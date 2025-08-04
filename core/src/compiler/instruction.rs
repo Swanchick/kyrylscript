@@ -1,20 +1,15 @@
-use crate::parser::expression::Expression;
+use super::constant::Constant;
 
 pub enum Instruction {
     Add,
     Minus,
     Mul,
     Div,
+    Return,
     Store(String),
-    LoadConst(Expression),
+    LoadConst(Constant),
     LoadVar(String),
-    Return(Option<Expression>),
     Closure(String),
-    CallDynamic {
-        args: i32
-    },
-    Call {
-        function: String,
-        args: i32,
-    },
+    CallDynamic { args: i32 },
+    Call { function: String, args: i32 },
 }
