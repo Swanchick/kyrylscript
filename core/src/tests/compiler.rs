@@ -59,6 +59,7 @@ fn compiler_variable_declaration_with_expression() {
         Instruction::LoadConst(Constant::Integer(30)),
         Instruction::Add,
         Instruction::LoadConst(Constant::Integer(2)),
+        Instruction::Div,
         Instruction::Store(String::from("result"))
     ];
 

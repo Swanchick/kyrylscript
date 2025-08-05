@@ -3,10 +3,14 @@ use std::ops::Add;
 
 use super::constant::Constant;
 
-use crate::compiler::instruction::{self, Instruction};
+use crate::compiler::instruction::Instruction;
 use crate::parser::expression;
 use crate::parser::operator::Operator;
-use crate::parser::{ expression::Expression, statement::Statement};
+
+use crate::parser::{ 
+    expression::Expression,
+    statement::Statement 
+};
 
 pub struct Compiler {
     statements: Vec<Statement>,
@@ -22,14 +26,20 @@ impl Compiler {
     }
 
     pub fn compile_statments(&self) -> Vec<Instruction> {
+        let mut instructions: Vec<Instruction> = Vec::new();
+        
         for statement in &self.statements {
-            self.compile_statment(statement);
+            let mut statement_instructions = self.compile_statment(statement);
+            
+            instructions.append(&mut statement_instructions);
         }
 
-        todo!()
+        instructions
     }
 
     fn compile_statment(&self, statement: &Statement) -> Vec<Instruction> {
+        let mut instructions: Vec<Instruction> = Vec::new();
+        
         match statement {
             Statement::VariableDeclaration {
                 name,
@@ -37,15 +47,14 @@ impl Compiler {
                 data_type,
                 value,
             } => {
-                let instructions = if let Some(value) = value {
+                let mut value_instructions = if let Some(value) = value {
                     self.start_compile_instruction(value)
                 } else {
                     vec![Instruction::LoadConst(Constant::Null)]
                 };
 
-
-
-                todo!()
+                instructions.append(&mut value_instructions);
+                instructions.push(Instruction::Store(name.clone()));
             }
 
             Statement::Assigment { name, value } => {}
@@ -88,7 +97,7 @@ impl Compiler {
         }
 
 
-        todo!()
+        instructions
     }
 
     fn start_compile_instruction(&self, expression: &Expression) -> Vec<Instruction> {
