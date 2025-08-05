@@ -170,7 +170,7 @@ impl SemanticAnalyzer {
         match (operator, right) {
             (Operator::Minus, DataType::Int) => Ok(DataType::Int),
             (Operator::Minus, DataType::Float) => Ok(DataType::Float),
-            (Operator::Tilde, DataType::Bool) => Ok(DataType::Bool),
+            (Operator::Not, DataType::Bool) => Ok(DataType::Bool),
             _ => Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid operator in unary operation!"))
         }
     }
@@ -289,7 +289,7 @@ impl SemanticAnalyzer {
                 }
             },
 
-            Expression::IdentifierIndex { left, index } => {
+            Expression::ListIndex { left, index } => {
                 let left = self.get_data_type(left)?;
                 let index_type = self.get_data_type(index)?;
 

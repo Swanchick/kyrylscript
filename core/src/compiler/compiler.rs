@@ -1,8 +1,11 @@
 use std::collections::HashMap;
+use std::ops::Add;
 
 use super::constant::Constant;
 
-use crate::compiler::instruction::Instruction;
+use crate::compiler::instruction::{self, Instruction};
+use crate::parser::expression;
+use crate::parser::operator::Operator;
 use crate::parser::{ expression::Expression, statement::Statement};
 
 pub struct Compiler {
@@ -35,10 +38,12 @@ impl Compiler {
                 value,
             } => {
                 let instructions = if let Some(value) = value {
-                    self.compile_expression(value)
+                    self.start_compile_instruction(value)
                 } else {
                     vec![Instruction::LoadConst(Constant::Null)]
                 };
+
+
 
                 todo!()
             }
@@ -86,44 +91,117 @@ impl Compiler {
         todo!()
     }
 
-    fn compile_expression(&self, expression: &Expression) -> Vec<Instruction> {
+    fn start_compile_instruction(&self, expression: &Expression) -> Vec<Instruction> {
+        self.compile_expression(expression, Vec::new())
+    }
+
+    fn compile_expression(&self, expression: &Expression, mut instructions: Vec<Instruction>) -> Vec<Instruction> {
         match expression {
-            Expression::NullLiteral => {}
-            Expression::IntegerLiteral(integer) => {}
-            Expression::FloatLiteral(float) => {}
-            Expression::StringLiteral(string) => {}
-            Expression::BooleanLiteral(boolean) => {}
-            Expression::Identifier(name) => {}
-            Expression::FunctionCall(name, arguments) => {}
-            Expression::ListLiteral(elements) => {}
-            Expression::TupleLiteral(elements) => {}
+            Expression::NullLiteral => instructions.push(Instruction::LoadConst(Constant::Null)),
+            Expression::IntegerLiteral(integer) => instructions.push(Instruction::LoadConst(Constant::Integer(*integer))),
+            Expression::FloatLiteral(float) => instructions.push(Instruction::LoadConst(Constant::Float(*float))),
+            Expression::StringLiteral(string) => instructions.push(Instruction::LoadConst(Constant::String(string.clone()))),
+            Expression::BooleanLiteral(boolean) => instructions.push(Instruction::LoadConst(Constant::Boolean(*boolean))),
+            Expression::Identifier(name) => instructions.push(Instruction::LoadVar(name.clone())),
+            
+            Expression::FunctionCall(name, arguments) => {
+                for argument in arguments {
+                    instructions = self.compile_expression(argument, instructions);
+                }
+
+                instructions.push(Instruction::Call { function: name.clone(), args: arguments.len() });
+            },
+            
+            Expression::ListLiteral(elements) => {
+                for element in elements {
+                    instructions = self.compile_expression(element, instructions);
+                }
+
+                instructions.push(Instruction::LoadList);
+            },
+
+            Expression::TupleLiteral(elements) => {
+                for element in elements {
+                    instructions = self.compile_expression(element, instructions);
+                }
+
+                instructions.push(Instruction::LoadTuple);
+            },
 
             Expression::BinaryOp {
                 left,
                 operator,
                 right,
-            } => {}
+            } => {
+                instructions = self.compile_binary_op(left, right, operator, instructions);
+            },
 
             Expression::FunctionLiteral {
                 parameters,
                 return_type,
                 block,
-            } => {}
+            } => todo!(),
 
             Expression::UnaryOp {
                 expression,
                 operator,
-            } => {}
+            } => {
+                instructions = self.compile_unary_op(expression, operator, instructions);
+            }
 
             Expression::FrontUnaryOp {
                 expression,
                 operator,
-            } => {}
+            } => todo!(),
 
-            Expression::IdentifierIndex { left, index } => {}
-            Expression::TupleIndex { left, indeces } => {}
+            Expression::ListIndex { left, index } => todo!(),
+            Expression::TupleIndex { left, indeces } => todo!()
         }
 
-        todo!()
+        instructions
+    }
+
+    fn compile_binary_op(
+        &self, 
+        left: &Box<Expression>, 
+        right: &Box<Expression>,
+        operator: &Operator,
+        mut instructions: Vec<Instruction>
+    ) -> Vec<Instruction> {
+        instructions = self.compile_expression(&left, instructions);
+        instructions = self.compile_expression(&right, instructions);
+
+        match operator {
+            Operator::Plus => instructions.push(Instruction::Add),
+            Operator::Minus => instructions.push(Instruction::Minus),
+            Operator::Multiply => instructions.push(Instruction::Mul),
+            Operator::Divide => instructions.push(Instruction::Div),
+            Operator::EqualEqual => instructions.push(Instruction::Eq),
+            Operator::GreaterEqual => instructions.push(Instruction::GreaterEq),
+            Operator::Greater => instructions.push(Instruction::Greater),
+            Operator::LessEqual => instructions.push(Instruction::LessEq),
+            Operator::Less => instructions.push(Instruction::Less),
+            Operator::NotEqual => instructions.push(Instruction::NotEq),
+            _ => unreachable!()
+        }
+
+        instructions
+    }
+
+    fn compile_unary_op(
+        &self, 
+        expression: &Box<Expression>, 
+        operator: &Operator,
+        mut instructions: Vec<Instruction>
+    ) -> Vec<Instruction> {
+        instructions = self.compile_expression(&expression, instructions);
+        
+        match operator {
+            Operator::Not => instructions.push(Instruction::Not),
+            Operator::Minus => instructions.push(Instruction::Minus),
+            _ => unreachable!()
+        }
+
+        instructions
     }
 }

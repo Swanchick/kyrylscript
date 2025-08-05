@@ -685,7 +685,7 @@ impl Parser {
         if self.match_token(&Token::Minus) || self.match_token(&Token::Not) {
             let operator = match self.previous() {
                 Token::Minus => Operator::Minus,
-                Token::Not => Operator::Tilde,
+                Token::Not => Operator::Not,
                 _ => unreachable!()
             };
             
@@ -737,9 +737,9 @@ impl Parser {
                 let value = self.parse_expression()?;
                 
                 if let Some(i) = index {
-                    index = Some(Expression::IdentifierIndex { left: Box::new(i), index: Box::new(value) }); 
+                    index = Some(Expression::ListIndex { left: Box::new(i), index: Box::new(value) }); 
                 } else {
-                    index = Some(Expression::IdentifierIndex { left: Box::new(left.clone()), index: Box::new(value)});
+                    index = Some(Expression::ListIndex { left: Box::new(left.clone()), index: Box::new(value)});
                 }
                 
                 self.consume_token(Token::RightSquareBracket)?;

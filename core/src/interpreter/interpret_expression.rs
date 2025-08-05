@@ -143,7 +143,7 @@ impl<'a> InterpretExpression<'a> {
 
                 Ok(value)
             },
-            Expression::IdentifierIndex{ left, index } => {
+            Expression::ListIndex{ left, index } => {
                 let left = self.interpret_expression(*left)?;
                 let index = self.interpret_expression(*index)?;
 
@@ -484,7 +484,7 @@ impl<'a> InterpretExpression<'a> {
                 self.interpret_negation(value)
             },
 
-            Operator::Tilde => {
+            Operator::Not => {
                 self.interpret_not(value)
             },
             _ => Err(io::Error::new(io::ErrorKind::InvalidData, "Unknown unary operator!"))

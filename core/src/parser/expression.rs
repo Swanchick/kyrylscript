@@ -21,7 +21,7 @@ pub enum Expression {
         return_type: DataType, 
         block: Vec<Statement>
     },
-    IdentifierIndex {
+    ListIndex {
         left: Box<Expression>,
         index: Box<Expression>
     },
