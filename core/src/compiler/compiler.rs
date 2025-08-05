@@ -1,26 +1,23 @@
 use super::constant::Constant;
 
-use crate::{
-    compiler::instruction::Instruction,
-    parser::{
-        expression::Expression,
-        statement::{self, Statement},
-    },
-};
+use crate::compiler::instruction::Instruction;
+use crate::parser::{ expression::Expression, statement::Statement};
 
 pub struct Compiler {
     statements: Vec<Statement>,
 }
 
 impl Compiler {
-    pub fn new(statement: Vec<Statement>) -> Compiler {
+    pub fn new(statements: Vec<Statement>) -> Compiler {
         Compiler { statements }
     }
 
     pub fn compile_statments(&self) -> Vec<Instruction> {
-        for statement in self.statements {
-            self.compile_statment(statement)
+        for statement in &self.statements {
+            self.compile_statment(statement);
         }
+
+        todo!()
     }
 
     fn compile_statment(&self, statement: &Statement) -> Vec<Instruction> {
@@ -78,6 +75,9 @@ impl Compiler {
                 global,
             } => {}
         }
+
+
+        todo!()
     }
 
     fn compile_expression(&self, expression: &Expression) -> Vec<Instruction> {
@@ -117,5 +117,7 @@ impl Compiler {
             Expression::IdentifierIndex { left, index } => {}
             Expression::TupleIndex { left, indeces } => {}
         }
+
+        todo!()
     }
 }
