@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::constant::Constant;
 
 use crate::compiler::instruction::Instruction;
@@ -5,11 +7,15 @@ use crate::parser::{ expression::Expression, statement::Statement};
 
 pub struct Compiler {
     statements: Vec<Statement>,
+    functions: HashMap<String, Vec<Instruction>>
 }
 
 impl Compiler {
     pub fn new(statements: Vec<Statement>) -> Compiler {
-        Compiler { statements }
+        Compiler { 
+            statements,
+            functions: HashMap::new()
+        }
     }
 
     pub fn compile_statments(&self) -> Vec<Instruction> {

@@ -1,5 +1,6 @@
 use super::constant::Constant;
 
+#[derive(Debug, PartialEq)]
 pub enum Instruction {
     Add,
     Minus,
