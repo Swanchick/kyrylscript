@@ -1,10 +1,9 @@
 use std::collections::HashMap;
-use std::ops::Add;
+use std::fmt::format;
 
 use super::constant::Constant;
 
-use crate::compiler::instruction::Instruction;
-use crate::parser::expression;
+use crate::compiler::instruction::{self, Instruction};
 use crate::parser::operator::Operator;
 
 use crate::parser::{ 
@@ -12,23 +11,34 @@ use crate::parser::{
     statement::Statement 
 };
 
+const FUNCTION_ENCAPSULATION: &str = "__function_";
+
+
 pub struct Compiler {
-    statements: Vec<Statement>,
     functions: HashMap<String, Vec<Instruction>>
 }
 
 impl Compiler {
-    pub fn new(statements: Vec<Statement>) -> Compiler {
+    pub fn new() -> Compiler {
         Compiler { 
-            statements,
             functions: HashMap::new()
         }
     }
 
-    pub fn compile_statments(&self) -> Vec<Instruction> {
+    pub fn get_instructions(&self, name: &str) -> Option<&Vec<Instruction>>{
+        self.functions.get(name)
+    }
+
+    pub fn start_compile(&mut self, statements: Vec<Statement>) {
         let mut instructions: Vec<Instruction> = Vec::new();
-        
-        for statement in &self.statements {
+
+        instructions = self.compile_statments(statements, instructions);
+
+        self.functions.insert(String::from("main"), instructions);
+    }
+
+    pub fn compile_statments(&mut self, statements: Vec<Statement>, mut instructions: Vec<Instruction>) -> Vec<Instruction> {
+        for statement in &statements {
             let mut statement_instructions = self.compile_statment(statement);
             
             instructions.append(&mut statement_instructions);
@@ -37,7 +47,7 @@ impl Compiler {
         instructions
     }
 
-    fn compile_statment(&self, statement: &Statement) -> Vec<Instruction> {
+    fn compile_statment(&mut self, statement: &Statement) -> Vec<Instruction> {
         let mut instructions: Vec<Instruction> = Vec::new();
         
         match statement {
@@ -85,7 +95,13 @@ impl Compiler {
                 return_type,
                 parameters,
                 body,
-            } => {}
+            } => {
+                let final_function_name = format!("{}{}", FUNCTION_ENCAPSULATION, name);
+                let mut function_instructions: Vec<Instruction> = Vec::new();
+                function_instructions = self.compile_statments(body.clone(), function_instructions);
+
+                self.functions.insert(final_function_name, function_instructions);
+            }
 
             Statement::EarlyReturn { name, body } => {}
 
@@ -163,7 +179,10 @@ impl Compiler {
                 operator,
             } => todo!(),
 
-            Expression::ListIndex { left, index } => todo!(),
+            Expression::ListIndex { left, index } => {
+                instructions = self.compile_expression(&left, instructions);
+
+            },
             Expression::TupleIndex { left, indeces } => todo!()
         }
 

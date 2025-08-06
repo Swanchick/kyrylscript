@@ -18,6 +18,8 @@ pub enum Instruction {
     Or,
     Not,
     LoadTuple,
+    LoadFromList,
+    LoadFromTuple(i32),
     Store(String),
     LoadConst(Constant),
     LoadVar(String),

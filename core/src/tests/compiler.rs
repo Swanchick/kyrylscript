@@ -28,7 +28,7 @@ fn load_statments(source: &str) -> Vec<Statement> {
 
 
 #[test]
-fn compiler_simple_variable_declaration() {
+fn simple_variable_declaration() {
     let source = concat!(
         "let a = 10;"
     );
@@ -40,14 +40,15 @@ fn compiler_simple_variable_declaration() {
         Instruction::Store(String::from("a"))
     ];
 
-    let compiler = Compiler::new(statements);
-    let instruction = compiler.compile_statments();
+    let mut compiler = Compiler::new();
+    compiler.start_compile(statements);
 
-    assert_eq!(expected_instructions, instruction);
+    let instructions = compiler.get_instructions("main").unwrap();
+    assert_eq!(&expected_instructions, instructions);
 }
 
 #[test]
-fn compiler_variable_declaration_with_expression() {
+fn variable_declaration_with_expression() {
     let source = concat!(
         "let result = (20 + 30) / 2;"
     );
@@ -63,8 +64,9 @@ fn compiler_variable_declaration_with_expression() {
         Instruction::Store(String::from("result"))
     ];
 
-    let compiler = Compiler::new(statements);
-    let instruction = compiler.compile_statments();
+    let mut compiler = Compiler::new();
+    compiler.start_compile(statements);
 
-    assert_eq!(expected_instructions, instruction);
+    let instructions = compiler.get_instructions("main").unwrap();
+    assert_eq!(&expected_instructions, instructions);
 }
