@@ -1,0 +1,22 @@
+use super::globals::Instructions;
+
+pub struct Function {
+    instructions: Instructions,
+    args: Vec<String>
+}
+
+impl Function {
+    pub fn method(instructions: Instructions) -> Function {
+        Function { 
+            instructions, 
+            args: Vec::new()
+        }
+    }
+
+    pub fn new(instructions: Instructions, args: Vec<String>) -> Function {
+        Function { 
+            instructions, 
+            args 
+        }
+    }
+}

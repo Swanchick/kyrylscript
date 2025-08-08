@@ -1,43 +1,40 @@
 use std::collections::HashMap;
-use std::fmt::format;
 
+use super::instruction::Instruction;
 use super::constant::Constant;
+use super::globals::{Instructions, FUNCTION_ENCAPSULATION, ANONYNOUS_FUNCTION_ENCAPSULATION};
 
-use crate::compiler::instruction::{self, Instruction};
+use crate::compiler::function::Function;
 use crate::parser::operator::Operator;
-
-use crate::parser::{ 
-    expression::Expression,
-    statement::Statement 
-};
-
-const FUNCTION_ENCAPSULATION: &str = "__function_";
-
+use crate::parser::expression::Expression;
+use crate::parser::statement::Statement;
 
 pub struct Compiler {
-    functions: HashMap<String, Vec<Instruction>>
+    functions: HashMap<String, Function>,
+    last_anonymous_function: usize
 }
 
 impl Compiler {
     pub fn new() -> Compiler {
         Compiler { 
-            functions: HashMap::new()
+            functions: HashMap::new(),
+            last_anonymous_function: 0
         }
     }
 
-    pub fn get_instructions(&self, name: &str) -> Option<&Vec<Instruction>>{
+    pub fn get_instructions(&self, name: &str) -> Option<&Function>{
         self.functions.get(name)
     }
 
     pub fn start_compile(&mut self, statements: Vec<Statement>) {
-        let mut instructions: Vec<Instruction> = Vec::new();
+        let mut instructions: Instructions = Vec::new();
 
         instructions = self.compile_statments(statements, instructions);
 
-        self.functions.insert(String::from("main"), instructions);
+        self.functions.insert(String::from("main"), Function::method(instructions));
     }
 
-    pub fn compile_statments(&mut self, statements: Vec<Statement>, mut instructions: Vec<Instruction>) -> Vec<Instruction> {
+    pub fn compile_statments(&mut self, statements: Vec<Statement>, mut instructions: Instructions) -> Instructions {
         for statement in &statements {
             let mut statement_instructions = self.compile_statment(statement);
             
@@ -47,8 +44,8 @@ impl Compiler {
         instructions
     }
 
-    fn compile_statment(&mut self, statement: &Statement) -> Vec<Instruction> {
-        let mut instructions: Vec<Instruction> = Vec::new();
+    fn compile_statment(&mut self, statement: &Statement) -> Instructions {
+        let mut instructions: Instructions = Vec::new();
         
         match statement {
             Statement::VariableDeclaration {
@@ -97,10 +94,19 @@ impl Compiler {
                 body,
             } => {
                 let final_function_name = format!("{}{}", FUNCTION_ENCAPSULATION, name);
-                let mut function_instructions: Vec<Instruction> = Vec::new();
+                let mut function_instructions: Instructions = Vec::new();
                 function_instructions = self.compile_statments(body.clone(), function_instructions);
 
-                self.functions.insert(final_function_name, function_instructions);
+                let args: Vec<String> = 
+                    parameters
+                        .iter()
+                        .map(|parameter| parameter.name.clone())
+                        .collect();
+
+                self.functions.insert(
+                    final_function_name, 
+                    Function::new(function_instructions, args)
+                );
             }
 
             Statement::EarlyReturn { name, body } => {}
@@ -116,11 +122,11 @@ impl Compiler {
         instructions
     }
 
-    fn start_compile_instruction(&self, expression: &Expression) -> Vec<Instruction> {
+    fn start_compile_instruction(&mut self, expression: &Expression) -> Instructions {
         self.compile_expression(expression, Vec::new())
     }
 
-    fn compile_expression(&self, expression: &Expression, mut instructions: Vec<Instruction>) -> Vec<Instruction> {
+    fn compile_expression(&mut self, expression: &Expression, mut instructions: Instructions) -> Instructions {
         match expression {
             Expression::NullLiteral => instructions.push(Instruction::LoadConst(Constant::Null)),
             Expression::IntegerLiteral(integer) => instructions.push(Instruction::LoadConst(Constant::Integer(*integer))),
@@ -163,9 +169,30 @@ impl Compiler {
 
             Expression::FunctionLiteral {
                 parameters,
-                return_type,
+                return_type: _,
                 block,
-            } => todo!(),
+            } => {
+                let function_name = format!(
+                    "{}{}", 
+                    ANONYNOUS_FUNCTION_ENCAPSULATION, 
+                    self.last_anonymous_function
+                );
+
+                self.last_anonymous_function += 1;
+                let mut function_instructions: Instructions = Vec::new();
+                function_instructions = self.compile_statments(block.clone(), function_instructions);
+
+                let args: Vec<String> = 
+                    parameters
+                        .iter()
+                        .map(|parameter| parameter.name.clone())
+                        .collect();
+
+                self.functions.insert(
+                    function_name, 
+                    Function::new(function_instructions, args)
+                );
+            },
 
             Expression::UnaryOp {
                 expression,
@@ -190,12 +217,12 @@ impl Compiler {
     }
 
     fn compile_binary_op(
-        &self, 
+        &mut self, 
         left: &Box<Expression>, 
         right: &Box<Expression>,
         operator: &Operator,
-        mut instructions: Vec<Instruction>
-    ) -> Vec<Instruction> {
+        mut instructions: Instructions
+    ) -> Instructions {
         instructions = self.compile_expression(&left, instructions);
         instructions = self.compile_expression(&right, instructions);
 
@@ -217,11 +244,11 @@ impl Compiler {
     }
 
     fn compile_unary_op(
-        &self, 
+        &mut self, 
         expression: &Box<Expression>, 
         operator: &Operator,
-        mut instructions: Vec<Instruction>
-    ) -> Vec<Instruction> {
+        mut instructions: Instructions
+    ) -> Instructions {
         instructions = self.compile_expression(&expression, instructions);
         
         match operator {
