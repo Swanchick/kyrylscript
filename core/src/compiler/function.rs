@@ -19,4 +19,8 @@ impl Function {
             args 
         }
     }
+
+    pub fn get_instructions(&self) -> &Instructions {
+        &self.instructions
+    }
 }
