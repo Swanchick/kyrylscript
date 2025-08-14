@@ -17,6 +17,7 @@ pub enum Instruction {
     And,
     Or,
     Not,
+    Clone,
     LoadTuple,
     LoadFromList,
     LoadFromTuple(i32),

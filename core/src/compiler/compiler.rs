@@ -197,14 +197,12 @@ impl Compiler {
             Expression::UnaryOp {
                 expression,
                 operator,
-            } => {
-                instructions = self.compile_unary_op(expression, operator, instructions);
-            }
+            } => instructions = self.compile_unary_op(expression, operator, instructions),
 
             Expression::FrontUnaryOp {
                 expression,
                 operator,
-            } => todo!(),
+            } => instructions = self.compile_front_unary_op(expression, operator, instructions),
 
             Expression::ListIndex { left, index } => {
                 instructions = self.compile_expression(&left, instructions);
@@ -254,6 +252,32 @@ impl Compiler {
         match operator {
             Operator::Not => instructions.push(Instruction::Not),
             Operator::Minus => instructions.push(Instruction::Minus),
+            _ => unreachable!()
+        }
+
+        instructions
+    }
+
+    fn compile_front_unary_op(
+        &mut self,
+        expression: &Box<Expression>,
+        operator: &Operator,
+        mut instructions: Instructions,
+    ) -> Instructions {
+        instructions = self.compile_expression(&expression, instructions);
+
+        match operator {
+            Operator::PlusPlus => {
+                instructions.push(Instruction::LoadConst(Constant::Integer(1)));
+                instructions.push(Instruction::Add);
+            },
+            Operator::MinusMinus => {
+                instructions.push(Instruction::LoadConst(Constant::Integer(1)));
+                instructions.push(Instruction::Minus);
+            },
+            Operator::Not => {
+                instructions.push(Instruction::Clone);
+            },
             _ => unreachable!()
         }
 
