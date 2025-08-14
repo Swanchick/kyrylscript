@@ -70,3 +70,4 @@ fn variable_declaration_with_expression() {
     let instructions = compiler.get_instructions("main").unwrap().get_instructions();
     assert_eq!(&expected_instructions, instructions);
 }
+

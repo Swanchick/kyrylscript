@@ -1,11 +1,11 @@
 use std::env::args;
 
-use core::kyryl_script::KyrylScript;
+use core::{compiler::compiler::Compiler, kyryl_script::KyrylScript, lexer::{self, lexer::Lexer}, parser::parser::Parser};
 use ks_std::ks_register_std;
 use core::global::ks_path::KsPath;
 
 fn main() {
-    let test_path = KsPath::from(".\\examples\\utils").unwrap();
+    // let test_path = KsPath::from(".\\examples\\utils").unwrap();
     
     let args: Vec<String> = args().collect();
     let path = args.get(1);
@@ -13,11 +13,28 @@ fn main() {
     if let Some(path) = path {
         ks_register_std();
 
-        let mut ks = KyrylScript::new();
-        let ks_result = ks.run_from_file(path);
+        let mut lexer = Lexer::load(&path).unwrap();
+        lexer.lexer().unwrap();
 
-        if let Err(e) = ks_result {
-            println!("{}", e);
-        }
+        let mut parser = Parser::new(
+            lexer.get_tokens().clone(), 
+            lexer.get_token_pos().clone(), 
+            KsPath::new(), 
+            KsPath::new()
+        );
+
+        let statements = parser.start().unwrap();
+
+        let mut compiler = Compiler::new();
+        compiler.start_compile(statements);
+
+        compiler.display();
+
+        // let mut ks = KyrylScript::new();
+        // let ks_result = ks.run_from_file(path);
+
+        // if let Err(e) = ks_result {
+        //     println!("{}", e);
+        // }
     }
 }

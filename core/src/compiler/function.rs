@@ -1,4 +1,4 @@
-use super::globals::Instructions;
+use crate::global::constants::Instructions;
 
 pub struct Function {
     instructions: Instructions,
@@ -18,6 +18,10 @@ impl Function {
             instructions, 
             args 
         }
+    }
+
+    pub fn get_args(&self) -> &Vec<String> {
+        &self.args
     }
 
     pub fn get_instructions(&self) -> &Instructions {

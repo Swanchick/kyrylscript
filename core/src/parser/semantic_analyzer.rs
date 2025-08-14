@@ -112,6 +112,20 @@ impl SemanticAnalyzer {
         }
     }
 
+    fn division(&self, left: DataType, right: DataType) -> io::Result<DataType> {
+        self.check_null(&left)?;
+        self.check_null(&right)?;
+
+        match (left, right) {
+            (DataType::Int, DataType::Int)
+            | (DataType::Float, DataType::Int)
+            | (DataType::Int, DataType::Float)
+            | (DataType::Float, DataType::Float) => Ok(DataType::Float),
+            
+            _ => Err(io::Error::new(io::ErrorKind::InvalidData, "Division type error!"))
+        }
+    }
+
     fn boolean(&self, left: DataType, right: DataType) -> io::Result<DataType> {
         self.check_null(&left)?;
         self.check_null(&right)?;
@@ -148,8 +162,9 @@ impl SemanticAnalyzer {
             Operator::Plus => self.plus(left, right),
             
             Operator::Minus
-            | Operator::Multiply
-            | Operator::Divide => self.arithmetic(left, right),
+            | Operator::Multiply => self.arithmetic(left, right),
+            
+            Operator::Divide => self.division(left, right),
             
             Operator::And
             | Operator::Or => self.boolean(left, right),

@@ -1,8 +1,14 @@
 use std::collections::HashMap;
+use std::ffi::NulError;
 
 use super::instruction::Instruction;
 use super::constant::Constant;
-use super::globals::{Instructions, FUNCTION_ENCAPSULATION, ANONYNOUS_FUNCTION_ENCAPSULATION};
+use crate::global::constants::{
+    Instructions, 
+    FUNCTION_ENCAPSULATION, 
+    ANONYNOUS_FUNCTION_ENCAPSULATION,
+    MAIN_FUNCTION
+};
 
 use crate::compiler::function::Function;
 use crate::parser::operator::Operator;
@@ -22,6 +28,19 @@ impl Compiler {
         }
     }
 
+    pub fn display(&self) {
+        for (function_name, function) in &self.functions {
+            print!("{} ", function_name);
+            println!("{:?}:", function.get_args());
+
+            for (i, instruction) in function.get_instructions().iter().enumerate() {
+                println!("    {}: {:?}", i, instruction);
+            }
+
+            println!("");
+        }
+    }
+
     pub fn get_instructions(&self, name: &str) -> Option<&Function>{
         self.functions.get(name)
     }
@@ -31,7 +50,7 @@ impl Compiler {
 
         instructions = self.compile_statments(statements, instructions);
 
-        self.functions.insert(String::from("main"), Function::method(instructions));
+        self.functions.insert(String::from(MAIN_FUNCTION), Function::method(instructions));
     }
 
     pub fn compile_statments(&mut self, statements: Vec<Statement>, mut instructions: Instructions) -> Instructions {
@@ -72,7 +91,15 @@ impl Compiler {
 
             Statement::RemoveValue { name, value } => todo!(),
 
-            Statement::ReturnStatement { value } => todo!(),
+            Statement::ReturnStatement { value } => {
+                if let Some(value) = value {
+                    instructions = self.compile_expression(value, instructions);
+                } else {
+                    instructions.push(Instruction::LoadConst(Constant::Null));
+                }
+
+                instructions.push(Instruction::Return);
+            },
 
             Statement::IfStatement {
                 condition,
@@ -202,9 +229,13 @@ impl Compiler {
                         .collect();
 
                 self.functions.insert(
-                    function_name, 
+                    function_name.clone(), 
                     Function::new(function_instructions, args)
                 );
+
+                instructions.push(Instruction::LoadConst(
+                    Constant::Function(function_name)
+                ));
             },
 
             Expression::UnaryOp {
