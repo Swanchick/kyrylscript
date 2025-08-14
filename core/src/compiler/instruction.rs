@@ -12,6 +12,7 @@ pub enum Instruction {
     LessEq,
     Less,
     NotEq,
+    End,
     Return,
     LoadList,
     And,

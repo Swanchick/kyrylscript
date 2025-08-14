@@ -64,27 +64,37 @@ impl Compiler {
                 instructions.push(Instruction::Store(name.clone()));
             }
 
-            Statement::Assigment { name, value } => {}
+            Statement::Assigment { name, value } => todo!(),
 
-            Statement::AssigmentIndex { name, index, value } => {}
+            Statement::AssigmentIndex { name, index, value } => todo!(),
 
-            Statement::AddValue { name, value } => {}
+            Statement::AddValue { name, value } => todo!(),
 
-            Statement::RemoveValue { name, value } => {}
+            Statement::RemoveValue { name, value } => todo!(),
 
-            Statement::ReturnStatement { value } => {}
+            Statement::ReturnStatement { value } => todo!(),
 
             Statement::IfStatement {
                 condition,
                 body,
                 else_body,
-            } => {}
+            } => todo!(),
 
-            Statement::WhileStatement { condition, body } => {}
+            Statement::WhileStatement { 
+                condition, 
+                body 
+            } => todo!(),
 
-            Statement::ForLoopStatement { name, list, body } => {}
+            Statement::ForLoopStatement { 
+                name, 
+                list, 
+                body 
+            } => todo!(),
 
-            Statement::Expression { value } => {}
+            Statement::Expression { value } => {
+                instructions = self.compile_expression(value, instructions);
+                instructions.push(Instruction::End);
+            },
 
             Statement::Function {
                 name,
@@ -109,13 +119,16 @@ impl Compiler {
                 );
             }
 
-            Statement::EarlyReturn { name, body } => {}
+            Statement::EarlyReturn { 
+                name, 
+                body 
+            } => todo!(),
 
             Statement::Use {
                 file_name,
                 body,
                 global,
-            } => {}
+            } => todo!()
         }
 
 
@@ -204,10 +217,7 @@ impl Compiler {
                 operator,
             } => instructions = self.compile_front_unary_op(expression, operator, instructions),
 
-            Expression::ListIndex { left, index } => {
-                instructions = self.compile_expression(&left, instructions);
-
-            },
+            Expression::ListIndex { left, index } => todo!(),
             Expression::TupleIndex { left, indeces } => todo!()
         }
 
