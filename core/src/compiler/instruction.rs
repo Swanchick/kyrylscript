@@ -2,6 +2,7 @@ use super::constant::Constant;
 
 #[derive(Debug, PartialEq)]
 pub enum Instruction {
+    // Math
     Add,
     Minus,
     Mul,
@@ -12,23 +13,28 @@ pub enum Instruction {
     LessEq,
     Less,
     NotEq,
-    End,
-    Return,
-    LoadList,
     And,
     Or,
     Not,
-    Clone,
+    
+    
+    // List
+    LoadList,
     LoadTuple,
     LoadFromList,
-    LoadFromTuple(i32),
+    LoadFromTuple(usize),
+    AssignListIndex,
+    AssignTupleIndex(usize),
+    
+    // Statements
+    End,
+    Return,
+    Clone,
+    JumpIfFalse(usize),
     Store(String),
     Assign(String),
-    AssignListIndex(i32),
-    AssignTupleIndex(i32),
     LoadConst(Constant),
     LoadVar(String),
     Closure(String),
-    CallDynamic { args: i32 },
-    Call { function: String, args: usize },
+    Call { args: usize },
 }

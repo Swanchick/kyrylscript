@@ -85,14 +85,44 @@ impl Compiler {
             }
 
             Statement::Assignment { name, value } => {
-                
+                instructions = self.compile_expression(value, instructions);
+
+                instructions.push(Instruction::Assign(name.clone()));
             },
 
-            Statement::AssignmentIndex { name, index, value } => todo!(),
+            Statement::AssignmentIndex { name, index, value } => {
+                instructions.push(Instruction::LoadVar(name.clone()));
+                
+                for (i, index_value) in index.iter().enumerate() {
+                    let is_last = i == index.len() - 1;
+                    
+                    if is_last {
+                        instructions = self.compile_expression(value, instructions);
+                        instructions = self.compile_expression(index_value, instructions);
 
-            Statement::AddValue { name, value } => todo!(), 
+                        instructions.push(Instruction::AssignListIndex);
 
-            Statement::RemoveValue { name, value } => todo!(),
+                        break;
+                    }
+
+                    instructions = self.compile_expression(index_value, instructions);
+                    instructions.push(Instruction::LoadFromList);
+                }
+            },
+
+            Statement::AddValue { name, value } => {
+                instructions.push(Instruction::LoadVar(name.clone()));
+                instructions = self.compile_expression(value, instructions);
+
+                instructions.push(Instruction::Add);
+            }, 
+
+            Statement::RemoveValue { name, value } => {
+                instructions.push(Instruction::LoadVar(name.clone()));
+                instructions = self.compile_expression(value, instructions);
+
+                instructions.push(Instruction::Minus);
+            },
 
             Statement::ReturnStatement { value } => {
                 if let Some(value) = value {
@@ -144,9 +174,12 @@ impl Compiler {
                         .collect();
 
                 self.functions.insert(
-                    final_function_name, 
+                    final_function_name.clone(), 
                     Function::new(function_instructions, args)
                 );
+
+                instructions.push(Instruction::LoadConst(Constant::Function(final_function_name)));
+                instructions.push(Instruction::Store(name.clone()));
             }
 
             Statement::EarlyReturn { 
@@ -179,11 +212,12 @@ impl Compiler {
             Expression::Identifier(name) => instructions.push(Instruction::LoadVar(name.clone())),
             
             Expression::FunctionCall(name, arguments) => {
+                instructions.push(Instruction::LoadVar(name.clone()));
                 for argument in arguments {
                     instructions = self.compile_expression(argument, instructions);
                 }
 
-                instructions.push(Instruction::Call { function: name.clone(), args: arguments.len() });
+                instructions.push(Instruction::Call { args: arguments.len() });
             },
             
             Expression::ListLiteral(elements) => {
@@ -257,12 +291,12 @@ impl Compiler {
 
                 instructions.push(Instruction::LoadFromList);
             },
-            
+
             Expression::TupleIndex { left, indeces } => {
                 instructions = self.compile_expression(&left, instructions);
                 
                 for index in indeces {
-                    instructions.push(Instruction::LoadFromTuple(*index));
+                    instructions.push(Instruction::LoadFromTuple(*index as usize));
                 }
             }
         }
