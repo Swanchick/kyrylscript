@@ -194,7 +194,7 @@ fn test_function_assigment_error() {
     lexer.lexer().unwrap();
 
     let mut parser = Parser::new(lexer.get_tokens().clone(), lexer.get_token_pos().clone(), KsPath::new(), KsPath::new());
-    assert_eq!(parser.parse_block_statement().unwrap_err().to_string(), "Assigment value mismatch!");
+    assert_eq!(parser.parse_block_statement().unwrap_err().to_string(), "Assignment value mismatch!");
 }
 
 

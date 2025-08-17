@@ -3,6 +3,7 @@ use std::ffi::NulError;
 
 use super::instruction::Instruction;
 use super::constant::Constant;
+use crate::compiler::instruction;
 use crate::global::constants::{
     Instructions, 
     FUNCTION_ENCAPSULATION, 
@@ -74,7 +75,7 @@ impl Compiler {
                 value,
             } => {
                 let mut value_instructions = if let Some(value) = value {
-                    self.start_compile_instruction(value)
+                    self.start_compile_expression(value)
                 } else {
                     vec![Instruction::LoadConst(Constant::Null)]
                 };
@@ -83,11 +84,13 @@ impl Compiler {
                 instructions.push(Instruction::Store(name.clone()));
             }
 
-            Statement::Assigment { name, value } => todo!(),
+            Statement::Assignment { name, value } => {
+                
+            },
 
-            Statement::AssigmentIndex { name, index, value } => todo!(),
+            Statement::AssignmentIndex { name, index, value } => todo!(),
 
-            Statement::AddValue { name, value } => todo!(),
+            Statement::AddValue { name, value } => todo!(), 
 
             Statement::RemoveValue { name, value } => todo!(),
 
@@ -162,7 +165,7 @@ impl Compiler {
         instructions
     }
 
-    fn start_compile_instruction(&mut self, expression: &Expression) -> Instructions {
+    fn start_compile_expression(&mut self, expression: &Expression) -> Instructions {
         self.compile_expression(expression, Vec::new())
     }
 
@@ -248,8 +251,20 @@ impl Compiler {
                 operator,
             } => instructions = self.compile_front_unary_op(expression, operator, instructions),
 
-            Expression::ListIndex { left, index } => todo!(),
-            Expression::TupleIndex { left, indeces } => todo!()
+            Expression::ListIndex { left, index } => {
+                instructions = self.compile_expression(&left, instructions);
+                instructions = self.compile_expression(&index, instructions);
+
+                instructions.push(Instruction::LoadFromList);
+            },
+            
+            Expression::TupleIndex { left, indeces } => {
+                instructions = self.compile_expression(&left, instructions);
+                
+                for index in indeces {
+                    instructions.push(Instruction::LoadFromTuple(*index));
+                }
+            }
         }
 
         instructions

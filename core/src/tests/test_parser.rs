@@ -239,7 +239,7 @@ fn test_assigment_statement() {
         "a = \"Hello World\";\n",
     );
 
-    let test_statement = Statement::Assigment {
+    let test_statement = Statement::Assignment {
         name: String::from("a"),
         value: Expression::StringLiteral(String::from("Hello World"))
     };
@@ -400,7 +400,7 @@ fn test_parser_index_assingment_statment() {
     let mut lexer = Lexer::new(String::from("some_list[10][20] = 20;"));
     lexer.lexer().unwrap();
 
-    let test_statement = Statement::AssigmentIndex { 
+    let test_statement = Statement::AssignmentIndex { 
         name: String::from("some_list"), 
         index: vec![Expression::IntegerLiteral(10), Expression::IntegerLiteral(20)],
         value: Expression::IntegerLiteral(20)

@@ -45,14 +45,14 @@ impl<'a> InterpretStatement<'a> {
 
                 Ok(Return::Nothing)
             },
-            Statement::Assigment { name, value } => {
+            Statement::Assignment { name, value } => {
                 let value = self.interpreter.interpret_expression(value)?;
 
                 self.interpreter.assign_variable(&name, value)?;
 
                 Ok(Return::Nothing)
             },
-            Statement::AssigmentIndex { name, index, value } => {
+            Statement::AssignmentIndex { name, index, value } => {
                 let mut list_value = self.interpreter.get_variable(&name)?;
                 let list_value_type = list_value.get_type_mut();
                 let value_to_assign = self.interpreter.interpret_expression(value)?;

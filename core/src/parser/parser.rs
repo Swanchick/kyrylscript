@@ -210,7 +210,7 @@ impl Parser {
                             let value  = self.parse_expression()?;
                             self.consume_token(Token::Semicolon)?;
 
-                            return Ok(Some(Statement::AssigmentIndex { name: name, index: indexes, value: value }));
+                            return Ok(Some(Statement::AssignmentIndex { name: name, index: indexes, value: value }));
                         }
                     }
 
@@ -491,20 +491,20 @@ impl Parser {
         match data_type_to_check {
             DataType::Void(Some (null_type)) => {
                 if *null_type != data_type && !DataType::is_void(&data_type) {
-                    return Err(io::Error::new(io::ErrorKind::InvalidData, "Assigment value mismatch!"))
+                    return Err(io::Error::new(io::ErrorKind::InvalidData, "Assignment value mismatch!"))
                 }
             }
 
             _ => {
                 if data_type_to_check != data_type && !DataType::is_void(&data_type) {
-                    return Err(io::Error::new(io::ErrorKind::InvalidData, "Assigment value mismatch!"))
+                    return Err(io::Error::new(io::ErrorKind::InvalidData, "Assignment value mismatch!"))
                 }
             }
         }
 
         self.consume_token(Token::Semicolon)?;
 
-        Ok(Statement::Assigment { name: name, value: expression })
+        Ok(Statement::Assignment { name: name, value: expression })
     }
 
     fn parse_function_call_parameters(&mut self) -> io::Result<Vec<Expression>> {

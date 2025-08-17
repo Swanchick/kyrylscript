@@ -16,11 +16,11 @@ pub enum Statement {
         data_type: Option<DataType>,
         value: Option<Expression>
     },
-    Assigment {
+    Assignment {
         name: String,
         value: Expression
     },
-    AssigmentIndex {
+    AssignmentIndex {
         name: String,
         index: Vec<Expression>,
         value: Expression
