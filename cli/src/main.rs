@@ -26,7 +26,7 @@ fn main() {
         let statements = parser.start().unwrap();
 
         let mut compiler = Compiler::new();
-        compiler.start_compile(statements);
+        compiler.start_compile(&statements);
 
         compiler.display();
 

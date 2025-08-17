@@ -2,7 +2,7 @@ use super::constant::Constant;
 
 #[derive(Debug, PartialEq)]
 pub enum Instruction {
-    // Math
+    // Expressions
     Add,
     Minus,
     Mul,
@@ -17,8 +17,20 @@ pub enum Instruction {
     Or,
     Not,
     
+    // Statements
+    End,
+    Return,
+    Clone,
+    JumpIfFalse(i32),
+    Jump(i32),
+    Store(String),
+    Assign(String),
+    LoadConst(Constant),
+    LoadVar(String),
+    Closure(String),
+    Call { args: usize },
     
-    // List
+    // List & Tuple
     LoadList,
     LoadTuple,
     LoadFromList,
@@ -26,15 +38,7 @@ pub enum Instruction {
     AssignListIndex,
     AssignTupleIndex(usize),
     
-    // Statements
-    End,
-    Return,
-    Clone,
-    JumpIfFalse(usize),
-    Store(String),
-    Assign(String),
-    LoadConst(Constant),
-    LoadVar(String),
-    Closure(String),
-    Call { args: usize },
+    // System
+    Enter,
+    Exit,
 }

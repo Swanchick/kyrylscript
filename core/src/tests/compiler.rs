@@ -41,7 +41,7 @@ fn simple_variable_declaration() {
     ];
 
     let mut compiler = Compiler::new();
-    compiler.start_compile(statements);
+    compiler.start_compile(&statements);
 
     let instructions = compiler.get_instructions("main").unwrap().get_instructions();
     assert_eq!(&expected_instructions, instructions);
@@ -65,7 +65,7 @@ fn variable_declaration_with_expression() {
     ];
 
     let mut compiler = Compiler::new();
-    compiler.start_compile(statements);
+    compiler.start_compile(&statements);
 
     let instructions = compiler.get_instructions("main").unwrap().get_instructions();
     assert_eq!(&expected_instructions, instructions);

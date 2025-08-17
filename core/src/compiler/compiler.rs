@@ -1,9 +1,7 @@
 use std::collections::HashMap;
-use std::ffi::NulError;
 
 use super::instruction::Instruction;
 use super::constant::Constant;
-use crate::compiler::instruction;
 use crate::global::constants::{
     Instructions, 
     FUNCTION_ENCAPSULATION, 
@@ -46,7 +44,7 @@ impl Compiler {
         self.functions.get(name)
     }
 
-    pub fn start_compile(&mut self, statements: Vec<Statement>) {
+    pub fn start_compile(&mut self, statements: &Vec<Statement>) {
         let mut instructions: Instructions = Vec::new();
 
         instructions = self.compile_statments(statements, instructions);
@@ -54,8 +52,8 @@ impl Compiler {
         self.functions.insert(String::from(MAIN_FUNCTION), Function::method(instructions));
     }
 
-    pub fn compile_statments(&mut self, statements: Vec<Statement>, mut instructions: Instructions) -> Instructions {
-        for statement in &statements {
+    pub fn compile_statments(&mut self, statements: &Vec<Statement>, mut instructions: Instructions) -> Instructions {
+        for statement in statements {
             let mut statement_instructions = self.compile_statment(statement);
             
             instructions.append(&mut statement_instructions);
@@ -115,6 +113,8 @@ impl Compiler {
                 instructions = self.compile_expression(value, instructions);
 
                 instructions.push(Instruction::Add);
+
+                instructions.push(Instruction::Store(name.clone()));
             }, 
 
             Statement::RemoveValue { name, value } => {
@@ -122,6 +122,7 @@ impl Compiler {
                 instructions = self.compile_expression(value, instructions);
 
                 instructions.push(Instruction::Minus);
+                instructions.push(Instruction::Store(name.clone()));
             },
 
             Statement::ReturnStatement { value } => {
@@ -138,12 +139,38 @@ impl Compiler {
                 condition,
                 body,
                 else_body,
-            } => todo!(),
+            } => {
+                let mut body = self.compile_statments(body, Vec::new());
+                let body_len = body.len() as i32;
+
+                instructions = self.compile_expression(condition, instructions);
+                instructions.push(Instruction::JumpIfFalse(body_len + 2));
+
+                instructions.append(&mut body);
+
+                if let Some(else_body) = else_body {
+                    let mut else_body = self.compile_statments(else_body, Vec::new());
+                    instructions.push(Instruction::Jump(else_body.len() as i32 + 1));
+
+                    instructions.append(&mut else_body);
+                }
+            },
 
             Statement::WhileStatement { 
                 condition, 
                 body 
-            } => todo!(),
+            } => {
+                let mut body = self.compile_statments(body, Vec::new());
+                let body_len = body.len() as i32;
+                
+                let mut condition = self.compile_expression(condition, Vec::new());
+                let condition_len = condition.len() as i32;
+                instructions.append(&mut condition);
+                instructions.push(Instruction::JumpIfFalse(body_len + 2));
+
+                instructions.append(&mut body);
+                instructions.push(Instruction::Jump(-body_len - condition_len - 1));
+            },
 
             Statement::ForLoopStatement { 
                 name, 
@@ -165,7 +192,7 @@ impl Compiler {
             } => {
                 let final_function_name = format!("{}{}", FUNCTION_ENCAPSULATION, name);
                 let mut function_instructions: Instructions = Vec::new();
-                function_instructions = self.compile_statments(body.clone(), function_instructions);
+                function_instructions = self.compile_statments(body, function_instructions);
 
                 let args: Vec<String> = 
                     parameters
@@ -257,7 +284,7 @@ impl Compiler {
 
                 self.last_anonymous_function += 1;
                 let mut function_instructions: Instructions = Vec::new();
-                function_instructions = self.compile_statments(block.clone(), function_instructions);
+                function_instructions = self.compile_statments(block, function_instructions);
 
                 let args: Vec<String> = 
                     parameters
