@@ -69,9 +69,11 @@ impl Compiler {
             Statement::VariableDeclaration {
                 name,
                 public,
-                data_type,
+                data_type: _,
                 value,
             } => {
+                let name = name.clone();
+
                 let mut value_instructions = if let Some(value) = value {
                     self.start_compile_expression(value)
                 } else {
@@ -79,7 +81,14 @@ impl Compiler {
                 };
 
                 instructions.append(&mut value_instructions);
-                instructions.push(Instruction::Store(name.clone()));
+
+                let store = if *public {
+                    Instruction::PubStore(name)
+                } else {
+                    Instruction::Store(name)
+                };
+
+                instructions.push(store);
             }
 
             Statement::Assignment { name, value } => {
@@ -195,10 +204,12 @@ impl Compiler {
             Statement::Function {
                 name,
                 public,
-                return_type,
+                return_type: _,
                 parameters,
                 body,
             } => {
+                let name = name.clone();
+
                 let final_function_name = format!("{}{}", FUNCTION_ENCAPSULATION, name);
                 let mut function_instructions: Instructions = Vec::new();
                 function_instructions = self.compile_statments(body, function_instructions);
@@ -215,7 +226,14 @@ impl Compiler {
                 );
 
                 instructions.push(Instruction::LoadConst(Constant::Function(final_function_name)));
-                instructions.push(Instruction::Store(name.clone()));
+                
+                let store = if *public {
+                    Instruction::PubStore(name)
+                } else {
+                    Instruction::Store(name)
+                };
+
+                instructions.push(store);
             }
 
             Statement::EarlyReturn { 

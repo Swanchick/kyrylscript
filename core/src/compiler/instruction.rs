@@ -24,6 +24,7 @@ pub enum Instruction {
     JumpIfFalse(i32),
     Jump(i32),
     Store(String),
+    PubStore(String),
     Assign(String),
     LoadConst(Constant),
     LoadVar(String),

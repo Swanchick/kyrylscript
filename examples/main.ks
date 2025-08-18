@@ -1,3 +1,7 @@
+function sum(a: int, b: int): int {
+    return a + b;
+}
+
 let a = 10;
 let b = 20;
 
