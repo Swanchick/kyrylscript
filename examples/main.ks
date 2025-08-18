@@ -1,6 +1,8 @@
 let a = 10;
 let b = 20;
 
-while (a >= b) {
-    a++;
+if a == b {
+    println("Hello World");
+} else {
+    println("Bye world");
 }

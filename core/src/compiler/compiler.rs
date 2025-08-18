@@ -140,20 +140,29 @@ impl Compiler {
                 body,
                 else_body,
             } => {
+                instructions.push(Instruction::Enter);
+
                 let mut body = self.compile_statments(body, Vec::new());
                 let body_len = body.len() as i32;
 
                 instructions = self.compile_expression(condition, instructions);
-                instructions.push(Instruction::JumpIfFalse(body_len + 2));
+                
+                let mut jump_distance = body_len + 1;
+                
 
+                let mut else_body = if let Some(else_body) = else_body {
+                    jump_distance += 1;
+                    
+                    self.compile_statments(else_body, Vec::new())
+                } else {
+                    Vec::new()
+                };
+
+                instructions.push(Instruction::JumpIfFalse(jump_distance));
                 instructions.append(&mut body);
-
-                if let Some(else_body) = else_body {
-                    let mut else_body = self.compile_statments(else_body, Vec::new());
-                    instructions.push(Instruction::Jump(else_body.len() as i32 + 1));
-
-                    instructions.append(&mut else_body);
-                }
+                instructions.push(Instruction::Jump(else_body.len() as i32 + 1));
+                instructions.append(&mut else_body);
+                instructions.push(Instruction::Exit);
             },
 
             Statement::WhileStatement { 
