@@ -3,13 +3,11 @@ use std::collections::HashMap;
 use super::instruction::Instruction;
 use super::constant::Constant;
 use crate::global::constants::{
-    Instructions, 
-    FUNCTION_ENCAPSULATION, 
-    ANONYNOUS_FUNCTION_ENCAPSULATION,
-    MAIN_FUNCTION
+    Instructions, ANONYNOUS_FUNCTION_ENCAPSULATION, FUNCTION_ENCAPSULATION, ITERATOR_LIST_NAME, ITERATOR_NAME, MAIN_FUNCTION
 };
 
 use crate::compiler::function::Function;
+use crate::interpreter;
 use crate::parser::operator::Operator;
 use crate::parser::expression::Expression;
 use crate::parser::statement::Statement;
@@ -183,18 +181,70 @@ impl Compiler {
                 
                 let mut condition = self.compile_expression(condition, Vec::new());
                 let condition_len = condition.len() as i32;
+                
                 instructions.append(&mut condition);
-                instructions.push(Instruction::JumpIfFalse(body_len + 2));
+                instructions.push(Instruction::JumpIfFalse(body_len + 3));
+                instructions.push(Instruction::Enter);
 
                 instructions.append(&mut body);
-                instructions.push(Instruction::Jump(-body_len - condition_len - 1));
+                instructions.push(Instruction::Exit);
+                instructions.push(Instruction::Jump(-body_len - condition_len - 3));
             },
 
             Statement::ForLoopStatement { 
                 name, 
                 list, 
                 body 
-            } => todo!(),
+            } => {
+                let name = name.clone();
+                let iter_name = format!("{}{}", ITERATOR_NAME, name);
+                let iter_list_name = format!("{}{}", ITERATOR_LIST_NAME, name);
+                
+                instructions.push(Instruction::Enter);
+
+                instructions.push(Instruction::LoadConst(Constant::Integer(0)));
+                instructions.push(Instruction::Store(iter_name.clone()));
+
+                instructions = self.compile_expression(list, instructions);
+                instructions.push(Instruction::Store(iter_list_name.clone()));
+
+                let mut condition_body: Instructions = Vec::new();
+
+                condition_body.push(Instruction::LoadVar(iter_name.clone()));
+                condition_body.push(Instruction::LoadVar(iter_list_name.clone()));
+                condition_body.push(Instruction::ListLen);
+                condition_body.push(Instruction::Less);
+                
+                let mut for_body: Instructions = Vec::new();
+                
+                for_body.push(Instruction::Enter);
+                
+                for_body.push(Instruction::LoadVar(iter_list_name.clone()));
+                for_body.push(Instruction::LoadVar(iter_name.clone()));
+                for_body.push(Instruction::LoadFromList);
+                for_body.push(Instruction::Store(name));
+                
+                for_body = self.compile_statments(body, for_body);
+
+                for_body.push(Instruction::Exit);
+
+                for_body.push(Instruction::LoadVar(iter_name.clone()));
+                for_body.push(Instruction::LoadConst(Constant::Integer(1)));
+                for_body.push(Instruction::Add);
+                for_body.push(Instruction::Store(iter_name.clone()));
+                
+                let for_body_len = for_body.len() as i32;
+                let condition_body_len = condition_body.len() as i32;
+                for_body.push(Instruction::Jump(-condition_body_len - for_body_len - 1));
+
+                let for_body_len = for_body.len() as i32;
+                condition_body.push(Instruction::JumpIfFalse(for_body_len + 1));
+
+
+                instructions.append(&mut condition_body);
+                instructions.append(&mut for_body);
+                instructions.push(Instruction::Exit);
+            },
 
             Statement::Expression { value } => {
                 instructions = self.compile_expression(value, instructions);

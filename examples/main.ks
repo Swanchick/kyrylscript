@@ -1,12 +1,3 @@
-function sum(a: int, b: int): int {
-    return a + b;
-}
-
-let a = 10;
-let b = 20;
-
-if a == b {
-    println("Hello World");
-} else {
-    println("Bye world");
+for i in range(10) {
+    println("Number: ", i);
 }

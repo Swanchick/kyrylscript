@@ -35,6 +35,7 @@ pub enum Instruction {
     LoadList,
     LoadTuple,
     LoadFromList,
+    ListLen,
     LoadFromTuple(usize),
     AssignListIndex,
     AssignTupleIndex(usize),

@@ -1,6 +1,6 @@
 use std::env::args;
 
-use core::{compiler::compiler::Compiler, kyryl_script::KyrylScript, lexer::{self, lexer::Lexer}, parser::parser::Parser};
+use core::{compiler::compiler::Compiler, kyryl_script::KyrylScript, lexer::lexer::Lexer, parser::parser::Parser};
 use ks_std::ks_register_std;
 use core::global::ks_path::KsPath;
 
