@@ -1,3 +1,10 @@
-for i in range(10) {
-    println("Number: ", i);
+
+
+function sum(a: int, b: int): int {
+    return a + b;
+
+    println("Hello World");
 }
+
+sum(32, 12);
+

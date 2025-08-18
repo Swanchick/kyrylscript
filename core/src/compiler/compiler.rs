@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use super::instruction::Instruction;
 use super::constant::Constant;
+use crate::compiler::instruction;
 use crate::global::constants::{
     Instructions, ANONYNOUS_FUNCTION_ENCAPSULATION, FUNCTION_ENCAPSULATION, ITERATOR_LIST_NAME, ITERATOR_NAME, MAIN_FUNCTION
 };
@@ -50,11 +51,25 @@ impl Compiler {
         self.functions.insert(String::from(MAIN_FUNCTION), Function::method(instructions));
     }
 
+    fn has_return(&self, instructions: &Instructions) -> bool {
+        if let Some(instruction) = instructions.last() {
+            matches!(instruction, Instruction::Return)
+        } else {
+            false
+        }
+    }
+
     pub fn compile_statments(&mut self, statements: &Vec<Statement>, mut instructions: Instructions) -> Instructions {
         for statement in statements {
             let mut statement_instructions = self.compile_statment(statement);
-            
+
+            let has_return = self.has_return(&statement_instructions);
+
             instructions.append(&mut statement_instructions);
+
+            if has_return {
+                break;
+            }
         }
 
         instructions
