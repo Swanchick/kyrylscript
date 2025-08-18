@@ -2,13 +2,17 @@ use std::collections::HashMap;
 
 use super::instruction::Instruction;
 use super::constant::Constant;
-use crate::compiler::instruction;
+
 use crate::global::constants::{
-    Instructions, ANONYNOUS_FUNCTION_ENCAPSULATION, FUNCTION_ENCAPSULATION, ITERATOR_LIST_NAME, ITERATOR_NAME, MAIN_FUNCTION
+    Instructions, 
+    ANONYNOUS_FUNCTION_ENCAPSULATION, 
+    FUNCTION_ENCAPSULATION, 
+    ITERATOR_LIST_NAME, 
+    ITERATOR_NAME, 
+    MAIN_FUNCTION
 };
 
 use crate::compiler::function::Function;
-use crate::interpreter;
 use crate::parser::operator::Operator;
 use crate::parser::expression::Expression;
 use crate::parser::statement::Statement;
@@ -304,12 +308,39 @@ impl Compiler {
             Statement::EarlyReturn { 
                 name, 
                 body 
-            } => todo!(),
+            } => {
+                let name = name.clone();
+
+                instructions.push(Instruction::LoadVar(name));
+                instructions.push(Instruction::LoadConst(Constant::Null));
+                instructions.push(Instruction::Eq);
+
+                let mut early_body: Instructions = if let Some(body) = body {
+                    let mut body = self.compile_statments(body, Vec::new());
+
+                    if self.has_return(&body) {
+                        body
+                    } else {
+                        body.push(Instruction::LoadConst(Constant::Null));
+                        body.push(Instruction::Return);
+                        body
+                    }
+                } else {
+                    let mut body: Instructions = Vec::new();
+                    body.push(Instruction::LoadConst(Constant::Null));
+                    body.push(Instruction::Return);
+
+                    body
+                };
+
+                instructions.append(&mut early_body);
+
+            },
 
             Statement::Use {
-                file_name,
-                body,
-                global,
+                file_name: _,
+                body: _,
+                global: _,
             } => todo!()
         }
 
