@@ -315,24 +315,28 @@ impl Compiler {
                 instructions.push(Instruction::LoadConst(Constant::Null));
                 instructions.push(Instruction::Eq);
 
-                let mut early_body: Instructions = if let Some(body) = body {
-                    let mut body = self.compile_statments(body, Vec::new());
+                let mut prepare_early_body: Instructions = Vec::new();
+                prepare_early_body.push(Instruction::Enter);
 
-                    if self.has_return(&body) {
-                        body
+                let mut early_body: Instructions = if let Some(body) = body {
+                    prepare_early_body = self.compile_statments(body, prepare_early_body);
+
+                    if self.has_return(&prepare_early_body) {
+                        prepare_early_body
                     } else {
-                        body.push(Instruction::LoadConst(Constant::Null));
-                        body.push(Instruction::Return);
-                        body
+                        prepare_early_body.push(Instruction::LoadConst(Constant::Null));
+                        prepare_early_body.push(Instruction::Return);
+                        prepare_early_body
                     }
                 } else {
-                    let mut body: Instructions = Vec::new();
-                    body.push(Instruction::LoadConst(Constant::Null));
-                    body.push(Instruction::Return);
-
-                    body
+                    prepare_early_body.push(Instruction::LoadConst(Constant::Null));
+                    prepare_early_body.push(Instruction::Return);
+                    prepare_early_body
                 };
 
+                early_body.push(Instruction::Exit);
+
+                instructions.push(Instruction::JumpIfFalse(early_body.len() as i32 + 1));
                 instructions.append(&mut early_body);
 
             },
