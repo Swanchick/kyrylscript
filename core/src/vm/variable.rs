@@ -3,7 +3,7 @@ use super::value::Value;
 
 pub struct Variable {
     value: Value,
-    reference: Option<u64>
+    reference: Option<u64>,
 } 
 
 impl Variable {
@@ -17,6 +17,13 @@ impl Variable {
     pub fn empty(value: Value ) -> Variable {
         Variable {
             value,
+            reference: None
+        }
+    }
+
+    pub fn null() -> Variable {
+        Variable { 
+            value: Value::Null, 
             reference: None
         }
     }

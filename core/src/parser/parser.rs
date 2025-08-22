@@ -177,7 +177,7 @@ impl Parser {
                 return Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid context for public visibility!"));
             }
         }
-        
+
         match self.advance() {
             Some(Token::Let) => return Ok(Some(self.parse_variable_declaration_statement(public)?)),
             Some(Token::Return) => return Ok(Some(self.parse_return_statement()?)),

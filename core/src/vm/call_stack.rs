@@ -25,4 +25,8 @@ impl CallStack {
     pub fn peek(&self) -> Option<&Instruction> {
         self.instructions.get(self.step)
     } 
+
+    pub fn peek_mut(&mut self) -> Option<&mut Instruction> {
+        self.instructions.get_mut(self.step)
+    } 
 }

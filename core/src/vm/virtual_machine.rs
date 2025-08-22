@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::env::var;
 
 use crate::compiler::constant::Constant;
 use crate::compiler::instruction::Instruction;
@@ -9,7 +8,7 @@ use crate::global::constants::{
 };
 use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
-use crate::vm::variable_stack::VariableStack;
+use crate::vm::variable_stack::{self, VariableStack};
 
 use super::call_stack::CallStack;
 use super::environment::Environment;
@@ -80,6 +79,27 @@ impl VirtualMachine {
         Variable::empty(value)
     }
 
+    fn define_variable(&mut self, name: &str) -> KsResult<()> {
+        let variable_stack = self.variable_stack.pop();
+
+        match variable_stack {
+            Some(VariableStack::Variable(variable)) => {
+                self.environment.define_variable(name, variable);
+            },
+
+            Some(VariableStack::Reference(reference)) => {
+                self.environment.define_reference(name, &reference);
+            },
+
+            _ => self.environment.define_variable(
+                name, 
+                Variable::null()
+            )
+        }
+
+        Ok(())
+    }
+
     fn interpret(&mut self) -> KsResult<()> {
         let instruction = {
             let call_stack = self.call_stack_last();
@@ -104,11 +124,14 @@ impl VirtualMachine {
                 } else {
                     return Err(KsError::runtime(&format!("Cannot find variable {}!", name)));
                 }
-            }
+            },
 
-            _ => {
-                self.exit_function();
-            }
+            Some(Instruction::Store(name)) => {
+                let name = name.clone();
+                self.define_variable(&name)?;
+            },
+
+            _ => self.exit_function()
         }
 
         Ok(())
