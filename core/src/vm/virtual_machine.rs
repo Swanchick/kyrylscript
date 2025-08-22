@@ -1,18 +1,24 @@
 use std::collections::HashMap;
+use std::env::var;
 
 use crate::compiler::constant::Constant;
 use crate::compiler::instruction::Instruction;
-use crate::global::constants::MAIN_FUNCTION;
+use crate::global::constants::{
+    MAIN_FUNCTION, 
+    MAX_DEPTH_RECURSION
+};
+use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
-use crate::vm::call_stack::CallStack;
+use crate::vm::variable_stack::VariableStack;
 
+use super::call_stack::CallStack;
 use super::environment::Environment;
 use super::variable::Variable;
 use super::value::Value;
 
 pub struct VirtualMachine {
     environment: Environment,
-    variable_stack: Vec<Variable>,
+    variable_stack: Vec<VariableStack>,
     call_stack: Vec<CallStack>,
     compilation: HashMap<String, Vec<Instruction>>
 }
@@ -27,13 +33,19 @@ impl VirtualMachine {
         }
     }
 
-    fn enter_function(&mut self, function: &str) {
+    fn enter_function(&mut self, function: &str) -> KsResult<()> {
+        if self.call_stack.len() >= MAX_DEPTH_RECURSION {
+            return Err(KsError::runtime("Reached the maximum recursion depth!"));
+        }
+        
         let instructions = self.compilation.get(function);
         if let Some(instructions) = instructions {
             let call_stack = CallStack::new(function, instructions.to_vec());
 
             self.call_stack.push(call_stack);
         }
+
+        Ok(())
     }
 
     fn exit_function(&mut self) {
@@ -68,7 +80,7 @@ impl VirtualMachine {
         Variable::empty(value)
     }
 
-    fn interpret(&mut self) {
+    fn interpret(&mut self) -> KsResult<()> {
         let instruction = {
             let call_stack = self.call_stack_last();
             if let Some(call_stack) = call_stack {
@@ -81,21 +93,32 @@ impl VirtualMachine {
         match instruction {
             Some(Instruction::LoadConst(constant)) => {
                 let variable = self.constant_to_variable(constant);
-                self.variable_stack.push(variable);
+                self.variable_stack.push(VariableStack::Variable(variable));
                 self.step();
             },
+
+            Some(Instruction::LoadVar(name)) => {
+                let reference = self.environment.find_reference(name);
+                if let Some(reference) = reference {
+                    self.variable_stack.push(VariableStack::Reference(reference));
+                } else {
+                    return Err(KsError::runtime(&format!("Cannot find variable {}!", name)));
+                }
+            }
 
             _ => {
                 self.exit_function();
             }
         }
+
+        Ok(())
     }
 
     pub fn start(&mut self) -> KsResult<()> {
-        self.enter_function(MAIN_FUNCTION);
+        self.enter_function(MAIN_FUNCTION)?;
 
         while self.call_stack.len() != 0 {
-            self.interpret();
+            self.interpret()?;
         }
 
 

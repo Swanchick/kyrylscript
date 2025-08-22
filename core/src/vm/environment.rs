@@ -19,4 +19,16 @@ impl Environment {
             references: HashMap::new()
         }
     }
+
+    pub fn find_reference(&self, name: &str) -> Option<u64> {
+        for scope in self.variables.iter().rev() {
+            let reference = scope.get(name);
+            
+            if let Some(reference) = reference {
+                return Some(*reference);
+            }
+        }
+
+        None
+    }
 }

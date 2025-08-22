@@ -13,7 +13,7 @@ impl KsError {
         }
     }
     
-    pub fn run_time(message: &str) -> KsError {
+    pub fn runtime(message: &str) -> KsError {
         KsError::new(message, KsErrorType::RunTime)
     }
 
