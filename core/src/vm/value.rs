@@ -7,5 +7,5 @@ pub enum Value {
     List(Vec<u64>),
     Tuple(Vec<u64>),
     Function(String),
-    RustFucntion(String)
+    RustFunction(String)
 }
