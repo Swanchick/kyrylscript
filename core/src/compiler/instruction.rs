@@ -1,6 +1,6 @@
 use super::constant::Constant;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Instruction {
     // Expressions
     Add,
