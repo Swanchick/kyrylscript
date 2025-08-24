@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::env::var;
 
 use crate::compiler::constant::Constant;
 use crate::compiler::instruction::Instruction;
@@ -8,9 +9,10 @@ use crate::global::constants::{
 };
 use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
+use crate::interpreter::enviroment;
 use crate::native_registry::native_registry::NativeRegistry;
 use crate::native_registry::native_types::NativeTypes;
-use crate::vm::variable_stack::VariableStack;
+use crate::vm::variable_stack::{self, VariableStack};
 
 use super::call_stack::CallStack;
 use super::environment::Environment;
@@ -79,7 +81,7 @@ impl VirtualMachine {
                 let native = native.borrow();
                 
                 if let Some(NativeTypes::NativeFunction(_)) = native.get_native(name) {
-                    Value::RustFunction(name.clone())
+                    Value::NativeFunction(name.clone())
                 } else {
                     Value::Function(name.clone())
                 }
@@ -111,6 +113,133 @@ impl VirtualMachine {
         Ok(())
     }
 
+    fn call_native_function(&mut self, args: Vec<&mut Variable>) {
+
+    }
+
+    fn call_function(&mut self, name: &str, args: Vec<&VariableStack>) -> KsResult<Variable> {
+        todo!()
+    }
+
+
+    fn extract_function(&mut self, args: &usize) -> KsResult<Variable> {
+        let function_variable = self.variable_stack.pop();
+        
+        if let Some(VariableStack::Reference(reference)) = function_variable {
+            let value = {
+                let variable = self.environment.variable(&reference)?;
+                variable.value()
+            };
+
+            let mut name = String::new(); 
+
+            Ok(Variable::null())
+        } else {
+            Ok(Variable::null())
+        }
+    }
+
+    fn extract_variable(&mut self) -> KsResult<Variable> {
+        let last_stack = self.variable_stack.pop();
+        if let Some(last_stack) = last_stack {
+            match last_stack {
+                VariableStack::Variable(variable) => {
+                    Ok(variable)
+                },
+
+                VariableStack::Reference(reference) => {
+                    let variable = self.environment.variable(&reference)?;
+
+                    Ok(variable.clone())
+                }
+            }
+        } else {
+            Err(KsError::runtime("No variable!"))
+        }
+    }
+
+    fn add(&self, left: &Value, right: &Value) -> KsResult<Value> {
+        match (left, right) {
+            (Value::Integer(left), Value::Integer(right)) => 
+                Ok(Value::Integer(*left + *right)),
+            
+            (Value::Integer(left), Value::Float(right)) => 
+                Ok(Value::Float(*left as f64 + *right)),
+            
+            (Value::Float(left), Value::Integer(right)) => 
+                Ok(Value::Float(*left + *right as f64)),
+            
+            (Value::String(left), Value::String(right)) => {
+                let mut left = left.clone();
+                left.push_str(&right);
+
+                Ok(Value::String(left))
+            },
+            
+            _ => Err(KsError::runtime("Arithmetic error!"))
+        }
+    }
+
+    fn minus(&self, left: &Value, right: &Value) -> KsResult<Value> {
+        match (left, right) {
+            (Value::Integer(left), Value::Integer(right)) => 
+                Ok(Value::Integer(*left - *right)),
+            
+            (Value::Integer(left), Value::Float(right)) => 
+                Ok(Value::Float(*left as f64 - *right)),
+            
+            (Value::Float(left), Value::Integer(right)) => 
+                Ok(Value::Float(*left - *right as f64)),
+            
+            _ => Err(KsError::runtime("Arithmetic error!"))
+        }
+    }
+
+    fn multiply(&self, left: &Value, right: &Value) -> KsResult<Value> {
+        match (left, right) {
+            (Value::Integer(left), Value::Integer(right)) => 
+                Ok(Value::Integer(*left * *right)),
+            
+            (Value::Integer(left), Value::Float(right)) => 
+                Ok(Value::Float(*left as f64 * *right)),
+            
+            (Value::Float(left), Value::Integer(right)) => 
+                Ok(Value::Float(*left * *right as f64)),
+            
+            _ => Err(KsError::runtime("Arithmetic error!"))
+        }
+    }
+
+    fn divide(&self, left: &Value, right: &Value) -> KsResult<Value> {
+        match (left, right) {
+            (Value::Integer(left), Value::Integer(right)) => {
+                if *right == 0 {
+                    return Err(KsError::runtime("Division zero Error"));
+                }
+
+                Ok(Value::Integer(*left / *right))
+            },
+
+            (Value::Integer(left), Value::Float(right)) => {
+                if *right == 0.0 {
+                    return Err(KsError::runtime("Division zero Error"));
+                }
+
+                Ok(Value::Float(*left as f64 / *right))
+            }
+
+            (Value::Float(left), Value::Integer(right)) => {
+                if *right == 0 {
+                    return Err(KsError::runtime("Division zero Error"));
+                }
+
+                Ok(Value::Float(*left * *right as f64))
+            }
+
+            _ => Err(KsError::runtime("Arithmetic error!"))
+        }
+    }
+
     fn interpret(&mut self) -> KsResult<()> {
         let instruction = {
             let call_stack = self.call_stack_last();
@@ -135,6 +264,67 @@ impl VirtualMachine {
                 } else {
                     return Err(KsError::runtime(&format!("Cannot find variable {}!", name)));
                 }
+
+                self.step();
+            },
+
+            Some(Instruction::Add) => {
+                let right = self.extract_variable()?;
+                let left = self.extract_variable()?;
+
+
+            },
+
+            Some(Instruction::Minus) => {
+
+            },
+
+            Some(Instruction::Mul) => {
+
+            },
+
+            Some(Instruction::Div) => {
+
+            },
+
+            Some(Instruction::Eq) => {
+
+            },
+
+            Some(Instruction::GreaterEq) => {
+
+            },
+
+            Some(Instruction::Greater) => {
+
+            },
+
+            Some(Instruction::LessEq) => {
+
+            },
+
+            Some(Instruction::Less) => {
+
+            },
+
+            Some(Instruction::NotEq) => {
+
+            },
+
+            Some(Instruction::And) => {
+
+            },
+
+            Some(Instruction::Or) => {
+
+            },
+
+            Some(Instruction::Not) => {
+
+            },
+
+            Some(Instruction::Call { args }) => {
+                
             },
 
             Some(Instruction::Store(name)) => {

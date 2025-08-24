@@ -1,6 +1,6 @@
 use super::value::Value;
 
-
+#[derive(Debug, Clone)]
 pub struct Variable {
     value: Value,
     reference: Option<u64>,

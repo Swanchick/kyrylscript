@@ -366,11 +366,11 @@ impl Compiler {
             Expression::Identifier(name) => instructions.push(Instruction::LoadVar(name.clone())),
             
             Expression::FunctionCall(name, arguments) => {
-                instructions.push(Instruction::LoadVar(name.clone()));
                 for argument in arguments {
                     instructions = self.compile_expression(argument, instructions);
                 }
 
+                instructions.push(Instruction::LoadVar(name.clone()));
                 instructions.push(Instruction::Call { args: arguments.len() });
             },
             

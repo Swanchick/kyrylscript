@@ -1,3 +1,4 @@
+#[derive(Debug, Clone)]
 pub enum Value {
     Null,
     Integer(i32),
@@ -7,5 +8,5 @@ pub enum Value {
     List(Vec<u64>),
     Tuple(Vec<u64>),
     Function(String),
-    RustFunction(String)
+    NativeFunction(String)
 }
