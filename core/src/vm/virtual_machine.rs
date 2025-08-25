@@ -12,6 +12,7 @@ use crate::global::utils::ks_result::KsResult;
 use crate::interpreter::enviroment;
 use crate::native_registry::native_registry::NativeRegistry;
 use crate::native_registry::native_types::NativeTypes;
+use crate::vm::variable;
 use crate::vm::variable_stack::{self, VariableStack};
 
 use super::call_stack::CallStack;
@@ -233,11 +234,113 @@ impl VirtualMachine {
                     return Err(KsError::runtime("Division zero Error"));
                 }
 
-                Ok(Value::Float(*left * *right as f64))
+                Ok(Value::Float(*left / *right as f64))
             }
 
             _ => Err(KsError::runtime("Arithmetic error!"))
         }
+    }
+
+    fn equal(&self, left: &Value, right: &Value) -> KsResult<Value> {
+        Ok(Value::Boolean(left == right))
+    }
+
+    fn not_equal(&self, left: &Value, right: &Value) -> KsResult<Value> {
+        Ok(Value::Boolean(left != right))
+    }
+
+    fn greater_equal(&self, left: &Value, right: &Value) -> KsResult<Value> {
+        match (left, right) {
+            (Value::Integer(left), Value::Integer(right)) => 
+                Ok(Value::Boolean(*left >= *right)),
+            
+            (Value::Integer(left), Value::Float(right)) => 
+                Ok(Value::Boolean(*left as f64 >= *right)),
+            
+            (Value::Float(left), Value::Integer(right)) => 
+                Ok(Value::Boolean(*left >= *right as f64)),
+            
+            _ => Err(KsError::runtime("Logic error!"))
+        }
+    }
+
+    fn greater(&self, left: &Value, right: &Value) -> KsResult<Value> {
+        match (left, right) {
+            (Value::Integer(left), Value::Integer(right)) => 
+                Ok(Value::Boolean(*left > *right)),
+            
+            (Value::Integer(left), Value::Float(right)) => 
+                Ok(Value::Boolean(*left as f64 > *right)),
+            
+            (Value::Float(left), Value::Integer(right)) => 
+                Ok(Value::Boolean(*left > *right as f64)),
+            
+            _ => Err(KsError::runtime("Logic error!"))
+        }
+    }
+
+    fn less_equal(&self, left: &Value, right: &Value) -> KsResult<Value> {
+        match (left, right) {
+            (Value::Integer(left), Value::Integer(right)) => 
+                Ok(Value::Boolean(*left <= *right)),
+            
+            (Value::Integer(left), Value::Float(right)) => 
+                Ok(Value::Boolean(*left as f64 <= *right)),
+            
+            (Value::Float(left), Value::Integer(right)) => 
+                Ok(Value::Boolean(*left <= *right as f64)),
+            
+            _ => Err(KsError::runtime("Logic error!"))
+        }
+    }
+
+    fn less(&self, left: &Value, right: &Value) -> KsResult<Value> {
+        match (left, right) {
+            (Value::Integer(left), Value::Integer(right)) => 
+                Ok(Value::Boolean(*left < *right)),
+            
+            (Value::Integer(left), Value::Float(right)) => 
+                Ok(Value::Boolean((*left as f64) < *right)),
+            
+            (Value::Float(left), Value::Integer(right)) => 
+                Ok(Value::Boolean(*left < *right as f64)),
+            
+            _ => Err(KsError::runtime("Logic error!"))
+        }
+    }
+
+    fn not(&self, value: &Value) -> KsResult<Value> {
+        if let Value::Boolean(boolean) = value {
+            Ok(Value::Boolean(!boolean))
+        } else {
+            Err(KsError::runtime("Logic error!"))
+        }
+    }
+
+    fn and(&self, left: &Value, right: &Value) -> KsResult<Value> {
+        match (left, right) {
+            (Value::Boolean(left), Value::Boolean(right)) => 
+                Ok(Value::Boolean(*left && *right)),
+            
+            _ => Err(KsError::runtime("Logic error!"))
+        }
+    }
+
+    fn or(&self, left: &Value, right: &Value) -> KsResult<Value> {
+        match (left, right) {
+            (Value::Boolean(left), Value::Boolean(right)) => 
+                Ok(Value::Boolean(*left || *right)),
+            
+            _ => Err(KsError::runtime("Logic error!"))
+        }
+    }
+
+    fn clone(&self, reference: u64) -> KsResult<Variable> {
+        let variable = self.environment.variable(&reference)?;
+        let mut variable = variable.clone();
+        variable.clear();
+        
+        Ok(variable)
     }
 
     fn interpret(&mut self) -> KsResult<()> {
@@ -272,7 +375,7 @@ impl VirtualMachine {
                 let right = self.extract_variable()?;
                 let left = self.extract_variable()?;
 
-
+                
             },
 
             Some(Instruction::Minus) => {

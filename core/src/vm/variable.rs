@@ -43,4 +43,8 @@ impl Variable {
             false
         }
     }
+
+    pub fn clear(&mut self) {
+        self.reference = None;
+    }
 }
