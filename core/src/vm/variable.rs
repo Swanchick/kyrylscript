@@ -4,27 +4,31 @@ use super::value::Value;
 pub struct Variable {
     value: Value,
     reference: Option<u64>,
+    depth: usize,
 } 
 
 impl Variable {
     pub fn new(value: Value, reference: u64) -> Variable {
         Variable {
             value,
-            reference: Some(reference)
+            reference: Some(reference),
+            depth: 0
         }
     }
 
-    pub fn empty(value: Value ) -> Variable {
+    pub fn empty(value: Value, depth: usize) -> Variable {
         Variable {
             value,
-            reference: None
+            reference: None,
+            depth: 0
         }
     }
 
-    pub fn null() -> Variable {
+    pub fn null(depth: usize) -> Variable {
         Variable { 
             value: Value::Null, 
-            reference: None
+            reference: None,
+            depth: 0
         }
     }
 
@@ -34,6 +38,10 @@ impl Variable {
 
     pub fn reference(&self) -> &Option<u64> {
         &self.reference
+    }
+
+    pub fn depth(&self) -> &usize {
+        &self.depth()
     }
 
     pub fn owned(&self) -> bool {

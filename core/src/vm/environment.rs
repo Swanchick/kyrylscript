@@ -1,19 +1,18 @@
 use std::collections::HashMap;
 
-use crate::global::utils::{
-    ks_error::KsError, 
-    ks_result::KsResult
-};
+use crate::{global::utils::{ks_error::KsError, ks_result::KsResult}, vm::variable_stack::VariableStack};
 
 use super::variable::Variable;
 
 type Scope = HashMap<String, u64>;
 type ScopeReference = HashMap<u64, Variable>;
+type ScopeTemporary = Vec<Variable>;
 
 pub struct Environment {
     current_reference: u64,
     variables: Vec<Scope>,
-    references: Vec<ScopeReference>
+    references: Vec<ScopeReference>,
+    temporary: Vec<ScopeTemporary>
 }
 
 impl Environment {
@@ -21,7 +20,8 @@ impl Environment {
         Environment { 
             current_reference: 0,
             variables: Vec::new(), 
-            references: Vec::new()
+            references: Vec::new(),
+            temporary: Vec::new()
         }
     }
 
@@ -39,6 +39,10 @@ impl Environment {
 
     fn current_scope_reference_mut(&mut self) -> Option<&mut ScopeReference> {
         self.references.last_mut()
+    }
+
+    fn current_scope_temporary(&mut self) -> Option<&mut ScopeTemporary> {
+        self.temporary.last_mut()
     }
 
     pub fn find_reference(&self, name: &str) -> Option<u64> {
@@ -117,5 +121,41 @@ impl Environment {
                 *reference
             );
         }
+    }
+
+    pub fn extract_variable(&mut self, stack: VariableStack) -> KsResult<&mut Variable> {
+        match stack {
+            VariableStack::Variable(variable) => {
+                let temporary = self.current_scope_temporary();
+                if let Some(temporary) = temporary {
+                    temporary.push(variable);
+    
+                    if let Some(variable) = temporary.last_mut() {
+                        Ok(variable)
+                    } else {
+                        Err(KsError::runtime("Cannot find temporary value"))
+                    }
+                } else {
+                    Err(KsError::runtime("No scope"))
+                }
+            },
+            VariableStack::Reference(reference) => self.variable_mut(&reference)
+        }
+    }
+
+    pub fn depth(&self) -> usize {
+        self.references.len()
+    }
+
+
+    pub fn enter_scope(&mut self) {
+        self.variables.push(HashMap::new());
+        self.references.push(HashMap::new());
+
+
+    }
+
+    pub fn exit_scope(&mut self) -> KsResult<()> {
+        Ok(())
     }
 }

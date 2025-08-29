@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::env::var;
 
 use crate::compiler::constant::Constant;
 use crate::compiler::instruction::Instruction;
@@ -9,10 +8,8 @@ use crate::global::constants::{
 };
 use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
-use crate::interpreter::enviroment;
 use crate::native_registry::native_registry::NativeRegistry;
 use crate::native_registry::native_types::NativeTypes;
-use crate::vm::variable;
 use crate::vm::variable_stack::{self, VariableStack};
 
 use super::call_stack::CallStack;
@@ -50,6 +47,10 @@ impl VirtualMachine {
         }
 
         Ok(())
+    }
+
+    fn depth(&self) -> usize {
+        self.environment.depth()
     }
 
     fn exit_function(&mut self) {
@@ -90,7 +91,7 @@ impl VirtualMachine {
             Constant::Null => Value::Null
         };
 
-        Variable::empty(value)
+        Variable::empty(value, self.depth())
     }
 
     fn define_variable(&mut self, name: &str) -> KsResult<()> {
@@ -107,55 +108,71 @@ impl VirtualMachine {
 
             _ => self.environment.define_variable(
                 name, 
-                Variable::null()
+                Variable::null(self.depth())
             )
         }
 
         Ok(())
     }
 
-    fn call_native_function(&mut self, args: Vec<&mut Variable>) {
-
-    }
-
-    fn call_function(&mut self, name: &str, args: Vec<&VariableStack>) -> KsResult<Variable> {
+    fn call_native_function(&mut self, name: &str, args: Vec<&mut Variable>) {
         todo!()
     }
 
-
-    fn extract_function(&mut self, args: &usize) -> KsResult<Variable> {
-        let function_variable = self.variable_stack.pop();
-        
-        if let Some(VariableStack::Reference(reference)) = function_variable {
-            let value = {
-                let variable = self.environment.variable(&reference)?;
-                variable.value()
-            };
-
-            let mut name = String::new(); 
-
-            Ok(Variable::null())
-        } else {
-            Ok(Variable::null())
-        }
+    pub fn call_function(&mut self, name: &str, args: Vec<VariableStack>) -> KsResult<VariableStack> {
+        todo!()
     }
 
-    fn extract_variable(&mut self) -> KsResult<Variable> {
-        let last_stack = self.variable_stack.pop();
-        if let Some(last_stack) = last_stack {
-            match last_stack {
-                VariableStack::Variable(variable) => {
-                    Ok(variable)
-                },
+    fn extract_arguments(&mut self, args_size: i32) -> Vec<VariableStack> {
+        let mut args: Vec<VariableStack> = Vec::new();
 
-                VariableStack::Reference(reference) => {
-                    let variable = self.environment.variable(&reference)?;
-
-                    Ok(variable.clone())
-                }
+        for _ in 0..args_size {
+            let last = self.variable_stack.pop();
+            if let Some(last) = last {
+                args.push(last);
             }
-        } else {
-            Err(KsError::runtime("No variable!"))
+        }
+
+        args
+    }
+
+    fn extract_function(&mut self, args: usize) -> KsResult<()> {
+        let stack = self.variable_stack.pop();
+        if let Some(VariableStack::Reference(reference)) = stack {
+            let function = {
+                let function = self.environment.variable(&reference)?;
+                function.clone()
+            };
+
+            let args = self.extract_arguments(args as i32);
+
+            match function.value() {
+                Value::Function(name) => {
+                    
+                },
+                Value::NativeFunction(name) => {
+                    // self.call_native_function(name, args);
+                },
+                _ => return Err(KsError::runtime("It's not a function!"))
+            }
+        }
+
+        Ok(())
+    }
+
+    fn extract_variable_from_stack(&mut self) -> KsResult<Variable> {
+        let last_stack = self.variable_stack.pop();
+        
+        match last_stack {
+            Some(VariableStack::Variable(variable)) => {
+                Ok(variable)
+            },
+            Some(VariableStack::Reference(reference)) => {
+                let variable = self.environment.variable(&reference)?;
+
+                Ok(variable.clone())
+            },
+            _ => Err(KsError::runtime("No variable!"))
         }
     }
 
@@ -343,6 +360,11 @@ impl VirtualMachine {
         Ok(variable)
     }
 
+    fn value_to_variable_stack(&mut self, value: Value) {
+        let variable = Variable::empty(value, self.depth());
+        self.variable_stack.push(VariableStack::Variable(variable));
+    }
+
     fn interpret(&mut self) -> KsResult<()> {
         let instruction = {
             let call_stack = self.call_stack_last();
@@ -372,58 +394,106 @@ impl VirtualMachine {
             },
 
             Some(Instruction::Add) => {
-                let right = self.extract_variable()?;
-                let left = self.extract_variable()?;
-
+                let right = self.extract_variable_from_stack()?;
+                let left = self.extract_variable_from_stack()?;
                 
+                let value = self.add(left.value(), right.value())?;
+                self.value_to_variable_stack(value);
             },
 
             Some(Instruction::Minus) => {
-
+                let right = self.extract_variable_from_stack()?;
+                let left = self.extract_variable_from_stack()?;
+                
+                let value = self.minus(left.value(), right.value())?;
+                self.value_to_variable_stack(value);
             },
 
             Some(Instruction::Mul) => {
-
+                let right = self.extract_variable_from_stack()?;
+                let left = self.extract_variable_from_stack()?;
+                
+                let value = self.multiply(left.value(), right.value())?;
+                self.value_to_variable_stack(value);
             },
 
             Some(Instruction::Div) => {
-
+                let right = self.extract_variable_from_stack()?;
+                let left = self.extract_variable_from_stack()?;
+                
+                let value = self.divide(left.value(), right.value())?;
+                self.value_to_variable_stack(value);
             },
 
             Some(Instruction::Eq) => {
-
+                let right = self.extract_variable_from_stack()?;
+                let left = self.extract_variable_from_stack()?;
+                
+                let value = self.equal(left.value(), right.value())?;
+                self.value_to_variable_stack(value);
             },
 
             Some(Instruction::GreaterEq) => {
-
+                let right = self.extract_variable_from_stack()?;
+                let left = self.extract_variable_from_stack()?;
+                
+                let value = self.greater_equal(left.value(), right.value())?;
+                self.value_to_variable_stack(value);
             },
 
             Some(Instruction::Greater) => {
-
+                let right = self.extract_variable_from_stack()?;
+                let left = self.extract_variable_from_stack()?;
+                
+                let value = self.greater(left.value(), right.value())?;
+                self.value_to_variable_stack(value);
             },
 
             Some(Instruction::LessEq) => {
-
+                let right = self.extract_variable_from_stack()?;
+                let left = self.extract_variable_from_stack()?;
+                
+                let value = self.less_equal(left.value(), right.value())?;
+                self.value_to_variable_stack(value);
             },
 
             Some(Instruction::Less) => {
-
+                let right = self.extract_variable_from_stack()?;
+                let left = self.extract_variable_from_stack()?;
+                
+                let value = self.less(left.value(), right.value())?;
+                self.value_to_variable_stack(value);
             },
 
             Some(Instruction::NotEq) => {
-
+                let right = self.extract_variable_from_stack()?;
+                let left = self.extract_variable_from_stack()?;
+                
+                let value = self.not_equal(left.value(), right.value())?;
+                self.value_to_variable_stack(value);
             },
 
             Some(Instruction::And) => {
-
+                let right = self.extract_variable_from_stack()?;
+                let left = self.extract_variable_from_stack()?;
+                
+                let value = self.and(left.value(), right.value())?;
+                self.value_to_variable_stack(value);
             },
 
             Some(Instruction::Or) => {
-
+                let right = self.extract_variable_from_stack()?;
+                let left = self.extract_variable_from_stack()?;
+                
+                let value = self.or(left.value(), right.value())?;
+                self.value_to_variable_stack(value);
             },
 
             Some(Instruction::Not) => {
-
+                let variable = self.extract_variable_from_stack()?;
+                
+                let value = self.not(variable.value())?;
+                self.value_to_variable_stack(value);
             },
 
             Some(Instruction::Call { args }) => {
