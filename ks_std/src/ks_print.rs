@@ -7,9 +7,13 @@ use core::vm::value::Value;
 use core::native_registry::native_registry::NativeRegistry;
 
 pub fn ks_print(args: Vec<Variable>) -> KsResult<Variable> {
-    todo!()
+    print!("{:?}", args);
+
+    Ok(Variable::null(0))
 }
 
 pub fn ks_println(args: Vec<Variable>) -> KsResult<Variable> {    
-    todo!()
+    println!("{:?}", args);
+
+    Ok(Variable::null(0))
 }

@@ -1,5 +1,6 @@
 use crate::global::constants::Instructions;
 
+#[derive(Debug, Clone)]
 pub struct Function {
     instructions: Instructions,
     args: Vec<String>

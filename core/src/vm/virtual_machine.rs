@@ -447,6 +447,8 @@ impl VirtualMachine {
                 
                 let value = self.add(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
+
+                self.step();
             },
 
             Some(Instruction::Minus) => {
@@ -455,6 +457,8 @@ impl VirtualMachine {
                 
                 let value = self.minus(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
+
+                self.step();
             },
 
             Some(Instruction::Mul) => {
@@ -463,6 +467,8 @@ impl VirtualMachine {
                 
                 let value = self.multiply(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
+
+                self.step();
             },
 
             Some(Instruction::Div) => {
@@ -471,6 +477,8 @@ impl VirtualMachine {
                 
                 let value = self.divide(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
+
+                self.step();
             },
 
             Some(Instruction::Eq) => {
@@ -479,6 +487,8 @@ impl VirtualMachine {
                 
                 let value = self.equal(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
+
+                self.step();
             },
 
             Some(Instruction::GreaterEq) => {
@@ -487,6 +497,8 @@ impl VirtualMachine {
                 
                 let value = self.greater_equal(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
+
+                self.step();
             },
 
             Some(Instruction::Greater) => {
@@ -495,6 +507,8 @@ impl VirtualMachine {
                 
                 let value = self.greater(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
+
+                self.step();
             },
 
             Some(Instruction::LessEq) => {
@@ -503,6 +517,8 @@ impl VirtualMachine {
                 
                 let value = self.less_equal(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
+
+                self.step();
             },
 
             Some(Instruction::Less) => {
@@ -511,6 +527,8 @@ impl VirtualMachine {
                 
                 let value = self.less(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
+
+                self.step();
             },
 
             Some(Instruction::NotEq) => {
@@ -519,6 +537,8 @@ impl VirtualMachine {
                 
                 let value = self.not_equal(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
+
+                self.step();
             },
 
             Some(Instruction::And) => {
@@ -527,6 +547,8 @@ impl VirtualMachine {
                 
                 let value = self.and(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
+
+                self.step();
             },
 
             Some(Instruction::Or) => {
@@ -535,6 +557,8 @@ impl VirtualMachine {
                 
                 let value = self.or(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
+
+                self.step();
             },
 
             Some(Instruction::Not) => {
@@ -542,15 +566,21 @@ impl VirtualMachine {
                 
                 let value = self.not(variable.value())?;
                 self.value_to_variable_stack(value);
+
+                self.step();
             },
 
             Some(Instruction::Call { args }) => {
-                
+                self.extract_function(args.clone())?;
+
+                self.step();
             },
 
             Some(Instruction::Store(name)) => {
                 let name = name.clone();
                 self.define_variable(&name)?;
+
+                self.step();
             },
 
             _ => self.exit_function()
@@ -559,11 +589,28 @@ impl VirtualMachine {
         Ok(())
     }
 
+    fn load_native(&mut self) {
+        let native = NativeRegistry::get();
+        let native = native.borrow();
+
+        for (name, native_type) in native.get_natives() {
+            if let NativeTypes::NativeFunction(_) = native_type {
+                self.environment.define_variable(name, Variable::empty(Value::NativeFunction(name.clone()), self.depth()));
+            }
+        }
+    }
+
     pub fn start(&mut self) -> KsResult<()> {
         self.enter_function(MAIN_FUNCTION)?;
 
+        self.load_native();
+
         while self.call_stack.len() != 0 {
             self.interpret()?;
+
+            println!("===== Debug");
+
+            println!("{:?}", self.variable_stack);
         }
 
 

@@ -1,6 +1,6 @@
 use std::env::args;
 
-use core::{compiler::compiler::Compiler, kyryl_script::KyrylScript, lexer::lexer::Lexer, parser::parser::Parser};
+use core::{compiler::compiler::Compiler, kyryl_script::KyrylScript, lexer::lexer::Lexer, parser::parser::Parser, vm::virtual_machine::{self, VirtualMachine}};
 use ks_std::ks_register_std;
 use core::global::ks_path::KsPath;
 
@@ -27,8 +27,15 @@ fn main() {
 
         let mut compiler = Compiler::new();
         compiler.start_compile(&statements);
-
         compiler.display();
+
+        println!("============================");
+
+        let mut virtual_machine = VirtualMachine::from(compiler.functions());
+        let result = virtual_machine.start();
+        if let Err(result) = result {
+            result.display();
+        }
 
         // let mut ks = KyrylScript::new();
         // let ks_result = ks.run_from_file(path);

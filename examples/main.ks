@@ -1,6 +1,5 @@
-function sum(a: int, b: int): int {    
-    return a + b;
-}
-
-sum(32, 12);
+let a = 10;
+let b = 20;
+let c = a + b;
+println(c);
 
