@@ -3,4 +3,5 @@ pub enum KsErrorType {
     Parse,
     Type,
     RunTime,
+    Native
 }

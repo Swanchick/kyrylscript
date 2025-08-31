@@ -159,7 +159,7 @@ impl VirtualMachine {
         }
 
         if let Some(NativeTypes::NativeFunction(native_function)) = native_function {
-            (native_function.function)(args);
+            (native_function.function)(args)?;
         }
         
 
