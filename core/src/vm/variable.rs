@@ -40,8 +40,8 @@ impl Variable {
         &self.reference
     }
 
-    pub fn depth(&self) -> &usize {
-        &self.depth()
+    pub fn depth(&self) -> usize {
+        self.depth
     }
 
     pub fn owned(&self) -> bool {

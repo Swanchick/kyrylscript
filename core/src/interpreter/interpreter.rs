@@ -227,7 +227,8 @@ impl Interpreter {
         let native = registry.get_native(name);
 
         if let Some(NativeTypes::NativeFunction(native_function)) = native {
-            (native_function.function)(args.clone())
+            // (native_function.function)(args.clone())
+            todo!()
         } else {
             Err(io::Error::new(io::ErrorKind::InvalidData, format!("Variable {} is not a function!", name)))
         }

@@ -43,6 +43,10 @@ impl Compiler {
         }
     }
 
+    pub fn functions(&self) -> &HashMap<String, Function> {
+        &self.functions
+    }
+
     pub fn get_instructions(&self, name: &str) -> Option<&Function>{
         self.functions.get(name)
     }

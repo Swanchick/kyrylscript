@@ -29,4 +29,12 @@ impl CallStack {
     pub fn peek_mut(&mut self) -> Option<&mut Instruction> {
         self.instructions.get_mut(self.step)
     } 
+
+    pub fn enter_scope(&mut self) {
+        self.scopes += 1;
+    }
+
+    pub fn exit_scope(&mut self) {
+        self.scopes -= 1;
+    }
 }

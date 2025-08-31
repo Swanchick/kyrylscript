@@ -1,6 +1,6 @@
-mod virtual_machine;
-mod variable;
-mod value;
-mod environment;
-mod call_stack;
-mod variable_stack;
+pub mod virtual_machine;
+pub mod variable;
+pub mod value;
+pub mod environment;
+pub mod call_stack;
+pub mod variable_stack;

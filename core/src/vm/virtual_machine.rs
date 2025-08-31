@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use crate::compiler::constant::Constant;
+use crate::compiler::function::Function;
 use crate::compiler::instruction::Instruction;
 use crate::global::constants::{
     MAIN_FUNCTION, 
@@ -10,7 +11,7 @@ use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
 use crate::native_registry::native_registry::NativeRegistry;
 use crate::native_registry::native_types::NativeTypes;
-use crate::vm::variable_stack::{self, VariableStack};
+use crate::vm::variable_stack::VariableStack;
 
 use super::call_stack::CallStack;
 use super::environment::Environment;
@@ -21,11 +22,11 @@ pub struct VirtualMachine {
     environment: Environment,
     variable_stack: Vec<VariableStack>,
     call_stack: Vec<CallStack>,
-    compilation: HashMap<String, Vec<Instruction>>
+    compilation: HashMap<String, Function>
 }
 
 impl VirtualMachine {
-    pub fn from(compilation: HashMap<String, Vec<Instruction>>) -> VirtualMachine {
+    pub fn from(compilation: HashMap<String, Function>) -> VirtualMachine {
         VirtualMachine { 
             environment: Environment::new(),
             variable_stack: Vec::new(),
@@ -34,27 +35,47 @@ impl VirtualMachine {
         }
     }
 
-    fn enter_function(&mut self, function: &str) -> KsResult<()> {
+    fn enter_function(&mut self, name: &str) -> KsResult<Vec<String>> {
         if self.call_stack.len() >= MAX_DEPTH_RECURSION {
             return Err(KsError::runtime("Reached the maximum recursion depth!"));
         }
         
-        let instructions = self.compilation.get(function);
-        if let Some(instructions) = instructions {
-            let call_stack = CallStack::new(function, instructions.to_vec());
-
+        let function = self.compilation.get(name);
+        if let Some(function) = function {
+            let instructions = function.get_instructions();
+            let call_stack = CallStack::new(name, instructions.to_vec());
             self.call_stack.push(call_stack);
-        }
+            self.environment.enter();
 
-        Ok(())
+            Ok(function.get_args().to_vec())
+        } else {
+            Err(KsError::runtime(&format!("Cannot find function {}", name)))
+        }
     }
 
-    fn depth(&self) -> usize {
-        self.environment.depth()
+    fn enter_scope(&mut self) {
+        self.environment.enter();
+
+        if let Some(call_stack) = self.call_stack_last_mut() {
+            call_stack.enter_scope();
+        }
+    }
+
+    fn exit_scope(&mut self) {
+        self.environment.exit();
+
+        if let Some(call_stack) = self.call_stack_last_mut() {
+            call_stack.exit_scope();
+        }
     }
 
     fn exit_function(&mut self) {
         self.call_stack.pop();
+        self.environment.exit();
+    }
+
+    fn depth(&self) -> usize {
+        self.environment.depth()
     }
 
     fn call_stack_last(&self) -> Option<&CallStack> {
@@ -115,25 +136,55 @@ impl VirtualMachine {
         Ok(())
     }
 
-    fn call_native_function(&mut self, name: &str, args: Vec<&mut Variable>) {
-        todo!()
-    }
+    fn call_native_function(&mut self, name: &str, args_size: usize) -> KsResult<()> {
+        let native = NativeRegistry::get();
+        let native = native.borrow();
+        let native_function = native.get_native(name);
 
-    pub fn call_function(&mut self, name: &str, args: Vec<VariableStack>) -> KsResult<VariableStack> {
-        todo!()
-    }
+        let mut args: Vec<Variable> = Vec::new();
+        for i in 1..args_size {
+            let arg = self.variable_stack.pop();
+            
+            match arg {
+                Some(VariableStack::Variable(variable)) => 
+                    args.push(variable),
+                Some(VariableStack::Reference(reference)) => {
+                    let variable = self.environment.variable(&reference)?;
+                    let variable = variable.clone();
 
-    fn extract_arguments(&mut self, args_size: i32) -> Vec<VariableStack> {
-        let mut args: Vec<VariableStack> = Vec::new();
-
-        for _ in 0..args_size {
-            let last = self.variable_stack.pop();
-            if let Some(last) = last {
-                args.push(last);
+                    args.push(variable);
+                },
+                _ => unreachable!()
             }
         }
 
-        args
+        if let Some(NativeTypes::NativeFunction(native_function)) = native_function {
+            (native_function.function)(args);
+        }
+        
+
+        Ok(())
+    }
+
+    pub fn call_function(&mut self, name: &str, args: usize) -> KsResult<()> {
+        let arg_names = self.enter_function(name)?;
+
+        for i in 1..args {
+            let arg = self.variable_stack.pop();
+            let arg_name = arg_names.get(i as usize);
+            if let (Some(arg), Some(arg_name)) = (arg, arg_name) {
+                match arg {
+                    VariableStack::Variable(variable) => {
+                        self.environment.define_variable(&arg_name, variable);
+                    },
+                    VariableStack::Reference(reference) => {
+                        self.environment.define_reference(name, &reference);
+                    }
+                }
+            }
+        }
+
+        Ok(())
     }
 
     fn extract_function(&mut self, args: usize) -> KsResult<()> {
@@ -144,16 +195,13 @@ impl VirtualMachine {
                 function.clone()
             };
 
-            let args = self.extract_arguments(args as i32);
-
             match function.value() {
-                Value::Function(name) => {
-                    
-                },
-                Value::NativeFunction(name) => {
-                    // self.call_native_function(name, args);
-                },
-                _ => return Err(KsError::runtime("It's not a function!"))
+                Value::Function(name) => 
+                    self.call_function(name, args)?,
+                Value::NativeFunction(name) =>
+                    self.call_native_function(name, args)?,
+                _ => 
+                    return Err(KsError::runtime("It's not a function!"))
             }
         }
 
