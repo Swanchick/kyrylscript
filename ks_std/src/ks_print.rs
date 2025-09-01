@@ -14,6 +14,7 @@ pub fn ks_print(args: Vec<Variable>) -> KsResult<Variable> {
 
 pub fn ks_println(args: Vec<Variable>) -> KsResult<Variable> {    
     println!("{:?}", args);
+    println!("Hello World");
 
     Ok(Variable::null(0))
 }

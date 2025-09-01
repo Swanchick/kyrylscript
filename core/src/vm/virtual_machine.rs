@@ -1,8 +1,9 @@
 use std::collections::HashMap;
+use std::env::var;
 
 use crate::compiler::constant::Constant;
 use crate::compiler::function::Function;
-use crate::compiler::instruction::Instruction;
+use crate::compiler::instruction::{self, Instruction};
 use crate::global::constants::{
     MAIN_FUNCTION, 
     MAX_DEPTH_RECURSION
@@ -142,20 +143,9 @@ impl VirtualMachine {
         let native_function = native.get_native(name);
 
         let mut args: Vec<Variable> = Vec::new();
-        for i in 1..args_size {
-            let arg = self.variable_stack.pop();
-            
-            match arg {
-                Some(VariableStack::Variable(variable)) => 
-                    args.push(variable),
-                Some(VariableStack::Reference(reference)) => {
-                    let variable = self.environment.variable(&reference)?;
-                    let variable = variable.clone();
-
-                    args.push(variable);
-                },
-                _ => unreachable!()
-            }
+        for _ in 1..(args_size + 1) {
+            let arg = self.extract_variable_from_stack()?;
+            args.push(arg);
         }
 
         if let Some(NativeTypes::NativeFunction(native_function)) = native_function {
@@ -189,6 +179,7 @@ impl VirtualMachine {
 
     fn extract_function(&mut self, args: usize) -> KsResult<()> {
         let stack = self.variable_stack.pop();
+
         if let Some(VariableStack::Reference(reference)) = stack {
             let function = {
                 let function = self.environment.variable(&reference)?;
@@ -196,10 +187,13 @@ impl VirtualMachine {
             };
 
             match function.value() {
-                Value::Function(name) => 
-                    self.call_function(name, args)?,
-                Value::NativeFunction(name) =>
-                    self.call_native_function(name, args)?,
+                Value::Function(name) => {
+                    self.call_function(name, args)?;
+
+                }
+                Value::NativeFunction(name) => {
+                    self.call_native_function(name, args)?;
+                }
                 _ => 
                     return Err(KsError::runtime("It's not a function!"))
             }
@@ -410,6 +404,7 @@ impl VirtualMachine {
 
     fn value_to_variable_stack(&mut self, value: Value) {
         let variable = Variable::empty(value, self.depth());
+
         self.variable_stack.push(VariableStack::Variable(variable));
     }
 
@@ -425,13 +420,14 @@ impl VirtualMachine {
 
         match instruction {
             Some(Instruction::LoadConst(constant)) => {
-                let variable = self.constant_to_variable(constant);
+                let variable = self.constant_to_variable(&constant);
                 self.variable_stack.push(VariableStack::Variable(variable));
                 self.step();
             },
 
-            Some(Instruction::LoadVar(name)) => {
-                let reference = self.environment.find_reference(name);
+            Some(Instruction::LoadVar(name)) => {                
+                let reference = self.environment.find_reference(&name);
+                
                 if let Some(reference) = reference {
                     self.variable_stack.push(VariableStack::Reference(reference));
                 } else {
@@ -444,7 +440,7 @@ impl VirtualMachine {
             Some(Instruction::Add) => {
                 let right = self.extract_variable_from_stack()?;
                 let left = self.extract_variable_from_stack()?;
-                
+
                 let value = self.add(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
 
@@ -570,7 +566,7 @@ impl VirtualMachine {
                 self.step();
             },
 
-            Some(Instruction::Call { args }) => {
+            Some(Instruction::Call { args }) => {    
                 self.extract_function(args.clone())?;
 
                 self.step();
@@ -607,10 +603,6 @@ impl VirtualMachine {
 
         while self.call_stack.len() != 0 {
             self.interpret()?;
-
-            println!("===== Debug");
-
-            println!("{:?}", self.variable_stack);
         }
 
 

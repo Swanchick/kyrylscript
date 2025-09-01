@@ -52,20 +52,14 @@ impl Environment {
 
     pub fn variable(&self, reference: &u64) -> KsResult<&Variable> {
         let current_scope = self.current_scope_reference();
-
-        if let Some(current_scope) = current_scope {
-            if let Some(variable) = current_scope.get(reference) {
-                Ok(variable)
-            } else {
-                Err(KsError::runtime(
-                    &format!("Cannot find variable with reference {}", reference)
-                ))
+        
+        for scope in self.current_scope_reference().iter().rev() {
+            if let Some(variable) = scope.get(reference) {
+                return Ok(variable)
             }
-        } else {
-            Err(KsError::runtime(
-                "Not in the scope!"
-            ))
-        }
+        } 
+
+        Err(KsError::runtime(&format!("Cannot find variable with reference {}", reference)))
     }
 
     pub fn variable_mut(&mut self, reference: &u64) -> KsResult<&mut Variable> {
