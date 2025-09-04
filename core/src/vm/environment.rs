@@ -1,7 +1,10 @@
 use std::collections::HashMap;
+use std::thread::current;
 
 use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
+use crate::vm::variable;
+use crate::vm::variable_stack::VariableStack;
 
 use super::variable::Variable;
 
@@ -104,7 +107,7 @@ impl Environment {
         }
     }
 
-    pub fn define_reference(&mut self, name: &str, reference: &u64) {
+    pub fn define_name_reference(&mut self, name: &str, reference: &u64) {
         let current_scope = self.current_scope_mut();
 
         if let Some(current_scope) = current_scope {
@@ -112,6 +115,25 @@ impl Environment {
                 name.to_string(), 
                 *reference
             );
+        }
+    }
+
+    fn define_reference(&mut self, variable: Variable) -> KsResult<&mut Variable> {
+        self.current_reference += 1;
+        let reference = self.current_reference - 1;
+        let scope_reference = self.current_scope_reference_mut();
+
+        if let Some(scope_reference) = scope_reference {
+            scope_reference.insert(reference, variable);
+
+            if let Some(variable) = scope_reference.get_mut(&(reference)) {
+                variable.set_reference(&reference);
+                Ok(variable)
+            } else {
+                Err(KsError::runtime("There was a problem allocating a variable!"))
+            }
+        } else {
+            Err(KsError::runtime("No reference scope!"))
         }
     }
 

@@ -126,7 +126,7 @@ impl VirtualMachine {
             },
 
             Some(VariableStack::Reference(reference)) => {
-                self.environment.define_reference(name, &reference);
+                self.environment.define_name_reference(name, &reference);
             },
 
             _ => self.environment.define_variable(
@@ -152,7 +152,6 @@ impl VirtualMachine {
         if let Some(NativeTypes::NativeFunction(native_function)) = native_function {
             (native_function.function)(args)?;
         }
-        
 
         Ok(())
     }
@@ -169,7 +168,7 @@ impl VirtualMachine {
                     self.environment.define_variable(&arg_name, variable);
                 }
                 Some(VariableStack::Reference(reference)) => 
-                    self.environment.define_reference(&arg_name, &reference),
+                    self.environment.define_name_reference(&arg_name, &reference),
                 _ => 
                     return Err(KsError::runtime("Cannot find argument")) 
             }
