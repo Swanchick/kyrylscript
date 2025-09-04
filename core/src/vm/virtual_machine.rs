@@ -1,9 +1,8 @@
 use std::collections::HashMap;
-use std::env::var;
 
 use crate::compiler::constant::Constant;
 use crate::compiler::function::Function;
-use crate::compiler::instruction::{self, Instruction};
+use crate::compiler::instruction::Instruction;
 use crate::global::constants::{
     MAIN_FUNCTION, 
     MAX_DEPTH_RECURSION
@@ -54,6 +53,13 @@ impl VirtualMachine {
         }
     }
 
+    fn exit_function(&mut self) {
+        self.call_stack.pop();
+        self.environment.exit();
+
+        self.step();
+    }
+
     fn enter_scope(&mut self) {
         self.environment.enter();
 
@@ -68,11 +74,6 @@ impl VirtualMachine {
         if let Some(call_stack) = self.call_stack_last_mut() {
             call_stack.exit_scope();
         }
-    }
-
-    fn exit_function(&mut self) {
-        self.call_stack.pop();
-        self.environment.exit();
     }
 
     fn depth(&self) -> usize {
@@ -143,7 +144,7 @@ impl VirtualMachine {
         let native_function = native.get_native(name);
 
         let mut args: Vec<Variable> = Vec::new();
-        for _ in 1..(args_size + 1) {
+        for _ in 0..args_size {
             let arg = self.extract_variable_from_stack()?;
             args.push(arg);
         }
@@ -156,21 +157,21 @@ impl VirtualMachine {
         Ok(())
     }
 
-    pub fn call_function(&mut self, name: &str, args: usize) -> KsResult<()> {
+    pub fn call_function(&mut self, name: &str) -> KsResult<()> {
         let arg_names = self.enter_function(name)?;
 
-        for i in 1..args {
-            let arg = self.variable_stack.pop();
-            let arg_name = arg_names.get(i as usize);
-            if let (Some(arg), Some(arg_name)) = (arg, arg_name) {
-                match arg {
-                    VariableStack::Variable(variable) => {
-                        self.environment.define_variable(&arg_name, variable);
-                    },
-                    VariableStack::Reference(reference) => {
-                        self.environment.define_reference(name, &reference);
-                    }
+        for arg_name in arg_names {
+            let arg_stack = self.variable_stack.pop();
+
+            match arg_stack {
+                Some(VariableStack::Variable(mut variable)) => {
+                    variable.set_depth(self.depth());
+                    self.environment.define_variable(&arg_name, variable);
                 }
+                Some(VariableStack::Reference(reference)) => 
+                    self.environment.define_reference(&arg_name, &reference),
+                _ => 
+                    return Err(KsError::runtime("Cannot find argument")) 
             }
         }
 
@@ -187,13 +188,12 @@ impl VirtualMachine {
             };
 
             match function.value() {
-                Value::Function(name) => {
-                    self.call_function(name, args)?;
-
-                }
+                Value::Function(name) => 
+                    self.call_function(name)?,
                 Value::NativeFunction(name) => {
                     self.call_native_function(name, args)?;
-                }
+                    self.step();
+                },
                 _ => 
                     return Err(KsError::runtime("It's not a function!"))
             }
@@ -394,12 +394,19 @@ impl VirtualMachine {
         }
     }
 
-    fn clone(&self, reference: u64) -> KsResult<Variable> {
-        let variable = self.environment.variable(&reference)?;
-        let mut variable = variable.clone();
-        variable.clear();
-        
-        Ok(variable)
+    fn clone(&self, stack: Option<VariableStack>) -> KsResult<Variable> {
+        match stack {
+            Some(VariableStack::Reference(reference)) => {
+                let variable = self.environment.variable(&reference)?;
+                let mut variable = variable.clone();
+                variable.set_depth(self.depth());
+                variable.clear();
+
+                Ok(variable)
+            },
+            Some(VariableStack::Variable(variable)) => Ok(variable),
+            _ => Err(KsError::runtime("No variable were provided!"))
+        }
     }
 
     fn value_to_variable_stack(&mut self, value: Value) {
@@ -417,6 +424,7 @@ impl VirtualMachine {
                 None
             }
         };
+        println!("{}: Instruction: {:?}", self.call_stack_last().unwrap().current_step(), &instruction);
 
         match instruction {
             Some(Instruction::LoadConst(constant)) => {
@@ -427,7 +435,7 @@ impl VirtualMachine {
 
             Some(Instruction::LoadVar(name)) => {                
                 let reference = self.environment.find_reference(&name);
-                
+
                 if let Some(reference) = reference {
                     self.variable_stack.push(VariableStack::Reference(reference));
                 } else {
@@ -566,10 +574,17 @@ impl VirtualMachine {
                 self.step();
             },
 
-            Some(Instruction::Call { args }) => {    
-                self.extract_function(args.clone())?;
+            Some(Instruction::Clone) => {
+                let variable = self.variable_stack.pop();
+
+                let variable = self.clone(variable)?;
+                self.variable_stack.push(VariableStack::Variable(variable));
 
                 self.step();
+            },
+
+            Some(Instruction::Call { args }) => {    
+                self.extract_function(args.clone())?;
             },
 
             Some(Instruction::Store(name)) => {

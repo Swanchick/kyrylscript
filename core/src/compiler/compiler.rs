@@ -523,7 +523,7 @@ impl Compiler {
                 instructions.push(Instruction::LoadConst(Constant::Integer(1)));
                 instructions.push(Instruction::Minus);
             },
-            Operator::Not => {
+            Operator::Clone => {
                 instructions.push(Instruction::Clone);
             },
             _ => unreachable!()

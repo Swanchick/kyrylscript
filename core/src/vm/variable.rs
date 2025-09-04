@@ -8,11 +8,11 @@ pub struct Variable {
 } 
 
 impl Variable {
-    pub fn new(value: Value, reference: u64) -> Variable {
+    pub fn new(value: Value, reference: u64, depth: usize) -> Variable {
         Variable {
             value,
             reference: Some(reference),
-            depth: 0
+            depth
         }
     }
 
@@ -20,7 +20,7 @@ impl Variable {
         Variable {
             value,
             reference: None,
-            depth: 0
+            depth
         }
     }
 
@@ -28,7 +28,7 @@ impl Variable {
         Variable { 
             value: Value::Null, 
             reference: None,
-            depth: 0
+            depth
         }
     }
 
@@ -39,9 +39,16 @@ impl Variable {
     pub fn reference(&self) -> &Option<u64> {
         &self.reference
     }
+    pub fn set_reference(&mut self, reference: &u64) {
+        self.reference = Some(*reference);
+    }
 
     pub fn depth(&self) -> usize {
         self.depth
+    }
+
+    pub fn set_depth(&mut self, depth: usize) {
+        self.depth = depth;
     }
 
     pub fn owned(&self) -> bool {

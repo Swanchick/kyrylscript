@@ -1,6 +1,7 @@
 use crate::global::constants::Instructions;
 use crate::compiler::instruction::Instruction;
 
+#[derive(Debug)]
 pub struct CallStack {
     name: String,
     instructions: Instructions,
@@ -16,6 +17,10 @@ impl CallStack {
             step: 0,
             scopes: 0 
         }
+    }
+
+    pub fn current_step(&self) -> usize {
+        self.step
     }
 
     pub fn step(&mut self) {

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use crate::{global::utils::{ks_error::KsError, ks_result::KsResult}, vm::variable_stack::VariableStack};
+use crate::global::utils::ks_error::KsError;
+use crate::global::utils::ks_result::KsResult;
 
 use super::variable::Variable;
 
@@ -20,6 +21,14 @@ impl Environment {
             variables: Vec::new(), 
             references: Vec::new(),
         }
+    }
+
+    pub fn variables(&self) -> &Vec<Scope> {
+        &self.variables
+    }
+
+    pub fn references(&self) -> &Vec<ScopeReference> {
+        &self.references
     }
 
     fn current_scope(&self) -> Option<&Scope> {
@@ -51,36 +60,32 @@ impl Environment {
     }
 
     pub fn variable(&self, reference: &u64) -> KsResult<&Variable> {
-        let current_scope = self.current_scope_reference();
-        
-        for scope in self.current_scope_reference().iter().rev() {
+        for scope in self.references.iter().rev() {
             if let Some(variable) = scope.get(reference) {
                 return Ok(variable)
             }
         } 
 
-        Err(KsError::runtime(&format!("Cannot find variable with reference {}", reference)))
+        Err(KsError::runtime(
+            &format!("Cannot find variable with reference {}", reference)
+        ))
     }
 
     pub fn variable_mut(&mut self, reference: &u64) -> KsResult<&mut Variable> {
-        let current_scope = self.current_scope_reference_mut();
-
-        if let Some(current_scope) = current_scope {
-            if let Some(variable) = current_scope.get_mut(reference) {
-                Ok(variable)
-            } else {
-                Err(KsError::runtime(
-                    &format!("Cannot find variable with reference {}", reference)
-                ))
+        let scopes = &mut self.references;
+        
+        for scope in scopes.iter_mut().rev() {
+            if let Some(variable) = scope.get_mut(reference) {
+                return Ok(variable)
             }
-        } else {
-            Err(KsError::runtime(
-                "Not in the scope!"
-            ))
-        }
+        } 
+
+        Err(KsError::runtime(
+            &format!("Cannot find variable with reference {}", reference)
+        ))
     }
 
-    pub fn define_variable(&mut self, name: &str, variable: Variable) {
+    pub fn define_variable(&mut self, name: &str, mut variable: Variable) {
         let current_reference = self.current_reference;
         let current_scope = self.current_scope_mut();
         
@@ -91,7 +96,7 @@ impl Environment {
             );
 
             if let Some(current_scope_reference) = self.current_scope_reference_mut() {
-                
+                variable.set_reference(&current_reference);
                 current_scope_reference.insert(current_reference, variable);
 
                 self.current_reference += 1;
