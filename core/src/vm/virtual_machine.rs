@@ -423,7 +423,6 @@ impl VirtualMachine {
                 None
             }
         };
-        println!("{}: Instruction: {:?}", self.call_stack_last().unwrap().current_step(), &instruction);
 
         match instruction {
             Some(Instruction::LoadConst(constant)) => {
