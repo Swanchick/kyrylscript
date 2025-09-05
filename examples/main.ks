@@ -1,6 +1,6 @@
 
 function sum(a: int, b: int) {
-    println(a! + b!);
+    println("Result", a! + b!);
 }
 
 let a = 10;

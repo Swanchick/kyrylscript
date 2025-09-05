@@ -149,6 +149,8 @@ impl VirtualMachine {
             args.push(arg);
         }
 
+        args.reverse();
+
         if let Some(NativeTypes::NativeFunction(native_function)) = native_function {
             (native_function.function)(args)?;
         }
