@@ -57,42 +57,52 @@ impl VirtualMachine {
         self.call_stack.pop();
         self.environment.exit();
 
-        self.step();
+        self.step()?;
     }
 
-    fn enter_scope(&mut self) {
+    fn enter_scope(&mut self) -> KsResult<()> {
         self.environment.enter();
 
-        if let Some(call_stack) = self.call_stack_last_mut() {
-            call_stack.enter_scope();
-        }
+        let call_stack = self.call_stack_last_mut()?;
+        call_stack.enter_scope();
+
+        Ok(())
     }
 
-    fn exit_scope(&mut self) {
+    fn exit_scope(&mut self) -> KsResult<()> {
         self.environment.exit();
 
-        if let Some(call_stack) = self.call_stack_last_mut() {
-            call_stack.exit_scope();
-        }
+        let call_stack = self.call_stack_last_mut()?;
+        call_stack.exit_scope();
+
+        Ok(())
     }
 
     fn depth(&self) -> usize {
         self.environment.depth()
     }
 
-    fn call_stack_last(&self) -> Option<&CallStack> {
-        self.call_stack.last()
-    }
-
-    fn call_stack_last_mut(&mut self) -> Option<&mut CallStack> {
-        self.call_stack.last_mut()
-    }
-
-    fn step(&mut self) {
-        let call_stack = self.call_stack_last_mut();
-        if let Some(call_stack) = call_stack {
-            call_stack.step();
+    fn call_stack_last(&self) -> KsResult<&CallStack> {
+        if let Some(call_stack) = self.call_stack.last() {
+            Ok(call_stack)
+        } else {
+            Err(KsError::runtime("There is no more callstacks!"))
         }
+    }
+
+    fn call_stack_last_mut(&mut self) -> KsResult<&mut CallStack> {
+        if let Some(call_stack) = self.call_stack.last_mut() {
+            Ok(call_stack)
+        } else {
+            Err(KsError::runtime("There is no more callstacks!"))
+        }
+    }
+
+    fn step(&mut self) -> KsResult<()> {
+        let call_stack = self.call_stack_last_mut()?;
+        call_stack.step();
+
+        Ok(())
     }
 
     fn constant_to_variable(&self, constant: &Constant) -> Variable {
@@ -193,7 +203,7 @@ impl VirtualMachine {
                     self.call_function(name)?,
                 Value::NativeFunction(name) => {
                     self.call_native_function(name, args)?;
-                    self.step();
+                    self.step()?;
                 },
                 _ => 
                     return Err(KsError::runtime("It's not a function!"))
@@ -418,19 +428,15 @@ impl VirtualMachine {
 
     fn interpret(&mut self) -> KsResult<()> {
         let instruction = {
-            let call_stack = self.call_stack_last();
-            if let Some(call_stack) = call_stack {
-                call_stack.peek()
-            } else {
-                None
-            }
+            let call_stack = self.call_stack_last()?;
+            call_stack.peek()
         };
 
         match instruction {
             Some(Instruction::LoadConst(constant)) => {
                 let variable = self.constant_to_variable(&constant);
                 self.variable_stack.push(VariableStack::Variable(variable));
-                self.step();
+                self.step()?;
             },
 
             Some(Instruction::LoadVar(name)) => {                
@@ -442,7 +448,7 @@ impl VirtualMachine {
                     return Err(KsError::runtime(&format!("Cannot find variable {}!", name)));
                 }
 
-                self.step();
+                self.step()?;
             },
 
             Some(Instruction::Add) => {
@@ -452,7 +458,7 @@ impl VirtualMachine {
                 let value = self.add(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
 
-                self.step();
+                self.step()?;
             },
 
             Some(Instruction::Minus) => {
@@ -462,7 +468,7 @@ impl VirtualMachine {
                 let value = self.minus(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
 
-                self.step();
+                self.step()?;
             },
 
             Some(Instruction::Mul) => {
@@ -472,7 +478,7 @@ impl VirtualMachine {
                 let value = self.multiply(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
 
-                self.step();
+                self.step()?;
             },
 
             Some(Instruction::Div) => {
@@ -482,7 +488,7 @@ impl VirtualMachine {
                 let value = self.divide(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
 
-                self.step();
+                self.step()?;
             },
 
             Some(Instruction::Eq) => {
@@ -492,7 +498,7 @@ impl VirtualMachine {
                 let value = self.equal(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
 
-                self.step();
+                self.step()?;
             },
 
             Some(Instruction::GreaterEq) => {
@@ -502,7 +508,7 @@ impl VirtualMachine {
                 let value = self.greater_equal(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
 
-                self.step();
+                self.step()?;
             },
 
             Some(Instruction::Greater) => {
@@ -512,17 +518,17 @@ impl VirtualMachine {
                 let value = self.greater(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
 
-                self.step();
+                self.step()?;
             },
 
             Some(Instruction::LessEq) => {
                 let right = self.extract_variable_from_stack()?;
                 let left = self.extract_variable_from_stack()?;
-                
+
                 let value = self.less_equal(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
 
-                self.step();
+                self.step()?;
             },
 
             Some(Instruction::Less) => {
@@ -531,8 +537,8 @@ impl VirtualMachine {
                 
                 let value = self.less(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
-
-                self.step();
+    
+                self.step()?;
             },
 
             Some(Instruction::NotEq) => {
@@ -542,7 +548,7 @@ impl VirtualMachine {
                 let value = self.not_equal(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
 
-                self.step();
+                self.step()?;
             },
 
             Some(Instruction::And) => {
@@ -552,7 +558,7 @@ impl VirtualMachine {
                 let value = self.and(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
 
-                self.step();
+                self.step()?;
             },
 
             Some(Instruction::Or) => {
@@ -562,7 +568,7 @@ impl VirtualMachine {
                 let value = self.or(left.value(), right.value())?;
                 self.value_to_variable_stack(value);
 
-                self.step();
+                self.step()?;
             },
 
             Some(Instruction::Not) => {
@@ -571,7 +577,7 @@ impl VirtualMachine {
                 let value = self.not(variable.value())?;
                 self.value_to_variable_stack(value);
 
-                self.step();
+                self.step()?;
             },
 
             Some(Instruction::Clone) => {
@@ -580,7 +586,7 @@ impl VirtualMachine {
                 let variable = self.clone(variable)?;
                 self.variable_stack.push(VariableStack::Variable(variable));
 
-                self.step();
+                self.step()?;
             },
 
             Some(Instruction::Call { args }) => {    
@@ -591,10 +597,22 @@ impl VirtualMachine {
                 let name = name.clone();
                 self.define_variable(&name)?;
 
-                self.step();
+                self.step()?;
             },
 
-            _ => self.exit_function()
+            Some(Instruction::Return) => {
+                self.exit_function();
+            },
+
+            Some(Instruction::End) => {
+                self.variable_stack.clear();
+                self.step()?;
+            },
+
+            _ => {
+                self.exit_function();
+                self.variable_stack.push(VariableStack::Variable(Variable::null(self.depth())));
+            }
         }
 
         Ok(())

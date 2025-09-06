@@ -1,5 +1,3 @@
-use std::io;
-
 use crate::global::utils::ks_result::KsResult;
 use crate::vm::variable::Variable;
 use crate::global::data_type::DataType;
