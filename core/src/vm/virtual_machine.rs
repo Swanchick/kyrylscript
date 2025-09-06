@@ -509,6 +509,41 @@ impl VirtualMachine {
         Ok(references)
     }
 
+    fn list_len(&mut self) -> KsResult<()> {
+        let stack = self.variable_stack.pop();
+
+        match stack {
+            Some(VariableStack::Variable(variable)) => {
+                if let Value::List(references) = variable.value() {
+                    let variable = Variable::empty(
+                        Value::Integer(references.len() as i32), 
+                        self.depth()
+                    );
+
+                    self.variable_stack.push(VariableStack::Variable(variable));
+                }
+            },
+            Some(VariableStack::Reference(reference)) => {
+                let variable = self.environment.variable(&reference)?;
+
+                if let Value::List(references) = variable.value() {
+                    let variable = Variable::empty(
+                        Value::Integer(references.len() as i32), 
+                        self.depth()
+                    );
+
+                    self.variable_stack.push(VariableStack::Variable(variable));
+                }
+            },
+            _ => 
+                return Err(KsError::runtime("There is no more variable stacks!"))
+        }
+        
+        self.step()?;
+
+        Ok(())
+    }
+
     fn interpret(&mut self) -> KsResult<()> {
         let instruction = {
             let call_stack = self.call_stack_last();
@@ -702,13 +737,19 @@ impl VirtualMachine {
                 let referneces = self.load_references_in_list()?;
                 let variable = Variable::empty(Value::List(referneces), self.depth());
                 self.variable_stack.push(VariableStack::Variable(variable));
+
+                self.step()?;
             },
 
             Some(Instruction::LoadTuple) => {
                 let referneces = self.load_references_in_list()?;
                 let variable = Variable::empty(Value::Tuple(referneces), self.depth());
                 self.variable_stack.push(VariableStack::Variable(variable));
+
+                self.step()?;
             },
+
+            Some(Instruction::ListLen) => self.list_len()?,
 
             Some(Instruction::Return) => self.on_return()?,
             Some(Instruction::Call { args }) => self.extract_function(args.clone())?,
