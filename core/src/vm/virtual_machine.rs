@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::env::var;
 
 use crate::compiler::constant::Constant;
 use crate::compiler::function::Function;
@@ -544,6 +545,98 @@ impl VirtualMachine {
         Ok(())
     }
 
+    fn load_integer(&mut self) -> KsResult<i32> {
+        let stack = self.variable_stack.pop();
+
+        match stack {
+            Some(VariableStack::Variable(variable)) => {
+                if let Value::Integer(integer) = variable.value() {
+                    return Ok(*integer)
+                }
+            },
+            Some(VariableStack::Reference(reference)) => {
+                let variable = self.environment.variable(&reference)?;
+                if let Value::Integer(integer) = variable.value() {
+                    return Ok(*integer);
+                }
+            },
+            _ => 
+                return Err(KsError::runtime("There is no more variable stacks!"))
+        }
+        
+        Err(KsError::runtime("Cannot load integer"))
+    }
+
+    fn load_from_list(&mut self) -> KsResult<()> {
+        let index = self.load_integer()? as usize;
+
+        let stack = self.variable_stack.pop();
+
+        match stack {
+            Some(VariableStack::Variable(variable)) => {
+                if let Value::List(list) = variable.value() {
+                    let reference = list.get(index);
+                    if let Some(reference) = reference {
+                        self.variable_stack.push(VariableStack::Reference(*reference));
+                    } else {
+                        return Err(KsError::runtime("List indexing out of bounces!"));
+                    }
+                }
+            },
+            Some(VariableStack::Reference(reference)) => {
+                let variable = self.environment.variable(&reference)?;
+                if let Value::List(list) = variable.value() {
+                    let reference = list.get(index);
+                    if let Some(reference) = reference {
+                        self.variable_stack.push(VariableStack::Reference(*reference));
+                    } else {
+                        return Err(KsError::runtime("List indexing out of bounces!"));
+                    }
+                }
+            },
+            _ => 
+                return Err(KsError::runtime("There is no more variable stacks!"))
+        }
+
+        self.step()?;
+        
+        Ok(())
+    }
+
+    fn load_from_tuple(&mut self, index: usize) -> KsResult<()> {
+        let stack = self.variable_stack.pop();
+
+        match stack {
+            Some(VariableStack::Variable(variable)) => {
+                if let Value::Tuple(list) = variable.value() {
+                    let reference = list.get(index);
+                    if let Some(reference) = reference {
+                        self.variable_stack.push(VariableStack::Reference(*reference));
+                    } else {
+                        return Err(KsError::runtime("List indexing out of bounces!"));
+                    }
+                }
+            },
+            Some(VariableStack::Reference(reference)) => {
+                let variable = self.environment.variable(&reference)?;
+                if let Value::Tuple(list) = variable.value() {
+                    let reference = list.get(index);
+                    if let Some(reference) = reference {
+                        self.variable_stack.push(VariableStack::Reference(*reference));
+                    } else {
+                        return Err(KsError::runtime("List indexing out of bounces!"));
+                    }
+                }
+            },
+            _ => 
+                return Err(KsError::runtime("There is no more variable stacks!"))
+        }
+
+        self.step()?;
+        
+        Ok(())
+    }
+
     fn interpret(&mut self) -> KsResult<()> {
         let instruction = {
             let call_stack = self.call_stack_last();
@@ -749,8 +842,9 @@ impl VirtualMachine {
                 self.step()?;
             },
 
+            Some(Instruction::LoadFromList) => self.load_from_list()?,
+            Some(Instruction::LoadFromTuple(index)) => self.load_from_tuple(*index)?,
             Some(Instruction::ListLen) => self.list_len()?,
-
             Some(Instruction::Return) => self.on_return()?,
             Some(Instruction::Call { args }) => self.extract_function(args.clone())?,
             Some(Instruction::Jump(distance)) => self.jump(*distance)?,
