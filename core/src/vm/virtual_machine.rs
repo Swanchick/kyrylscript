@@ -87,7 +87,6 @@ impl VirtualMachine {
         if let Some(call_stack) = self.call_stack.last() {
             Ok(call_stack)
         } else {
-            println!("Not here");
             Err(KsError::runtime("There is no more callstacks!"))
         }
     }
@@ -431,7 +430,6 @@ impl VirtualMachine {
     fn on_return(&mut self) -> KsResult<()> {
         let call_stack = self.call_stack_last()?;
         let scopes = call_stack.scopes();
-        println!("{}", scopes);
 
         if scopes != 0 {
             for _ in 0..scopes  {
