@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::env::var;
 use std::thread::current;
 
 use crate::global::utils::ks_error::KsError;
@@ -74,6 +75,18 @@ impl Environment {
         ))
     }
 
+    pub fn reference(&self, name: &str) -> KsResult<u64> {
+        for scope in &self.variables {
+            if let Some(reference) = scope.get(name) {
+                return Ok(*reference)
+            }
+        }
+
+        Err(KsError::runtime(
+            &format!("No reference has been found by name {}", name)
+        ))
+    }
+
     pub fn variable_mut(&mut self, reference: &u64) -> KsResult<&mut Variable> {
         let scopes = &mut self.references;
         
@@ -100,6 +113,7 @@ impl Environment {
 
             if let Some(current_scope_reference) = self.current_scope_reference_mut() {
                 variable.set_reference(&current_reference);
+                variable.add_owner();
                 current_scope_reference.insert(current_reference, variable);
 
                 self.current_reference += 1;
@@ -128,6 +142,7 @@ impl Environment {
 
             if let Some(variable) = scope_reference.get_mut(&(reference)) {
                 variable.set_reference(&reference);
+                variable.add_owner();
                 Ok(reference)
             } else {
                 Err(KsError::runtime("There was a problem allocating a variable!"))
@@ -135,6 +150,79 @@ impl Environment {
         } else {
             Err(KsError::runtime("No reference scope!"))
         }
+    }
+
+    pub fn assign_to_reference(&mut self, reference: u64, mut variable: Variable) -> KsResult<()> {
+        for (depth, scope) in self.references.iter_mut().enumerate() {
+            if scope.contains_key(&reference) {
+                variable.set_depth(depth);
+                variable.set_reference(&reference);
+                variable.add_owner();
+                scope.insert(reference, variable);
+                break;
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn assign_to_name(&mut self, name: &str, reference: &u64) -> KsResult<()> {
+        for scope in self.variables.iter_mut() {
+            if scope.contains_key(name) {
+                scope.insert(name.to_string(), *reference);
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn add_variable_owner(&mut self, reference: u64, depth: usize) -> KsResult<()> {
+        if let Some(current_scope) = self.references.get_mut(depth) {
+            if let Some(variable) = current_scope.get_mut(&reference) {
+                variable.add_owner();
+            }
+
+            Ok(())
+        } else {
+            Err(KsError::runtime("No scope were found!"))
+        }
+    }
+
+    pub fn anchor_reference(&mut self, low_depth: usize, high_depth: usize, reference: u64) -> KsResult<()> {
+        let variable = {
+            if let Some(high_scope) = self.references.get_mut(high_depth) {
+                high_scope.remove(&reference)
+            } else {
+                None
+            }
+        };
+        
+        let low_scope = self.references.get_mut(low_depth);
+
+        if let (Some(low_scope), Some(variable)) = (low_scope, variable) {
+            low_scope.insert(reference, variable);
+            Ok(())
+        } else {
+            Err(KsError::runtime("No variable and scope were found!"))
+        }
+    }
+
+    pub fn free(&mut self, reference: &u64) -> KsResult<()> {
+        for scope in self.references.iter_mut() {
+            if scope.contains_key(reference) {
+                if let Some(variable) = scope.get_mut(reference) {
+                    variable.remove_owner();
+                    if !variable.owned() {
+                        variable.clear();
+                        scope.remove(reference);
+                    }
+                }
+
+                return Ok(())
+            }
+        }
+
+        Err(KsError::runtime("No variable were found with reference!"))
     }
 
     pub fn depth(&self) -> usize {

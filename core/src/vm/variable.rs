@@ -5,6 +5,7 @@ pub struct Variable {
     value: Value,
     reference: Option<u64>,
     depth: usize,
+    owners: usize,
 } 
 
 impl Variable {
@@ -12,7 +13,8 @@ impl Variable {
         Variable {
             value,
             reference: Some(reference),
-            depth
+            depth,
+            owners: 0
         }
     }
 
@@ -20,7 +22,8 @@ impl Variable {
         Variable {
             value,
             reference: None,
-            depth
+            depth,
+            owners: 0
         }
     }
 
@@ -28,7 +31,8 @@ impl Variable {
         Variable { 
             value: Value::Null, 
             reference: None,
-            depth
+            depth,
+            owners: 0
         }
     }
 
@@ -47,16 +51,20 @@ impl Variable {
         self.depth
     }
 
+    pub fn add_owner(&mut self) {
+        self.owners += 1;
+    }
+
+    pub fn remove_owner(&mut self) {
+        self.owners -= 1;
+    }
+
     pub fn set_depth(&mut self, depth: usize) {
         self.depth = depth;
     }
 
     pub fn owned(&self) -> bool {
-        if let Some(_) = self.reference {
-            true
-        } else {
-            false
-        }
+        self.owners != 0
     }
 
     pub fn clear(&mut self) {

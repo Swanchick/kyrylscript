@@ -636,6 +636,47 @@ impl VirtualMachine {
         Ok(())
     }
 
+    fn assign_with_reference(&mut self, name: String, reference: u64, assign_reference: u64) -> KsResult<()> {
+        let assign_variable = self.environment.variable(&assign_reference)?;
+        let variable = self.environment.variable(&reference)?;
+        let assign_depth = assign_variable.depth();
+        let variable_depth = variable.depth();
+
+        let same_scope_or_lower = assign_depth <= variable_depth;
+        let scope_difference = variable_depth < assign_depth;
+
+        self.environment.free(&reference)?;
+        self.environment.add_variable_owner(assign_reference, assign_depth)?;
+
+        if same_scope_or_lower {
+            self.environment.assign_to_name(&name, &assign_reference)?;
+        } else if scope_difference {
+            self.environment.anchor_reference(
+                variable_depth, 
+                assign_depth, 
+                assign_reference
+            )?;
+        }
+
+        Ok(())
+    }
+
+    fn assign(&mut self, name: String) -> KsResult<()> {
+        let reference = self.environment.reference(&name)?;
+        let stack = self.variable_stack.pop();
+
+        match stack {
+            Some(VariableStack::Variable(variable)) =>
+                self.environment.assign_to_reference(reference, variable)?,
+            Some(VariableStack::Reference(assign_reference)) => 
+                self.assign_with_reference(name, reference, assign_reference)?,
+            _ => 
+                return Err(KsError::runtime("There is no more variable stacks!"))
+        }
+        
+        Ok(())
+    }
+
     fn interpret(&mut self) -> KsResult<()> {
         let instruction = {
             let call_stack = self.call_stack_last();
@@ -810,6 +851,13 @@ impl VirtualMachine {
                 self.step()?;
             },
             
+            Some(Instruction::Assign(name)) => {
+                let name = name.clone();
+                self.assign(name)?;
+                
+                self.step()?;
+            },
+
             Some(Instruction::Enter) => {
                 self.enter_scope()?;
                 self.step()?;
