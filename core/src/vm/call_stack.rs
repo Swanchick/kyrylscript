@@ -27,6 +27,16 @@ impl CallStack {
         self.step += 1;
     }
 
+    pub fn add_steps(&mut self, steps: i32) {
+        let mut current_steps = self.step as i32;
+        current_steps += steps;
+        if current_steps < 0 {
+            current_steps = 0;
+        }
+
+        self.step = current_steps as usize;
+    }
+
     pub fn peek(&self) -> Option<&Instruction> {
         self.instructions.get(self.step)
     } 

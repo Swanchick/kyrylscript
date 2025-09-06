@@ -1,5 +1,10 @@
-function sum(a: int, b: int): int {
-    return a + b;
+function division(a: int, b: int): float {
+    if b == 0 {
+        return 0f;
+    }
+
+    return a / b;
 }
 
-sum(10, 20);
+
+println(division(10, 0));

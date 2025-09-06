@@ -8,7 +8,8 @@ use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
 use crate::native_registry::native_registry::NativeRegistry;
 use crate::native_registry::native_types::NativeTypes;
-use crate::vm::variable_stack::VariableStack;
+use crate::vm::call_stack;
+use crate::vm::variable_stack::{self, VariableStack};
 
 use super::call_stack::CallStack;
 use super::environment::Environment;
@@ -440,6 +441,51 @@ impl VirtualMachine {
         self.exit_function()?;
         
         Ok(())
+    }    
+
+    fn jump(&mut self, distance: i32) -> KsResult<()> {
+        let call_stack = self.call_stack_last_mut()?;
+        call_stack.add_steps(distance);
+        Ok(())
+    }
+
+    fn check_boolean(&self, variable: &Variable) -> KsResult<bool> {
+        if let Value::Boolean(boolean) = variable.value() {
+            Ok(*boolean)
+        } else {
+            Err(KsError::runtime("The value is not a boolean!"))
+        }
+    }
+
+    fn jump_if_false(&mut self, distance: i32) -> KsResult<()> {
+        let variable_stack = self.variable_stack.pop();
+        match variable_stack {
+            Some(VariableStack::Variable(variable)) => {
+                let result = self.check_boolean(&variable)?;
+
+                if result {
+                    let call_stack = self.call_stack_last_mut()?;
+                    call_stack.add_steps(distance);
+                } else {
+                    self.step()?;
+                }
+            },
+            Some(VariableStack::Reference(reference)) => {
+                let variable = self.environment.variable(&reference)?;
+                let result = self.check_boolean(variable)?;
+
+                if result {
+                    let call_stack = self.call_stack_last_mut()?;
+                    call_stack.add_steps(distance);
+                } else {
+                    self.step()?;
+                }
+            },
+            _ => 
+                return Err(KsError::runtime("There is no more variable stacks!"))
+        }
+
+        Ok(())
     }
 
     fn interpret(&mut self) -> KsResult<()> {
@@ -609,10 +655,6 @@ impl VirtualMachine {
                 self.step()?;
             },
 
-            Some(Instruction::Call { args }) => {    
-                self.extract_function(args.clone())?;
-            },
-
             Some(Instruction::Store(name)) => {
                 let name = name.clone();
                 self.define_variable(&name)?;
@@ -620,10 +662,22 @@ impl VirtualMachine {
                 self.step()?;
             },
 
-            Some(Instruction::Return) => {
-                self.on_return()?;
+            
+            Some(Instruction::Enter) => {
+                self.enter_scope()?;
+                self.step()?;
             },
-
+            
+            Some(Instruction::Exit) => {
+                self.exit_scope()?;
+                self.step()?;
+            },
+            
+            Some(Instruction::Return) => self.on_return()?,
+            Some(Instruction::Call { args }) => self.extract_function(args.clone())?,
+            Some(Instruction::Jump(distance)) => self.jump(*distance)?,
+            Some(Instruction::JumpIfFalse(distance)) => self.jump_if_false(*distance)?,
+            
             Some(Instruction::End) => {
                 self.variable_stack.clear();
                 self.step()?;
