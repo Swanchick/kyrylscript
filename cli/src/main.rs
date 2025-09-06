@@ -1,6 +1,6 @@
 use std::env::args;
 
-use core::{compiler::compiler::Compiler, kyryl_script::KyrylScript, lexer::lexer::Lexer, parser::parser::Parser, vm::virtual_machine::{self, VirtualMachine}};
+use core::{compiler::compiler::Compiler, global::constants::MAIN_FUNCTION, kyryl_script::KyrylScript, lexer::lexer::Lexer, parser::parser::Parser, vm::virtual_machine::VirtualMachine};
 use ks_std::ks_register_std;
 use core::global::ks_path::KsPath;
 
@@ -32,7 +32,7 @@ fn main() {
         println!("============================");
 
         let mut virtual_machine = VirtualMachine::from(compiler.functions());
-        let result = virtual_machine.start();
+        let result = virtual_machine.call(MAIN_FUNCTION);
         if let Err(result) = result {
             result.display();
         }

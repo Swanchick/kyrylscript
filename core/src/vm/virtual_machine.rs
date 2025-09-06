@@ -3,10 +3,7 @@ use std::collections::HashMap;
 use crate::compiler::constant::Constant;
 use crate::compiler::function::Function;
 use crate::compiler::instruction::Instruction;
-use crate::global::constants::{
-    MAIN_FUNCTION, 
-    MAX_DEPTH_RECURSION
-};
+use crate::global::constants::MAX_DEPTH_RECURSION;
 use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
 use crate::native_registry::native_registry::NativeRegistry;
@@ -53,11 +50,15 @@ impl VirtualMachine {
         }
     }
 
-    fn exit_function(&mut self) {
+    fn exit_function(&mut self) -> KsResult<()> {
         self.call_stack.pop();
         self.environment.exit();
 
-        self.step()?;
+        if self.call_stack.len() != 0 {
+            self.step()?;
+        }
+
+        Ok(())
     }
 
     fn enter_scope(&mut self) -> KsResult<()> {
@@ -86,6 +87,7 @@ impl VirtualMachine {
         if let Some(call_stack) = self.call_stack.last() {
             Ok(call_stack)
         } else {
+            println!("Not here");
             Err(KsError::runtime("There is no more callstacks!"))
         }
     }
@@ -426,10 +428,30 @@ impl VirtualMachine {
         self.variable_stack.push(VariableStack::Variable(variable));
     }
 
+    fn on_return(&mut self) -> KsResult<()> {
+        let call_stack = self.call_stack_last()?;
+        let scopes = call_stack.scopes();
+        println!("{}", scopes);
+
+        if scopes != 0 {
+            for _ in 0..scopes  {
+                self.exit_scope()?;
+            }
+        }
+
+        self.exit_function()?;
+        
+        Ok(())
+    }
+
     fn interpret(&mut self) -> KsResult<()> {
         let instruction = {
-            let call_stack = self.call_stack_last()?;
-            call_stack.peek()
+            let call_stack = self.call_stack_last();
+            if let Ok(call_stack) = call_stack {
+                call_stack.peek()
+            } else {
+                None
+            }
         };
 
         match instruction {
@@ -601,7 +623,7 @@ impl VirtualMachine {
             },
 
             Some(Instruction::Return) => {
-                self.exit_function();
+                self.on_return()?;
             },
 
             Some(Instruction::End) => {
@@ -610,7 +632,7 @@ impl VirtualMachine {
             },
 
             _ => {
-                self.exit_function();
+                self.exit_function()?;
                 self.variable_stack.push(VariableStack::Variable(Variable::null(self.depth())));
             }
         }
@@ -622,22 +644,18 @@ impl VirtualMachine {
         let native = NativeRegistry::get();
         let native = native.borrow();
 
-        for (name, native_type) in native.get_natives() {
-            if let NativeTypes::NativeFunction(_) = native_type {
-                self.environment.define_variable(name, Variable::empty(Value::NativeFunction(name.clone()), self.depth()));
-            }
+        for (name, _) in native.get_natives() {
+            self.environment.define_variable(name, Variable::empty(Value::NativeFunction(name.clone()), self.depth()));
         }
     }
 
-    pub fn start(&mut self) -> KsResult<()> {
-        self.enter_function(MAIN_FUNCTION)?;
-
+    pub fn call(&mut self, name: &str) -> KsResult<()> {
+        self.enter_function(name)?;
         self.load_native();
 
         while self.call_stack.len() != 0 {
             self.interpret()?;
         }
-
 
         Ok(())
     }

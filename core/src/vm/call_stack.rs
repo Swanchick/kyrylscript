@@ -35,6 +35,10 @@ impl CallStack {
         self.instructions.get_mut(self.step)
     } 
 
+    pub fn scopes(&self) -> usize {
+        self.scopes
+    }
+
     pub fn enter_scope(&mut self) {
         self.scopes += 1;
     }
