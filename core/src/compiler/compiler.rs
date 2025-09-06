@@ -383,7 +383,7 @@ impl Compiler {
                     instructions = self.compile_expression(element, instructions);
                 }
 
-                instructions.push(Instruction::LoadList);
+                instructions.push(Instruction::LoadList(elements.len()));
             },
 
             Expression::TupleLiteral(elements) => {
@@ -391,7 +391,7 @@ impl Compiler {
                     instructions = self.compile_expression(element, instructions);
                 }
 
-                instructions.push(Instruction::LoadTuple);
+                instructions.push(Instruction::LoadTuple(elements.len()));
             },
 
             Expression::BinaryOp {

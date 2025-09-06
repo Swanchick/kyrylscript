@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::env::var;
 
 use crate::compiler::constant::Constant;
 use crate::compiler::function::Function;
@@ -9,8 +8,7 @@ use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
 use crate::native_registry::native_registry::NativeRegistry;
 use crate::native_registry::native_types::NativeTypes;
-use crate::vm::call_stack;
-use crate::vm::variable_stack::{self, VariableStack};
+use crate::vm::variable_stack::VariableStack;
 
 use super::call_stack::CallStack;
 use super::environment::Environment;
@@ -489,10 +487,10 @@ impl VirtualMachine {
         Ok(())
     }
 
-    fn load_references_in_list(&mut self) -> KsResult<Vec<u64>> {
+    fn load_references_in_list(&mut self, size: usize) -> KsResult<Vec<u64>> {
         let mut references: Vec<u64> = Vec::new();
 
-        loop {
+        for _ in 0..size {
             let stack = self.variable_stack.pop();
 
             match stack {
@@ -506,7 +504,8 @@ impl VirtualMachine {
                     break
             }
         }
-        
+
+        references.reverse();
         Ok(references)
     }
 
@@ -826,16 +825,16 @@ impl VirtualMachine {
                 self.step()?;
             },
 
-            Some(Instruction::LoadList) => {
-                let referneces = self.load_references_in_list()?;
+            Some(Instruction::LoadList(size)) => {
+                let referneces = self.load_references_in_list(*size)?;
                 let variable = Variable::empty(Value::List(referneces), self.depth());
                 self.variable_stack.push(VariableStack::Variable(variable));
 
                 self.step()?;
             },
 
-            Some(Instruction::LoadTuple) => {
-                let referneces = self.load_references_in_list()?;
+            Some(Instruction::LoadTuple(size)) => {
+                let referneces = self.load_references_in_list(*size)?;
                 let variable = Variable::empty(Value::Tuple(referneces), self.depth());
                 self.variable_stack.push(VariableStack::Variable(variable));
 

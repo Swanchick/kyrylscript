@@ -32,8 +32,8 @@ pub enum Instruction {
     Call { args: usize },
     
     // List & Tuple
-    LoadList,
-    LoadTuple,
+    LoadList(usize),
+    LoadTuple(usize),
     LoadFromList,
     ListLen,
     LoadFromTuple(usize),

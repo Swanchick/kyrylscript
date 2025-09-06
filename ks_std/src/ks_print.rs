@@ -17,7 +17,8 @@ pub fn ks_print(args: Vec<Variable>) -> KsResult<Variable> {
                 print!("{}", string),
             Value::Null => 
                 print!("null"),
-            _ => todo!()
+            _ => 
+                print!("{:?}", arg.value())
         }
     }
 

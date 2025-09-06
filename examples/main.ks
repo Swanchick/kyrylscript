@@ -1,10 +1,4 @@
-function division(a: int, b: int): float {
-    if b == 0 {
-        return 0f;
-    }
+let a = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+let b = (984, 123, 374);
 
-    return a / b;
-}
-
-
-println(division(10, 0));
+println(a[0][1]);
