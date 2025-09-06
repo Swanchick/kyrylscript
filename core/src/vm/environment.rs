@@ -225,8 +225,28 @@ impl Environment {
         Err(KsError::runtime("No variable were found with reference!"))
     }
 
+    pub fn debug(&self) {
+        println!("Variables =================");
+        for (depth, scope) in self.variables.iter().enumerate() {
+            println!("Depth: {}", depth);
+            
+            for (name, reference) in scope {
+                println!("{} -> {}", name, reference);
+            }
+        }
+        println!("References ================");
+        for (depth, scope) in self.references.iter().enumerate() {
+            println!("Depth: {}", depth);
+            
+            for (reference, variable) in scope {
+                println!("{}: {:?}", reference, variable);
+            }
+        }
+        println!("===========================");
+    }
+
     pub fn depth(&self) -> usize {
-        self.references.len()
+        (self.references.len() as i32 - 1).max(0) as usize
     }
 
     pub fn enter(&mut self) {

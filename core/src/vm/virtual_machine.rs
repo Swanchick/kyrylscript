@@ -462,7 +462,7 @@ impl VirtualMachine {
             Some(VariableStack::Variable(variable)) => {
                 let result = self.check_boolean(&variable)?;
 
-                if result {
+                if !result {
                     let call_stack = self.call_stack_last_mut()?;
                     call_stack.add_steps(distance);
                 } else {
@@ -473,7 +473,7 @@ impl VirtualMachine {
                 let variable = self.environment.variable(&reference)?;
                 let result = self.check_boolean(variable)?;
 
-                if result {
+                if !result {
                     let call_stack = self.call_stack_last_mut()?;
                     call_stack.add_steps(distance);
                 } else {
@@ -642,12 +642,11 @@ impl VirtualMachine {
         let assign_depth = assign_variable.depth();
         let variable_depth = variable.depth();
 
-        let same_scope_or_lower = assign_depth <= variable_depth;
-        let scope_difference = variable_depth < assign_depth;
-
         self.environment.free(&reference)?;
         self.environment.add_variable_owner(assign_reference, assign_depth)?;
 
+        let same_scope_or_lower = assign_depth <= variable_depth;
+        let scope_difference = variable_depth < assign_depth;
         if same_scope_or_lower {
             self.environment.assign_to_name(&name, &assign_reference)?;
         } else if scope_difference {
@@ -656,6 +655,8 @@ impl VirtualMachine {
                 assign_depth, 
                 assign_reference
             )?;
+
+            self.environment.assign_to_name(&name, &assign_reference)?;
         }
 
         Ok(())
@@ -902,6 +903,8 @@ impl VirtualMachine {
                 self.variable_stack.push(VariableStack::Variable(Variable::null(self.depth())));
             }
         }
+
+        self.environment.debug();
 
         Ok(())
     }
