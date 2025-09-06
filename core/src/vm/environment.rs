@@ -118,7 +118,7 @@ impl Environment {
         }
     }
 
-    fn define_reference(&mut self, variable: Variable) -> KsResult<&mut Variable> {
+    pub fn define_reference(&mut self, variable: Variable) -> KsResult<u64> {
         self.current_reference += 1;
         let reference = self.current_reference - 1;
         let scope_reference = self.current_scope_reference_mut();
@@ -128,7 +128,7 @@ impl Environment {
 
             if let Some(variable) = scope_reference.get_mut(&(reference)) {
                 variable.set_reference(&reference);
-                Ok(variable)
+                Ok(reference)
             } else {
                 Err(KsError::runtime("There was a problem allocating a variable!"))
             }

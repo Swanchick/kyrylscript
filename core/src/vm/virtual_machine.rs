@@ -488,6 +488,27 @@ impl VirtualMachine {
         Ok(())
     }
 
+    fn load_references_in_list(&mut self) -> KsResult<Vec<u64>> {
+        let mut references: Vec<u64> = Vec::new();
+
+        loop {
+            let stack = self.variable_stack.pop();
+
+            match stack {
+                Some(VariableStack::Variable(variable)) => {
+                    let reference = self.environment.define_reference(variable)?;
+                    references.push(reference);
+                },
+                Some(VariableStack::Reference(reference)) => 
+                    references.push(reference),
+                _ => 
+                    break
+            }
+        }
+        
+        Ok(references)
+    }
+
     fn interpret(&mut self) -> KsResult<()> {
         let instruction = {
             let call_stack = self.call_stack_last();
@@ -661,7 +682,6 @@ impl VirtualMachine {
 
                 self.step()?;
             },
-
             
             Some(Instruction::Enter) => {
                 self.enter_scope()?;
@@ -672,16 +692,28 @@ impl VirtualMachine {
                 self.exit_scope()?;
                 self.step()?;
             },
-            
-            Some(Instruction::Return) => self.on_return()?,
-            Some(Instruction::Call { args }) => self.extract_function(args.clone())?,
-            Some(Instruction::Jump(distance)) => self.jump(*distance)?,
-            Some(Instruction::JumpIfFalse(distance)) => self.jump_if_false(*distance)?,
-            
+
             Some(Instruction::End) => {
                 self.variable_stack.clear();
                 self.step()?;
             },
+
+            Some(Instruction::LoadList) => {
+                let referneces = self.load_references_in_list()?;
+                let variable = Variable::empty(Value::List(referneces), self.depth());
+                self.variable_stack.push(VariableStack::Variable(variable));
+            },
+
+            Some(Instruction::LoadTuple) => {
+                let referneces = self.load_references_in_list()?;
+                let variable = Variable::empty(Value::Tuple(referneces), self.depth());
+                self.variable_stack.push(VariableStack::Variable(variable));
+            },
+
+            Some(Instruction::Return) => self.on_return()?,
+            Some(Instruction::Call { args }) => self.extract_function(args.clone())?,
+            Some(Instruction::Jump(distance)) => self.jump(*distance)?,
+            Some(Instruction::JumpIfFalse(distance)) => self.jump_if_false(*distance)?,
 
             _ => {
                 self.exit_function()?;
