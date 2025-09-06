@@ -487,7 +487,7 @@ impl VirtualMachine {
         Ok(())
     }
 
-    fn load_references_in_list(&mut self, size: usize) -> KsResult<Vec<u64>> {
+    fn load_references_collection(&mut self, size: usize) -> KsResult<Vec<u64>> {
         let mut references: Vec<u64> = Vec::new();
 
         for _ in 0..size {
@@ -826,7 +826,7 @@ impl VirtualMachine {
             },
 
             Some(Instruction::LoadList(size)) => {
-                let referneces = self.load_references_in_list(*size)?;
+                let referneces = self.load_references_collection(*size)?;
                 let variable = Variable::empty(Value::List(referneces), self.depth());
                 self.variable_stack.push(VariableStack::Variable(variable));
 
@@ -834,7 +834,7 @@ impl VirtualMachine {
             },
 
             Some(Instruction::LoadTuple(size)) => {
-                let referneces = self.load_references_in_list(*size)?;
+                let referneces = self.load_references_collection(*size)?;
                 let variable = Variable::empty(Value::Tuple(referneces), self.depth());
                 self.variable_stack.push(VariableStack::Variable(variable));
 
