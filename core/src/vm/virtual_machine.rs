@@ -8,8 +8,8 @@ use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
 use crate::native_registry::native_registry::NativeRegistry;
 use crate::native_registry::native_types::NativeTypes;
-use crate::vm::variable_stack::VariableStack;
 
+use super::variable_stack::VariableStack;
 use super::call_stack::CallStack;
 use super::environment::Environment;
 use super::variable::Variable;
@@ -903,8 +903,6 @@ impl VirtualMachine {
                 self.variable_stack.push(VariableStack::Variable(Variable::null(self.depth())));
             }
         }
-
-        self.environment.debug();
 
         Ok(())
     }
