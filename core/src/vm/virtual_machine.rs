@@ -137,7 +137,7 @@ impl VirtualMachine {
             },
 
             Some(VariableStack::Reference(reference)) => {
-                self.environment.define_name_reference(name, &reference);
+                self.environment.define_name_reference(name, &reference)?;
             },
 
             _ => self.environment.define_variable(
