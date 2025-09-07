@@ -2,9 +2,11 @@
 let a = 10;
 
 if true {
-    let b = 20;
+    let c = 20;
+    let b = c;
     a = b;
-    b = 123;
+
+    println(c);
 }
 
 println(a);

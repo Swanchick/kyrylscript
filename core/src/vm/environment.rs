@@ -1,11 +1,7 @@
 use std::collections::HashMap;
-use std::env::var;
-use std::thread::current;
 
 use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
-use crate::vm::variable;
-use crate::vm::variable_stack::VariableStack;
 
 use super::variable::Variable;
 
@@ -35,16 +31,8 @@ impl Environment {
         &self.references
     }
 
-    fn current_scope(&self) -> Option<&Scope> {
-        self.variables.last()
-    }
-
     fn current_scope_mut(&mut self) -> Option<&mut Scope> {
         self.variables.last_mut()
-    }
-
-    fn current_scope_reference(&self) -> Option<&ScopeReference> {
-        self.references.last()
     }
 
     fn current_scope_reference_mut(&mut self) -> Option<&mut ScopeReference> {
@@ -121,7 +109,7 @@ impl Environment {
         }
     }
 
-    pub fn define_name_reference(&mut self, name: &str, reference: &u64) {
+    pub fn define_name_reference(&mut self, name: &str, reference: &u64) -> KsResult<()> {
         let current_scope = self.current_scope_mut();
 
         if let Some(current_scope) = current_scope {
@@ -130,6 +118,11 @@ impl Environment {
                 *reference
             );
         }
+
+        let variable = self.variable_mut(&reference)?;
+        variable.add_owner();
+
+        Ok(())
     }
 
     pub fn define_reference(&mut self, variable: Variable) -> KsResult<u64> {
@@ -212,6 +205,7 @@ impl Environment {
             if scope.contains_key(reference) {
                 if let Some(variable) = scope.get_mut(reference) {
                     variable.remove_owner();
+                    
                     if !variable.owned() {
                         variable.clear();
                         scope.remove(reference);
@@ -254,8 +248,17 @@ impl Environment {
         self.references.push(HashMap::new());
     }
 
-    pub fn exit(&mut self) {
-        self.variables.pop();
+    pub fn exit(&mut self) -> KsResult<()> {
+        let variables = self.variables.pop();
+        if let Some(variables) = variables {
+            for (_, reference) in variables {
+                let variable = self.variable_mut(&reference)?;
+                variable.remove_owner();
+            }
+        } 
+
         self.references.pop();
+
+        Ok(())
     }
 }

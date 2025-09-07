@@ -52,7 +52,7 @@ impl VirtualMachine {
 
     fn exit_function(&mut self) -> KsResult<()> {
         self.call_stack.pop();
-        self.environment.exit();
+        self.environment.exit()?;
 
         if self.call_stack.len() != 0 {
             self.step()?;
@@ -71,7 +71,7 @@ impl VirtualMachine {
     }
 
     fn exit_scope(&mut self) -> KsResult<()> {
-        self.environment.exit();
+        self.environment.exit()?;
 
         let call_stack = self.call_stack_last_mut()?;
         call_stack.exit_scope();
@@ -181,7 +181,7 @@ impl VirtualMachine {
                     self.environment.define_variable(&arg_name, variable);
                 }
                 Some(VariableStack::Reference(reference)) => 
-                    self.environment.define_name_reference(&arg_name, &reference),
+                    self.environment.define_name_reference(&arg_name, &reference)?,
                 _ => 
                     return Err(KsError::runtime("Cannot find argument")) 
             }
