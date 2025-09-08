@@ -650,7 +650,7 @@ impl VirtualMachine {
         if same_scope_or_lower {
             self.environment.assign_to_name(&name, &assign_reference)?;
         } else if scope_difference {
-            self.environment.anchor_reference(
+            self.environment.anchor(
                 variable_depth, 
                 assign_depth, 
                 assign_reference
