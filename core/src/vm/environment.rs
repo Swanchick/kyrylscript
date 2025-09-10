@@ -1,11 +1,12 @@
 use std::collections::HashMap;
-use std::env::var;
 
 use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
+use crate::vm::anchor::tree_reference::TreeReference;
 
 use super::variable::Variable;
 use super::value::Value;
+use super::anchor::frame::Frame;
 
 type Scope = HashMap<String, u64>;
 type ScopeReference = HashMap<u64, Variable>;
@@ -195,68 +196,56 @@ impl Environment {
         }
     }
 
-    ////// DOESN'T WORK!
+    fn anchor_insert(&mut self, variable: Variable, low_depth: usize) -> KsResult<()> {
+        let low_scope = self.references.get_mut(low_depth);
+        
+        if let (Some(reference), Some(low_scope)) = (variable.reference(), low_scope) {
+            low_scope.insert(*reference, variable);
+        } 
+        
+        Ok(())
+    }
+
     fn anchor_references(&mut self, variable: Variable, low_depth: usize) -> KsResult<()> {
-        let mut previous_variables: Vec<Variable> = vec![variable];
-        let mut previous_count: Vec<usize> = Vec::new();
+        let mut frames: Vec<Frame> = vec![
+            Frame::new(variable, 0)
+        ];
 
-        loop {
-            let parent_variable = previous_variables.pop();
-            if let Some(parent_variable) = parent_variable {
-                match parent_variable.value() {
-                    Value::List(references) | Value::Tuple(references) => {
-                        previous_count.push(0);
-                        
-                        if let Some(mut count) = previous_count.pop() {
-                            let reference = references.get(count);
-                            if let Some(reference) = reference {
-                                let variable = self.variable_remove(reference)?;
-                                previous_variables.push(parent_variable);
-                                previous_variables.push(variable);
-                                count += 1;
-                                previous_count.push(count);
-
-                                println!("{}", count);
-                            } else {
-                                previous_count.pop();
-                            }
-                        }
-                    },
-                    _ => {
-                        let reference = parent_variable.reference();
-                        let low_scope = self.references.get_mut(low_depth);
-                        if let (Some(reference), Some(low_scope)) = (reference, low_scope) {
-                            low_scope.insert(*reference, parent_variable);
-                        }
-                    }
+        while let Some(mut frame) = frames.pop() {
+            let next = {
+                match frame.variable.value() {
+                    Value::List(references) 
+                    | Value::Tuple(references) => 
+                        TreeReference::Branch(&references, frame.index),
+                    _ => 
+                        TreeReference::Leaf,
                 }
-            } else {
-                break;
-            }
+            };
 
-            println!("{:?}", previous_variables);
-            
+            match next {
+                TreeReference::Branch(references, index) => {
+                    if let Some(reference) = references.get(index) {
+                        let child = self.variable_remove(reference)?;
+                        frame.step();
+                        frames.push(frame);
+                        frames.push(Frame::new(child, 0))
+                    } else {
+                        self.anchor_insert(frame.variable, low_depth)?;
+                    }
+                },
+                TreeReference::Leaf =>
+                    self.anchor_insert(frame.variable, low_depth)?,
+            }
         }
 
         Ok(())
     }
-    
-    ////// DOESN'T WORK!
-    pub fn anchor(&mut self, low_depth: usize, high_depth: usize, reference: u64) -> KsResult<()> {
-        let variable = {
-            if let Some(high_scope) = self.references.get_mut(high_depth) {
-                high_scope.remove(&reference)
-            } else {
-                None
-            }
-        };
 
-        if let Some(variable) = variable {
-            self.anchor_references(variable, low_depth)?;
-            Ok(())
-        } else {
-            Err(KsError::runtime("No variable found!"))
-        }
+    pub fn anchor(&mut self, low_depth: usize, high_depth: usize, reference: u64) -> KsResult<()> {        
+        let variable = self.variable_remove(&reference)?;
+        self.anchor_references(variable, low_depth)?;
+
+        Ok(())
     }
 
     pub fn free(&mut self, reference: &u64) -> KsResult<()> {
