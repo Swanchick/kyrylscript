@@ -160,6 +160,26 @@ impl Environment {
         }
     }
 
+    pub fn define_reference_at_depth(&mut self, variable: Variable, depth: usize) -> KsResult<u64> {
+        self.current_reference += 1;
+        let reference: u64 = self.current_reference - 1;
+        let scope_reference = self.references.get_mut(depth);
+
+        if let Some(scope_reference) = scope_reference {
+            scope_reference.insert(reference, variable);
+
+            if let Some(variable) = scope_reference.get_mut(&(reference)) {
+                variable.set_reference(&reference);
+                variable.add_owner();
+                Ok(reference)
+            } else {
+                Err(KsError::runtime("There was a problem allocating a variable!"))
+            }
+        } else {
+            Err(KsError::runtime("No reference scope!"))
+        }
+    }
+
     pub fn assign_to_reference(&mut self, reference: u64, mut variable: Variable) -> KsResult<()> {
         for (depth, scope) in self.references.iter_mut().enumerate() {
             if scope.contains_key(&reference) {

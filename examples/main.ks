@@ -1,7 +1,3 @@
-function test() {
-    println("Hello World");
-}
+let test = [[1, 2], [3, 4], [5, 6], [7, 8]];
 
-let name = "Kyryl";
-
-println("My name is ", name);
+test[1][2] = 32;

@@ -40,6 +40,11 @@ impl Variable {
         &self.value
     }
 
+    pub fn value_mut(&mut self) -> &mut Value {
+        &mut self.value
+    }
+
+
     pub fn reference(&self) -> &Option<u64> {
         &self.reference
     }
