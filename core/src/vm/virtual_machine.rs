@@ -3,7 +3,9 @@ use std::collections::HashMap;
 use crate::compiler::constant::Constant;
 use crate::compiler::function::Function;
 use crate::compiler::instruction::Instruction;
-use crate::global::constants::MAX_DEPTH_RECURSION;
+use crate::global::constants::{
+    DEAFULT_FUNCTION, FUNCTION_ENCAPSULATION, MAIN_FUNCTION, MAX_DEPTH_RECURSION, MIN_SCOPES
+};
 use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
 use crate::native_registry::native_registry::NativeRegistry;
@@ -27,7 +29,9 @@ impl VirtualMachine {
         VirtualMachine { 
             environment: Environment::new(),
             variable_stack: Vec::new(),
-            call_stack: Vec::new(),
+            call_stack: vec![
+                CallStack::new(DEAFULT_FUNCTION, Vec::new()),
+            ],
             compilation
         }
     }
@@ -652,7 +656,6 @@ impl VirtualMachine {
         } else if scope_difference {
             self.environment.anchor(
                 variable_depth, 
-                assign_depth, 
                 assign_reference
             )?;
 
@@ -916,11 +919,28 @@ impl VirtualMachine {
         }
     }
 
-    pub fn call(&mut self, name: &str) -> KsResult<()> {
-        self.enter_function(name)?;
+    pub fn initialize(&mut self) -> KsResult<()> {
+        self.enter_scope()?;
         self.load_native();
+        self.enter_function(MAIN_FUNCTION)?;
 
-        while self.call_stack.len() != 0 {
+        while self.call_stack.len() > MIN_SCOPES {
+            self.interpret()?;
+        }
+        
+        Ok(())
+    }
+
+    pub fn call(&mut self, name: &str) -> KsResult<()> {
+        let function_name = &format!(
+            "{}{}", 
+            FUNCTION_ENCAPSULATION, 
+            name
+        );
+        
+        self.enter_function(function_name)?;
+
+        while self.call_stack.len() > MIN_SCOPES {
             self.interpret()?;
         }
 

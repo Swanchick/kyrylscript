@@ -32,7 +32,14 @@ fn main() {
         println!("============================");
 
         let mut virtual_machine = VirtualMachine::from(compiler.functions());
-        let result = virtual_machine.call(MAIN_FUNCTION);
+        let result = virtual_machine.initialize();
+        if let Err(result) = result {
+            result.display();
+        }
+
+        println!("===================");
+
+        let result = virtual_machine.call("test");
         if let Err(result) = result {
             result.display();
         }

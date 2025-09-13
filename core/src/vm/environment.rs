@@ -241,7 +241,7 @@ impl Environment {
         Ok(())
     }
 
-    pub fn anchor(&mut self, low_depth: usize, high_depth: usize, reference: u64) -> KsResult<()> {        
+    pub fn anchor(&mut self, low_depth: usize, reference: u64) -> KsResult<()> {        
         let variable = self.variable_remove(&reference)?;
         self.anchor_references(variable, low_depth)?;
 
