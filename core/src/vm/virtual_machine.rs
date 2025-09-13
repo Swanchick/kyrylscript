@@ -4,7 +4,10 @@ use crate::compiler::constant::Constant;
 use crate::compiler::function::Function;
 use crate::compiler::instruction::Instruction;
 use crate::global::constants::{
-    DEAFULT_FUNCTION, FUNCTION_ENCAPSULATION, MAIN_FUNCTION, MAX_DEPTH_RECURSION, MIN_SCOPES
+    FUNCTION_ENCAPSULATION, 
+    MAIN_FUNCTION, 
+    MAX_DEPTH_RECURSION, 
+    MIN_SCOPES,
 };
 use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
@@ -30,7 +33,7 @@ impl VirtualMachine {
             environment: Environment::new(),
             variable_stack: Vec::new(),
             call_stack: vec![
-                CallStack::new(DEAFULT_FUNCTION, Vec::new()),
+                CallStack::new(Vec::new()),
             ],
             compilation
         }
@@ -44,7 +47,7 @@ impl VirtualMachine {
         let function = self.compilation.get(name);
         if let Some(function) = function {
             let instructions = function.get_instructions();
-            let call_stack = CallStack::new(name, instructions.to_vec());
+            let call_stack = CallStack::new(instructions.to_vec());
             self.call_stack.push(call_stack);
             self.environment.enter();
 

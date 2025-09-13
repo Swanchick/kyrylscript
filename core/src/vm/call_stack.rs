@@ -3,16 +3,14 @@ use crate::compiler::instruction::Instruction;
 
 #[derive(Debug)]
 pub struct CallStack {
-    name: String,
     instructions: Instructions,
     step: usize,
     scopes: usize
 }
 
 impl CallStack {
-    pub fn new(name: &str, instructions: Instructions) -> CallStack {
+    pub fn new(instructions: Instructions) -> CallStack {
         CallStack { 
-            name: name.to_string(), 
             instructions, 
             step: 0,
             scopes: 0 
