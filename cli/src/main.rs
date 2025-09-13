@@ -1,12 +1,14 @@
 use std::env::args;
 
-use core::{compiler::compiler::Compiler, global::constants::MAIN_FUNCTION, kyryl_script::KyrylScript, lexer::lexer::Lexer, parser::parser::Parser, vm::virtual_machine::VirtualMachine};
+use core::compiler::compiler::Compiler;
+use core::lexer::lexer::Lexer;
+use core::parser::parser::Parser;
+use core::vm::virtual_machine::VirtualMachine;
+
 use ks_std::ks_register_std;
 use core::global::ks_path::KsPath;
 
 fn main() {
-    // let test_path = KsPath::from(".\\examples\\utils").unwrap();
-    
     let args: Vec<String> = args().collect();
     let path = args.get(1);
 
@@ -36,19 +38,5 @@ fn main() {
         if let Err(result) = result {
             result.display();
         }
-
-        println!("===================");
-
-        let result = virtual_machine.call("test");
-        if let Err(result) = result {
-            result.display();
-        }
-
-        // let mut ks = KyrylScript::new();
-        // let ks_result = ks.run_from_file(path);
-
-        // if let Err(e) = ks_result {
-        //     println!("{}", e);
-        // }
     }
 }
