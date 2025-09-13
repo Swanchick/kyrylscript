@@ -216,17 +216,9 @@ impl Environment {
         }
     }
 
-    fn anchor_insert(&mut self, variable: Variable, low_depth: usize) -> KsResult<()> {
-        let low_scope = self.references.get_mut(low_depth);
-        
-        if let (Some(reference), Some(low_scope)) = (variable.reference(), low_scope) {
-            low_scope.insert(*reference, variable);
-        } 
-        
-        Ok(())
-    }
-
-    fn anchor_references(&mut self, variable: Variable, low_depth: usize) -> KsResult<()> {
+    fn tree_reference<F>(&mut self, variable: Variable, mut f: F) -> KsResult<()> 
+    where F: FnMut(&mut Self, Frame) -> KsResult<()>
+    {
         let mut frames: Vec<Frame> = vec![
             Frame::new(variable, 0)
         ];
@@ -250,13 +242,31 @@ impl Environment {
                         frames.push(frame);
                         frames.push(Frame::new(child, 0))
                     } else {
-                        self.anchor_insert(frame.variable, low_depth)?;
+                        f(self, frame)?;
                     }
                 },
                 TreeReference::Leaf =>
-                    self.anchor_insert(frame.variable, low_depth)?,
+                    f(self, frame)?,
             }
         }
+
+        Ok(())
+    }
+
+    fn anchor_insert(&mut self, variable: Variable, low_depth: usize) -> KsResult<()> {
+        let low_scope = self.references.get_mut(low_depth);
+        
+        if let (Some(reference), Some(low_scope)) = (variable.reference(), low_scope) {
+            low_scope.insert(*reference, variable);
+        } 
+        
+        Ok(())
+    }
+
+    fn anchor_references(&mut self, variable: Variable, low_depth: usize) -> KsResult<()> {
+        self.tree_reference(variable, |this, frame| {
+            this.anchor_insert(frame.variable, low_depth)
+        })?;
 
         Ok(())
     }

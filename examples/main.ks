@@ -1,3 +1,12 @@
-let test = [[1, 2], [3, 4], [5, 6], [7, 8]];
+let a = 10;
 
-test[1][2] = 32;
+println(a);
+
+if true {
+    if true {
+        let b = 3220;
+        a = b;
+    }
+}
+
+println(a);
