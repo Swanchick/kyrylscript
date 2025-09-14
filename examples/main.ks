@@ -1,4 +1,4 @@
-function display(list: [int]) {
+pub function display(list: [int]) {
     for element in list {
         println(element, ",");
     }

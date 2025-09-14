@@ -124,8 +124,44 @@ impl Environment {
         }
     }
 
+    pub fn define_variable_at_depth(&mut self, name: &str, mut variable: Variable, depth: usize) {
+        let current_reference = self.current_reference;
+        let current_scope = self.variables.get_mut(depth);
+        
+        if let Some(current_scope) = current_scope {
+            current_scope.insert(
+                name.to_string(), 
+                current_reference
+            );
+
+            if let Some(current_scope_reference) = self.current_scope_reference_mut() {
+                variable.set_reference(&current_reference);
+                variable.add_owner();
+                current_scope_reference.insert(current_reference, variable);
+
+                self.current_reference += 1;
+            }
+        }
+    }
+
     pub fn define_name_reference(&mut self, name: &str, reference: &u64) -> KsResult<()> {
         let current_scope = self.current_scope_mut();
+
+        if let Some(current_scope) = current_scope {
+            current_scope.insert(
+                name.to_string(), 
+                *reference
+            );
+        }
+
+        let variable = self.variable_mut(&reference)?;
+        variable.add_owner();
+
+        Ok(())
+    }
+
+    pub fn define_name_reference_at_depth(&mut self, name: &str, reference: &u64, depth: usize) -> KsResult<()> {
+        let current_scope = self.variables.get_mut(depth);
 
         if let Some(current_scope) = current_scope {
             current_scope.insert(

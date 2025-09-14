@@ -153,6 +153,40 @@ impl VirtualMachine {
             )
         }
 
+        self.step()?;
+
+        Ok(())
+    }
+
+    fn public_define_variable(&mut self, name: &str) -> KsResult<()> {
+        let variable_stack = self.variable_stack.pop();
+
+        match variable_stack {
+            Some(VariableStack::Variable(variable)) => {
+                self.environment.define_variable_at_depth(
+                    name, 
+                    variable, 
+                    0
+                );
+            },
+
+            Some(VariableStack::Reference(reference)) => {
+                self.environment.define_name_reference_at_depth(
+                    name, 
+                    &reference,
+                    0
+                )?;
+            },
+
+            _ => self.environment.define_variable_at_depth(
+                name, 
+                Variable::null(self.depth()),
+                0
+            )
+        }
+
+        self.step()?;
+
         Ok(())
     }
 
@@ -941,8 +975,11 @@ impl VirtualMachine {
             Some(Instruction::Store(name)) => {
                 let name = name.clone();
                 self.define_variable(&name)?;
+            },
 
-                self.step()?;
+            Some(Instruction::PubStore(name)) => {
+                let name = name.clone();
+                self.public_define_variable(&name)?;
             },
             
             Some(Instruction::Assign(name)) => {
