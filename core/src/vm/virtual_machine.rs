@@ -699,6 +699,13 @@ impl VirtualMachine {
 
                 if index >= 0 && index < list_len {
                     let child_reference = self.environment.define_reference_at_depth(variable, list_depth)?;
+                    {
+                        let list = self.environment.variable_mut(&reference)?;
+                        if let Value::List(references) = list.value_mut() {
+                            let old_reference = references[index as usize];
+                            self.environment.free(&old_reference)?;
+                        }
+                    }
 
                     let list = self.environment.variable_mut(&reference)?;
                     if let Value::List(references) = list.value_mut() {
@@ -710,11 +717,51 @@ impl VirtualMachine {
             },
 
             (Some(VariableStack::Reference(assign_reference)), Some(VariableStack::Reference(reference))) => {
-                
+                let (list_len, list_depth): (i32, usize) = {
+                    let list = self.environment.variable(&assign_reference)?;
+
+                    if let Value::List(references) = list.value() {
+                        Ok((references.len() as i32, list.depth()))
+                    } else {
+                        Err(KsError::runtime("The variable is not a list!"))
+                    }
+                }?;
+
+                let variable_depth = {
+                    let variable= self.environment.variable(&reference)?;
+                    variable.depth()
+                };
+
+                if index >= 0 && index < list_len {
+                    let scope_difference = list_depth < variable_depth;
+                    if scope_difference {
+                        self.environment.anchor(
+                            list_depth, 
+                            reference
+                        )?;
+                    }
+
+                    {
+                        let list = self.environment.variable_mut(&assign_reference)?;
+                        if let Value::List(references) = list.value_mut() {
+                            let old_reference = references[index as usize];
+                            self.environment.free(&old_reference)?;
+                        }
+                    }
+
+                    let list = self.environment.variable_mut(&assign_reference)?;
+                    if let Value::List(references) = list.value_mut() {
+                        references[index as usize] = reference;
+                    }
+                } else {
+                    return Err(KsError::runtime("Index out of bounds!"));
+                }             
             },
 
             _ => {}
         }
+
+        self.step()?;
 
         Ok(())
     }
@@ -936,11 +983,7 @@ impl VirtualMachine {
                 self.step()?;
             },
 
-            Some(Instruction::AssignTupleIndex(index)) => {
-                self.assign_collection_index(*index as i32)?;
-                self.step()?;
-            },
-
+            Some(Instruction::AssignTupleIndex(index)) => self.assign_collection_index(*index as i32)?,
             Some(Instruction::AssignListIndex) => self.assign_list_index()?,
             Some(Instruction::LoadFromList) => self.load_from_list()?,
             Some(Instruction::LoadFromTuple(index)) => self.load_from_tuple(*index)?,
