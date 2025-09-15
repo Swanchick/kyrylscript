@@ -43,10 +43,8 @@ impl Environment {
     }
 
     pub fn find_reference(&self, name: &str) -> Option<u64> {
-        for scope in self.variables.iter().rev() {
-            let reference = scope.get(name);
-            
-            if let Some(reference) = reference {
+        for i in (0..self.variables.len()).rev() {
+            if let Some(reference) = self.variables[i].get(name) {
                 return Some(*reference);
             }
         }
@@ -315,15 +313,18 @@ impl Environment {
     }
 
     pub fn free(&mut self, reference: &u64) -> KsResult<()> {
-        for scope in self.references.iter_mut() {
+        for i in (0..self.references.len()).rev() {
+            let scope = &mut self.references[i];
             if scope.contains_key(reference) {
-                if let Some(variable) = scope.get_mut(reference) {
-                    variable.remove_owner();
-                    
-                    if !variable.owned() {
-                        variable.clear();
-                        scope.remove(reference);
-                    }
+                if let Some(variable) = scope.remove(reference) {
+                    self.tree_reference(variable, |_, frame| {
+                        let mut variable = frame.variable;
+                        variable.remove_owner();
+                        if !variable.owned() {
+                            variable.clear();
+                        }
+                        Ok(())
+                    })?;
                 }
 
                 return Ok(())
