@@ -471,35 +471,33 @@ impl VirtualMachine {
     fn on_return(&mut self) -> KsResult<()> {
         let call_stack = self.call_stack_last()?;
         let call_stack_depth = call_stack.scopes();
-        let current_depth = self.depth();
-        let depth_to_return = current_depth - call_stack_depth;
-        let stack = self.variable_stack.pop();
-        
+        // let current_depth = self.depth();
+        // let depth_to_return = current_depth - call_stack_depth;
+        // let stack = self.variable_stack.pop();
 
+        // match stack {
+        //     Some(VariableStack::Variable(_)) => {
+        //         // Todo:
+        //         // Think more here
+        //         // How to anchor the value to the depth_to_return - 1;
+        //         // and basically return back the actual variable to the variable_stack
+        //     },
+        //     Some(VariableStack::Reference(reference)) => {
+        //         let variable_depth = {
+        //             let variable = self.environment.variable(&reference)?;
+        //             variable.depth()
+        //         };
 
-        match stack {
-            Some(VariableStack::Variable(_)) => {
-                // Todo:
-                // Think more here
-                // How to anchor the value to the depth_to_return - 1;
-                // and basically return back the actual variable to the variable_stack
-            },
-            Some(VariableStack::Reference(reference)) => {
-                let variable_depth = {
-                    let variable = self.environment.variable(&reference)?;
-                    variable.depth()
-                };
+        //         let variable_inside_function = variable_depth >= current_depth;
 
-                let variable_inside_function = variable_depth >= current_depth;
+        //         if variable_inside_function {
+        //             self.environment.anchor_reference(depth_to_return - 1, reference)?;
+        //         }
+        //     },
 
-                if variable_inside_function {
-                    self.environment.anchor_reference(depth_to_return - 1, reference)?;
-                }
-            },
-
-            _ => 
-                return Err(KsError::runtime("No variable were provided"))
-        }
+        //     _ => 
+        //         return Err(KsError::runtime("No variable were provided"))
+        // }
 
         if call_stack_depth != 0 {
             for _ in 0..call_stack_depth  {
