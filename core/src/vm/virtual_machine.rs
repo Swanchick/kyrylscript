@@ -267,7 +267,7 @@ impl VirtualMachine {
 
                 Ok(variable.clone())
             },
-            _ => Err(KsError::runtime("No variable!"))
+            _ => Err(KsError::runtime("No variable were provided!"))
         }
     }
 
@@ -470,10 +470,39 @@ impl VirtualMachine {
 
     fn on_return(&mut self) -> KsResult<()> {
         let call_stack = self.call_stack_last()?;
-        let scopes = call_stack.scopes();
+        let call_stack_depth = call_stack.scopes();
+        let current_depth = self.depth();
+        let depth_to_return = current_depth - call_stack_depth;
+        let stack = self.variable_stack.pop();
+        
 
-        if scopes != 0 {
-            for _ in 0..scopes  {
+
+        match stack {
+            Some(VariableStack::Variable(_)) => {
+                // Todo:
+                // Think more here
+                // How to anchor the value to the depth_to_return - 1;
+                // and basically return back the actual variable to the variable_stack
+            },
+            Some(VariableStack::Reference(reference)) => {
+                let variable_depth = {
+                    let variable = self.environment.variable(&reference)?;
+                    variable.depth()
+                };
+
+                let variable_inside_function = variable_depth >= current_depth;
+
+                if variable_inside_function {
+                    self.environment.anchor_reference(depth_to_return - 1, reference)?;
+                }
+            },
+
+            _ => 
+                return Err(KsError::runtime("No variable were provided"))
+        }
+
+        if call_stack_depth != 0 {
+            for _ in 0..call_stack_depth  {
                 self.exit_scope()?;
             }
         }
@@ -688,7 +717,7 @@ impl VirtualMachine {
 
         let scope_difference = variable_depth < assign_depth;
         if scope_difference {
-            self.environment.anchor(
+            self.environment.anchor_reference(
                 variable_depth, 
                 assign_reference
             )?;
@@ -748,6 +777,15 @@ impl VirtualMachine {
                 } else {
                     return Err(KsError::runtime("Index out of bounds!"));
                 }
+
+                // Todo:
+                // Same here
+                // think more
+                // variable can be a list
+                // so the children of the potential list can have upper depth
+                // which later on will be deleted
+                // because scope is being deleted, and so the values
+                // which eventually will turn into an error
             },
 
             (Some(VariableStack::Reference(assign_reference)), Some(VariableStack::Reference(reference))) => {
@@ -769,7 +807,7 @@ impl VirtualMachine {
                 if index >= 0 && index < list_len {
                     let scope_difference = list_depth < variable_depth;
                     if scope_difference {
-                        self.environment.anchor(
+                        self.environment.anchor_reference(
                             list_depth, 
                             reference
                         )?;

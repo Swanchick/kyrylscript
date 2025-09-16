@@ -64,7 +64,7 @@ impl Environment {
         ))
     }
 
-    fn variable_remove(&mut self, reference: &u64) -> KsResult<Variable> {
+    pub fn variable_remove(&mut self, reference: &u64) -> KsResult<Variable> {
         for scope in self.references.iter_mut().rev() {
             if let Some(variable) = scope.remove(reference) {
                 return Ok(variable)
@@ -250,7 +250,7 @@ impl Environment {
         }
     }
 
-    fn tree_reference<F>(&mut self, variable: Variable, mut f: F) -> KsResult<()> 
+    pub fn tree_reference<F>(&mut self, variable: Variable, mut f: F) -> KsResult<()> 
     where F: FnMut(&mut Self, Frame) -> KsResult<()>
     {
         let mut frames: Vec<Frame> = vec![
@@ -297,7 +297,7 @@ impl Environment {
         Ok(())
     }
 
-    fn anchor_references(&mut self, variable: Variable, low_depth: usize) -> KsResult<()> {
+    pub fn anchor(&mut self, low_depth: usize, variable: Variable) -> KsResult<()> {
         self.tree_reference(variable, |this, frame| {
             this.anchor_insert(frame.variable, low_depth)
         })?;
@@ -305,9 +305,9 @@ impl Environment {
         Ok(())
     }
 
-    pub fn anchor(&mut self, low_depth: usize, reference: u64) -> KsResult<()> {        
+    pub fn anchor_reference(&mut self, low_depth: usize, reference: u64) -> KsResult<()> {        
         let variable = self.variable_remove(&reference)?;
-        self.anchor_references(variable, low_depth)?;
+        self.anchor(low_depth, variable)?;
 
         Ok(())
     }
