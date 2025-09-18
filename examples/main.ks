@@ -1,7 +1,7 @@
-function test(): [int] {
-    let result = [10, 20, 30, 40, 50];
-    
-    return result;
-}
+let a = 0;
 
-println(test());
+while a < 100 {
+    a = a + 1;
+
+    println(a);
+}

@@ -206,7 +206,7 @@ impl Compiler {
                 let condition_len = condition.len() as i32;
                 
                 instructions.append(&mut condition);
-                instructions.push(Instruction::JumpIfFalse(body_len + 3));
+                instructions.push(Instruction::JumpIfFalse(body_len + 4));
                 instructions.push(Instruction::Enter);
 
                 instructions.append(&mut body);
