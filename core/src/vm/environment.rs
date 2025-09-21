@@ -2,7 +2,9 @@ use std::collections::HashMap;
 
 use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
+use crate::vm::anchor::reference_frame::ReferenceFrame;
 use crate::vm::anchor::tree_reference::TreeReference;
+use crate::vm::variable;
 
 use super::variable::Variable;
 use super::value::Value;
@@ -289,9 +291,11 @@ impl Environment {
 
     fn anchor_insert(&mut self, variable: Variable, low_depth: usize) -> KsResult<()> {
         let low_scope = self.references.get_mut(low_depth);
+        let reference = variable.reference()?;
+
         
-        if let (Some(reference), Some(low_scope)) = (variable.reference(), low_scope) {
-            low_scope.insert(*reference, variable);
+        if let Some(low_scope) = low_scope {
+            low_scope.insert(reference, variable);
         } 
         
         Ok(())
@@ -300,7 +304,7 @@ impl Environment {
     pub fn anchor(&mut self, low_depth: usize, variable: Variable) -> KsResult<()> {
         self.tree_reference(variable, |this, frame| {
             this.anchor_insert(frame.variable, low_depth)
-        })?;
+        })?;  
 
         Ok(())
     }
@@ -310,6 +314,69 @@ impl Environment {
         self.anchor(low_depth, variable)?;
 
         Ok(())
+    }
+
+    pub fn clone(&mut self, mut parent_reference: u64) -> KsResult<Variable> {
+        let mut frames = vec![
+            ReferenceFrame::new(parent_reference, 0),
+        ];
+
+        while let Some(mut frame) = frames.pop() {
+            let next = {
+                let variable = self.variable(&frame.reference)?;
+                
+                match variable.value() {
+                    Value::List(references) 
+                    | Value::Tuple(references) => 
+                        TreeReference::Branch(&references, frame.index),
+                    _ => 
+                        TreeReference::Leaf,
+                }
+            };
+
+            match next {
+                TreeReference::Branch(references, index) => {
+                    let reference = frame.reference;
+                    
+                    if let Some(reference) = references.get(index) {
+                        frame.step();
+                        frames.push(frame);
+                        frames.push(ReferenceFrame::new(*reference, 0));
+                    } else {
+                        let mut variable = self.variable(&reference)?.clone();
+                        match variable.value_mut() {
+                            Value::List(child_references) 
+                            | Value::Tuple(child_references) => {
+                                *child_references = frame.new_references;
+                            },
+                            _ => {}
+                        }
+
+                        if parent_reference == reference {
+                            parent_reference = self.define_reference(variable)?;
+                            continue;
+                        }
+
+                        let child_reference = self.define_reference(variable)?;
+                        if let Some(last_frame) = frames.last_mut() {
+                            last_frame.new_references.push(child_reference);
+                        }
+                    }
+                },
+                TreeReference::Leaf => {
+                    let reference = frame.reference;
+                    let variable = self.variable(&reference)?.clone();
+                    let reference = self.define_reference(variable)?;
+                    if let Some(last_frame) = frames.last_mut() {
+                        last_frame.new_references.push(reference);
+                    }
+                }
+            }
+        }
+        
+
+        let variable = self.variable_remove(&parent_reference)?;
+        Ok(variable)
     }
 
     pub fn free(&mut self, reference: &u64) -> KsResult<()> {

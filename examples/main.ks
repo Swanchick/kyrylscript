@@ -1,7 +1,5 @@
-let a = 0;
+let a = [10, 20, 30, 40, 50];
+println(a);
 
-while a < 100 {
-    a = a + 1;
-
-    println(a);
-}
+let b = a!;
+println(b[1]);

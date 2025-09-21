@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::env::var;
 
 use crate::compiler::constant::Constant;
 use crate::compiler::function::Function;
@@ -447,19 +448,33 @@ impl VirtualMachine {
         }
     }
 
-    fn clone(&self, stack: Option<VariableStack>) -> KsResult<Variable> {
+    fn clone(&mut self) -> KsResult<()> {
+        let stack = self.variable_stack.pop();
+
         match stack {
             Some(VariableStack::Reference(reference)) => {
-                let variable = self.environment.variable(&reference)?;
-                let mut variable = variable.clone();
-                variable.set_depth(self.depth());
-                variable.clear();
+                let is_collection = {
+                    let variable = self.environment.variable(&reference)?;
+                    matches!(variable.value(), Value::List(_)) || matches!(variable.value(), Value::Tuple(_))
+                };
 
-                Ok(variable)
+                let variable = if is_collection {
+                    self.environment.clone(reference)?
+                } else {
+                    self.environment.variable(&reference)?.clone()
+                };
+
+                self.variable_stack.push(VariableStack::Variable(variable));
             },
-            Some(VariableStack::Variable(variable)) => Ok(variable),
-            _ => Err(KsError::runtime("No variable were provided!"))
+            Some(VariableStack::Variable(_)) => 
+                return Err(KsError::runtime("You cannot clone the expression!")),
+            _ => 
+                return Err(KsError::runtime("No variable were provided!")),
         }
+
+        self.step()?;
+
+        Ok(())
     }
 
     fn value_to_variable_stack(&mut self, value: Value) {
@@ -777,15 +792,6 @@ impl VirtualMachine {
                 } else {
                     return Err(KsError::runtime("Index out of bounds!"));
                 }
-
-                // Todo:
-                // Same here
-                // think more
-                // variable can be a list
-                // so the children of the potential list can have upper depth
-                // which later on will be deleted
-                // because scope is being deleted, and so the values
-                // which eventually will turn into an error
             },
 
             (Some(VariableStack::Reference(assign_reference)), Some(VariableStack::Reference(reference))) => {
@@ -1001,15 +1007,6 @@ impl VirtualMachine {
                 self.step()?;
             },
 
-            Some(Instruction::Clone) => {
-                let variable = self.variable_stack.pop();
-
-                let variable = self.clone(variable)?;
-                self.variable_stack.push(VariableStack::Variable(variable));
-
-                self.step()?;
-            },
-
             Some(Instruction::Store(name)) => {
                 let name = name.clone();
                 self.define_variable(&name)?;
@@ -1058,6 +1055,7 @@ impl VirtualMachine {
                 self.step()?;
             },
 
+            Some(Instruction::Clone) => self.clone()?,
             Some(Instruction::AssignTupleIndex(index)) => self.assign_collection_index(*index as i32)?,
             Some(Instruction::AssignListIndex) => self.assign_list_index()?,
             Some(Instruction::LoadFromList) => self.load_from_list()?,

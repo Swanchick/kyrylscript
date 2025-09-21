@@ -1,3 +1,5 @@
+use crate::global::utils::{ks_error::KsError, ks_result::KsResult};
+
 use super::value::Value;
 
 #[derive(Debug, Clone)]
@@ -44,10 +46,14 @@ impl Variable {
         &mut self.value
     }
 
-
-    pub fn reference(&self) -> &Option<u64> {
-        &self.reference
+    pub fn reference(&self) -> KsResult<u64> {
+        if let Some(reference) = self.reference {
+            Ok(reference)
+        } else {
+            Err(KsError::runtime("No error in varaible"))
+        }
     }
+
     pub fn set_reference(&mut self, reference: &u64) {
         self.reference = Some(*reference);
     }
