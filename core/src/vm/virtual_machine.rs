@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::env::var;
 
 use crate::compiler::constant::Constant;
 use crate::compiler::function::Function;
