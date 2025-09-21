@@ -1,40 +1,21 @@
-use std::cell::RefCell;
-use std::rc::Rc;
 use std::io;
 
+use crate::compiler::compiler::Compiler;
 use crate::global::ks_path::KsPath;
 use crate::lexer::lexer::Lexer;
 use crate::parser::parser::Parser;
-use crate::interpreter::enviroment::Environment;
-use crate::interpreter::interpreter::Interpreter;
 
+use crate::vm::virtual_machine::VirtualMachine;
 
 pub struct KyrylScript {
-    global: Rc<RefCell<Environment>>,
-    interpreter: Interpreter,
 }
 
 impl KyrylScript {
     pub fn new() -> KyrylScript {
-        let global = Rc::new(RefCell::new(Environment::new()));
-        let interpreter = Interpreter::new(global.clone());
-        
-        KyrylScript {
-            global,
-            interpreter
-        }
+        KyrylScript { }
     }
 
-    pub fn with_global(global: Rc<RefCell<Environment>>) -> KyrylScript {
-        let interpreter = Interpreter::new(global.clone());
-        
-        KyrylScript {
-            global: global.clone(),
-            interpreter
-        }
-    }
-
-    pub fn run_from_file(&mut self, path: &str) -> io::Result<()> {
+    pub fn run_from_file(&self, path: &str) -> io::Result<()> {
         let mut lexer = Lexer::load(path)?;
         lexer.lexer()?;
 
@@ -56,13 +37,14 @@ impl KyrylScript {
 
         let block = block?;
 
-        let interpreter_result = self.interpreter.interpret_statements(block);
+        let mut compiler = Compiler::new();
+        compiler.start_compile(&block);
 
-        if let Err(e) = interpreter_result {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                format!("KyrylScript Runtime Layer: \n{}", e.to_string())
-            ));
+        let mut vm = VirtualMachine::from(compiler.functions());
+        let result = vm.initialize();
+
+        if let Err(e) = result {
+            e.display();
         }
 
         Ok(())
