@@ -4,7 +4,6 @@ use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
 use crate::vm::anchor::reference_frame::ReferenceFrame;
 use crate::vm::anchor::tree_reference::TreeReference;
-use crate::vm::variable;
 
 use super::variable::Variable;
 use super::value::Value;

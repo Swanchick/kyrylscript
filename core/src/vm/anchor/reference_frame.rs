@@ -16,9 +16,4 @@ impl ReferenceFrame {
     pub fn step(&mut self) {
         self.index += 1;
     }
-
-
-    pub fn add_reference(&mut self, reference: u64) {
-        self.new_references.push(reference);
-    }
 }
