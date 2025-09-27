@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::compiler::constant::Constant;
-use crate::compiler::function::Function;
+use crate::compiler::function::{self, Function};
 use crate::compiler::instruction::Instruction;
 use crate::global::constants::{
     FUNCTION_ENCAPSULATION, 
@@ -1078,8 +1078,19 @@ impl VirtualMachine {
         let native = NativeRegistry::get();
         let native = native.borrow();
 
-        for (name, _) in native.get_natives() {
-            self.environment.define_variable(name, Variable::empty(Value::NativeFunction(name.clone()), self.depth()));
+        for (name, native) in native.get_natives() {
+            match native {
+                NativeTypes::Function(_) => 
+                    self.environment.define_variable(name, Variable::empty(Value::NativeFunction(name.clone()), self.depth())),
+                NativeTypes::Int(_, int) => 
+                    self.environment.define_variable(name, Variable::empty(Value::Integer(*int), self.depth())),
+                NativeTypes::Float(_, float) => 
+                    self.environment.define_variable(name, Variable::empty(Value::Float(*float), self.depth())),
+                NativeTypes::Boolean(_, boolean) => 
+                    self.environment.define_variable(name, Variable::empty(Value::Boolean(*boolean), self.depth())),
+                NativeTypes::String(_, string) => 
+                    self.environment.define_variable(name, Variable::empty(Value::String(string.clone()), self.depth())),
+            }
         }
     }
 
