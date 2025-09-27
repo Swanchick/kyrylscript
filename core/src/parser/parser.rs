@@ -40,7 +40,7 @@ impl Parser {
 
             for (name, native) in registry.get_natives() {
                 match native {
-                    NativeTypes::NativeFunction(function) => {
+                    NativeTypes::Function(function) => {
                         semantic_analyzer.register_rust_function(name.clone(), function);
                     }
                 }
@@ -71,7 +71,7 @@ impl Parser {
 
             for (name, native) in registry.get_natives() {
                 match native {
-                    NativeTypes::NativeFunction(function) => {
+                    NativeTypes::Function(function) => {
                         semantic_analyzer.register_rust_function(name.clone(), function);
                     }
                 }

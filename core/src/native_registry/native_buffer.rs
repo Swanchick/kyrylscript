@@ -19,7 +19,7 @@ impl NativeBuffer {
     }
 
     pub fn add_function(&mut self, name: &str, native_function: NativeFunction) {
-        self.add(name, NativeTypes::NativeFunction(native_function));
+        self.add(name, NativeTypes::Function(native_function));
     }
 
     pub fn get_table(&self) -> &HashMap<String, NativeTypes> {

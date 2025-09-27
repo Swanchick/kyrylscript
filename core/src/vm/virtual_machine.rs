@@ -123,7 +123,7 @@ impl VirtualMachine {
                 let native = NativeRegistry::get();
                 let native = native.borrow();
                 
-                if let Some(NativeTypes::NativeFunction(_)) = native.get_native(name) {
+                if let Some(NativeTypes::Function(_)) = native.get_native(name) {
                     Value::NativeFunction(name.clone())
                 } else {
                     Value::Function(name.clone())
@@ -203,7 +203,7 @@ impl VirtualMachine {
 
         args.reverse();
 
-        if let Some(NativeTypes::NativeFunction(native_function)) = native_function {
+        if let Some(NativeTypes::Function(native_function)) = native_function {
             (native_function.function)(args)?;
         }
 
