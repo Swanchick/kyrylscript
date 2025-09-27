@@ -38,7 +38,7 @@ impl Interpreter {
 
             for (name, native) in registry.get_natives() {
                 match native {
-                    NativeTypes::NativeFunction(function) => {
+                    NativeTypes::Function(function) => {
                         let _ = env.define_variable(name.clone(), Value::new(
                             None, 
                             ValueType::RustFucntion { return_type: function.return_type.clone() }
@@ -226,7 +226,7 @@ impl Interpreter {
         let registry = registry.borrow();
         let native = registry.get_native(name);
 
-        if let Some(NativeTypes::NativeFunction(native_function)) = native {
+        if let Some(NativeTypes::Function(native_function)) = native {
             // (native_function.function)(args.clone())
             todo!()
         } else {
