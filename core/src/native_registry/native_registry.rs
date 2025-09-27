@@ -2,8 +2,6 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::collections::HashMap;
 
-
-use crate::interpreter::enviroment::Environment;
 use super::native_buffer::NativeBuffer;
 
 use super::native_types::NativeTypes;
@@ -13,8 +11,6 @@ thread_local! {
 }
 
 pub struct NativeRegistry {
-    pub global: Option<Rc<RefCell<Environment>>>,
-    pub local: Option<Rc<RefCell<Environment>>>,
     natives: HashMap<String, NativeTypes>
 }
 
@@ -26,8 +22,6 @@ impl NativeRegistry {
     pub fn new() -> Rc<RefCell<NativeRegistry>> {
         Rc::new(RefCell::new(
             NativeRegistry { 
-                global: None, 
-                local: None,
                 natives: HashMap::new()
             }
         ))

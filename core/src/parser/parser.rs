@@ -40,9 +40,16 @@ impl Parser {
 
             for (name, native) in registry.get_natives() {
                 match native {
-                    NativeTypes::Function(function) => {
-                        semantic_analyzer.register_rust_function(name.clone(), function);
-                    }
+                    NativeTypes::Function(function) => 
+                        semantic_analyzer.register_rust_function(name.clone(), function),
+                    NativeTypes::Int(name, _) => 
+                        semantic_analyzer.save_variable(name.clone(), DataType::Int),
+                    NativeTypes::Boolean(name, _) => 
+                        semantic_analyzer.save_variable(name.clone(), DataType::Bool),
+                    NativeTypes::Float(name, _) =>
+                        semantic_analyzer.save_variable(name.clone(), DataType::Float),
+                    NativeTypes::String(name, _) => 
+                        semantic_analyzer.save_variable(name.clone(), DataType::String),
                 }
             }
         }
@@ -71,9 +78,16 @@ impl Parser {
 
             for (name, native) in registry.get_natives() {
                 match native {
-                    NativeTypes::Function(function) => {
-                        semantic_analyzer.register_rust_function(name.clone(), function);
-                    }
+                    NativeTypes::Function(function) => 
+                        semantic_analyzer.register_rust_function(name.clone(), function),
+                    NativeTypes::Int(name, _) => 
+                        semantic_analyzer.save_variable(name.clone(), DataType::Int),
+                    NativeTypes::Boolean(name, _) => 
+                        semantic_analyzer.save_variable(name.clone(), DataType::Bool),
+                    NativeTypes::Float(name, _) =>
+                        semantic_analyzer.save_variable(name.clone(), DataType::Float),
+                    NativeTypes::String(name, _) => 
+                        semantic_analyzer.save_variable(name.clone(), DataType::String),
                 }
             }
         }
