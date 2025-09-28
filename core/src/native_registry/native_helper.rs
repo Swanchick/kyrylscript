@@ -1,4 +1,7 @@
-use crate::{global::utils::ks_result::KsResult, vm::{environment::{self, Environment}, variable::Variable}};
+
+use crate::global::utils::ks_result::KsResult;
+use crate::vm::environment::Environment;
+use crate::vm::variable::Variable;
 
 pub struct NativeHelper<'a> {
     environment: &'a mut Environment,
