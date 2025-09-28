@@ -48,6 +48,8 @@ fn value_to_string(environment: &mut Environment, variable: Variable) -> KsResul
 }
 
 pub fn ks_print(environment: &mut Environment, mut args: Vec<Variable>) -> KsResult<Variable> {
+    args.reverse();
+    
     while let Some(arg) = args.pop() {
         let out = value_to_string(environment, arg)?;
         print!("{}", out);

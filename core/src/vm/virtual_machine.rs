@@ -204,7 +204,8 @@ impl VirtualMachine {
         args.reverse();
 
         if let Some(NativeTypes::Function(native_function)) = native_function {
-            (native_function.function)(&mut self.environment, args)?;
+            let variable = (native_function.function)(&mut self.environment, args)?;
+            self.variable_stack.push(VariableStack::Variable(variable));
         }
 
         Ok(())
