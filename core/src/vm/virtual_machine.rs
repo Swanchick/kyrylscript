@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::compiler::constant::Constant;
-use crate::compiler::function::{self, Function};
+use crate::compiler::function::Function;
 use crate::compiler::instruction::Instruction;
 use crate::global::constants::{
     FUNCTION_ENCAPSULATION, 
@@ -13,7 +13,6 @@ use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
 use crate::native_registry::native_registry::NativeRegistry;
 use crate::native_registry::native_types::NativeTypes;
-use crate::vm::environment;
 
 use super::variable_stack::VariableStack;
 use super::call_stack::CallStack;
