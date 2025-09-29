@@ -1,9 +1,7 @@
+use std::collections::HashMap;
 use std::fmt::Display;
-use std::rc::Rc;
-use std::cell::RefCell;
 
 use crate::parser::parameter::Parameter;
-use crate::parser::analyzer_enviroment::AnalyzerEnviroment;
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum DataType {
@@ -14,13 +12,27 @@ pub enum DataType {
     Void(Option<Box<DataType>>),
     List(Box<DataType>),
     Tuple(Vec<DataType>),
-    Mod(Rc<RefCell<AnalyzerEnviroment>>),
+    Module(HashMap<String, DataType>),
     RustFunction {
-        return_type: Box<DataType>
+        return_type: Box<DataType>,
     },
     Function {
         parameters: Vec<DataType>,
-        return_type: Box<DataType>
+        return_type: Box<DataType>,
+    },
+    ModuleFunction {
+        public: bool,
+        parameters: Vec<DataType>,
+        return_type: Box<DataType>,
+        is_static: bool,
+    },
+    ModuleRustFunction {
+        return_type: Box<DataType>,
+        is_static: bool,
+    },
+    Field {
+        public: bool,
+        data_type: Box<DataType>,
     },
 }
 
@@ -42,6 +54,14 @@ impl DataType {
             DataType::RustFunction{ return_type } => format!("rust_function( ... ) -> {:?}", return_type),
             DataType::List(data_type) => format!("list {:?}", data_type),
             DataType::Function{ parameters, return_type } => format!("function({:?}) -> {:?}", parameters, return_type),
+            DataType::Field { public: _, data_type } => format!("{}", data_type),
+            DataType::ModuleFunction { 
+                public: _, 
+                parameters, 
+                return_type, 
+                is_static: _ 
+            } => format!("::function({:?}) -> {:?}", parameters, return_type),
+            DataType::ModuleRustFunction { return_type, is_static: _ } => format!("::rust_function( ... ) -> {:?}", return_type),
             DataType::Tuple(types) => {
                 let mut out = String::from("(");
                 let len = types.len();
@@ -59,28 +79,23 @@ impl DataType {
                 }
 
                 out
-            }
-            DataType::Mod(global) => {
-                let (variables, len) = {
-                    let global = global.borrow();
-                    let variables = global.get_variables().clone();
-                    let len = variables.len();
-                    (variables, len)
-                };
-
+            },
+            
+            DataType::Module(module) => {
                 let mut out = String::from("{");
-                for (i, (name, data_type)) in variables.iter().enumerate() {
-                    out.push_str(format!("{} = {}", name, data_type).as_str());
+                let len = module.len();
+                for (i, (name, _)) in module.iter().enumerate() {
+                    out.push_str(name.as_str());
 
                     if i == len - 1 {
-                        out.push('}');
+                        out.push(')');
                     } else {
                         out.push_str(", ");
                     }
                 }
 
                 out
-            }
+            },
         }
     }
     

@@ -1,5 +1,3 @@
-use crate::global::ks_path::{KsPath, KS_MODULE_FILE};
-use crate::lexer::lexer::Lexer;
 use crate::lexer::token::Token;
 use crate::lexer::token_pos::TokenPos;
 use crate::native_registry::native_registry::NativeRegistry;
@@ -21,16 +19,12 @@ pub struct Parser {
     current_token: usize,
     semantic_analyzer: SemanticAnalyzer,
     function_context: Context,
-    path: KsPath,
-    root: KsPath
 }
 
 impl Parser {
     pub fn new(
         tokens: Vec<Token>, 
         token_pos: Vec<TokenPos>, 
-        path: KsPath, 
-        root: KsPath
     ) -> Parser {
         let mut semantic_analyzer = SemanticAnalyzer::new();
         
@@ -60,8 +54,6 @@ impl Parser {
             current_token: 0,
             semantic_analyzer: semantic_analyzer,
             function_context: Context::None,
-            path,
-            root
         }
     }
 
@@ -69,8 +61,6 @@ impl Parser {
         tokens: Vec<Token>, 
         token_pos: Vec<TokenPos>, 
         mut semantic_analyzer: SemanticAnalyzer, 
-        path: KsPath,
-        root: KsPath
     ) -> Parser {
         let registry = NativeRegistry::get();
         {
@@ -98,8 +88,6 @@ impl Parser {
             current_token: 0,
             semantic_analyzer: semantic_analyzer,
             function_context: Context::None,
-            path,
-            root
         }
     }
 
@@ -199,7 +187,6 @@ impl Parser {
             Some(Token::While) => return Ok(Some(self.parse_while_statement()?)),
             Some(Token::For) => return Ok(Some(self.parse_for_statement()?)),
             Some(Token::Function) => return Ok(Some(self.parse_function(public)?)),
-            Some(Token::Use) => return Ok(Some(self.parse_use()?)),
             Some(Token::Identifier(name)) => {
                 match self.advance() {
                     Some(Token::Equal) => return Ok(Some(self.parse_assignment_statement(name)?)),
@@ -289,98 +276,6 @@ impl Parser {
                 body: block 
             }
         )
-    }
-
-
-    fn parse_use(&mut self) -> io::Result<Statement> {
-        let mut current_path = self.path.parent();
-
-        if self.match_token(&Token::Root) {
-            self.consume_token(Token::ColonColon)?;
-            current_path = self.root.clone();
-        }
-        let name = self.consume_identifier()?;
-        current_path.push(name);
-
-        self.consume_token(Token::Semicolon)?;
-
-        let statement = if current_path.is_file() {
-            self.parse_use_file(current_path, self.root.clone())
-        } else if current_path.is_dir() {
-            self.parse_use_dir(current_path, self.root.clone())
-        } else {
-            return Err(io::Error::new(io::ErrorKind::InvalidData, "Cannot use directory {}")) 
-        }?;
-        
-        match self.advance() {
-            Some(Token::ColonColon) => {
-                if let Some(Token::LeftBrace) = self.advance() {
-
-                } else {
-
-                }
-            }
-
-            Some(Token::Semicolon) => {
-                
-            }
-            
-            None => {}
-            _ => {}
-        }
-
-        todo!()
-    }
-
-    fn parse_use_file(&self, path: KsPath, root: KsPath) -> io::Result<Statement> {
-        if let Some(source_path) = path.to_string() {
-            let mut lexer = Lexer::load(source_path)?;
-            lexer.lexer()?;
-
-            let mut parser = Parser::with_semantic_analyzer(
-                lexer.get_tokens().clone(), 
-                lexer.get_token_pos().clone(), 
-                SemanticAnalyzer::with_global(self.semantic_analyzer.get_global()), 
-                path.clone(), 
-                root
-            );
-
-            let body = parser.parse_block_statement()?;
-            Ok(Statement::Use { 
-                file_name: source_path.to_string(), 
-                body: body,
-                global: parser.get_semantic_analyzer().get_global()
-            })
-        } else {
-            Err(io::Error::new(io::ErrorKind::InvalidData, "Cannot find file!"))
-        }
-    }
-
-    fn parse_use_dir(&self, mut path: KsPath, root: KsPath) -> io::Result<Statement> {
-        path.push(KS_MODULE_FILE.to_string());
-
-        if let Some(source_path) = path.to_string() {
-            let mut lexer = Lexer::load(source_path)?;
-            lexer.lexer()?;
-
-            let mut parser = Parser::with_semantic_analyzer(
-                lexer.get_tokens().clone(), 
-                lexer.get_token_pos().clone(), 
-                SemanticAnalyzer::with_global(self.semantic_analyzer.get_global()), 
-                path.clone(), 
-                root
-            );
-
-            let body = parser.parse_block_statement()?;
-
-            Ok(Statement::Use { 
-                file_name: source_path.to_string(), 
-                body: body, 
-                global: parser.get_semantic_analyzer().get_global() 
-            })
-        } else {
-            Err(io::Error::new(io::ErrorKind::InvalidData, "Cannot find directory module!"))
-        }
     }
 
     fn parse_early_return(&mut self, name: String) -> io::Result<Statement> {

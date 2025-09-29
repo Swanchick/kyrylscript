@@ -2,7 +2,6 @@ use crate::{
     compiler::{
         compiler::Compiler, constant::Constant, instruction::Instruction
     }, 
-    global::ks_path::KsPath, 
     lexer::lexer::Lexer, 
     parser::{
         parser::Parser, 
@@ -19,8 +18,6 @@ fn load_statments(source: &str) -> Vec<Statement> {
     let mut parser = Parser::new(
         lexer.get_tokens().clone(), 
         lexer.get_token_pos().clone(), 
-        KsPath::new(), 
-        KsPath::new()
     );
 
     parser.parse_block_statement().unwrap()

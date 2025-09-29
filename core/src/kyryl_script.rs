@@ -1,7 +1,6 @@
 use std::io;
 
 use crate::compiler::compiler::Compiler;
-use crate::global::ks_path::KsPath;
 use crate::lexer::lexer::Lexer;
 use crate::parser::parser::Parser;
 
@@ -22,10 +21,7 @@ impl KyrylScript {
         let tokens = lexer.get_tokens().clone();
         let token_pos = lexer.get_token_pos().clone();
 
-        let path = KsPath::from(path)?;
-        let root = path.parent();
-
-        let mut parser = Parser::new(tokens, token_pos, path, root);
+        let mut parser = Parser::new(tokens, token_pos);
         let block = parser.start();
 
         if let Err(e) = block {

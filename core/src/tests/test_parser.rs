@@ -1,6 +1,5 @@
 use std::vec;
 
-use crate::global::ks_path::KsPath;
 use crate::parser::parameter::Parameter;
 use crate::*;
 use lexer::lexer::Lexer;
@@ -33,7 +32,7 @@ fn test_expression() {
         Token::IntegerLiteral(30)
     ];
 
-    let mut parser = Parser::new(tokens, Vec::new(), KsPath::new(), KsPath::new());
+    let mut parser = Parser::new(tokens, Vec::new());
     let expression = parser.parse_expression().unwrap();
 
     assert_eq!(expression, test_expression);
@@ -67,7 +66,7 @@ fn test_complex_expression() {
         Token::IntegerLiteral(8)
     ];
 
-    let mut parser = Parser::new(tokens, Vec::new(), KsPath::new(), KsPath::new());
+    let mut parser = Parser::new(tokens, Vec::new());
     let expression = parser.parse_expression().unwrap();
 
     assert_eq!(expression, test_expression);
@@ -109,7 +108,7 @@ fn test_complex_even_more_complex_expression() {
         Token::IntegerLiteral(8)
     ];
 
-    let mut parser = Parser::new(tokens, Vec::new(), KsPath::new(), KsPath::new());
+    let mut parser = Parser::new(tokens, Vec::new());
     let expression = parser.parse_expression().unwrap();
 
     println!("{:?}", expression);
@@ -125,7 +124,7 @@ fn test_single_expression() {
         Token::IntegerLiteral(10),
     ];
 
-    let mut parser = Parser::new(tokens, Vec::new(), KsPath::new(), KsPath::new());
+    let mut parser = Parser::new(tokens, Vec::new());
     let expression = parser.parse_expression().unwrap();
 
     assert_eq!(expression, test_expression);
@@ -150,7 +149,7 @@ fn test_variable_declaration_statement() {
         value: Some(Expression::IntegerLiteral(10))
     };
 
-    let mut parser = Parser::new(tokens, Vec::new(), KsPath::new(), KsPath::new());
+    let mut parser = Parser::new(tokens, Vec::new());
     let statement = parser.parse_statement().unwrap().unwrap();
 
     assert_eq!(statement, test_statement);
@@ -203,7 +202,7 @@ fn test_expression_boolean_parse() {
     ];
 
 
-    let mut parser = Parser::new(tokens, Vec::new(), KsPath::new(), KsPath::new());
+    let mut parser = Parser::new(tokens, Vec::new());
     let expression = parser.parse_expression().unwrap();
 
     assert_eq!(expression, test_expression);
@@ -225,7 +224,7 @@ fn test_expression_in_parenthesis() {
         Token::RightParenthesis
     ];
 
-    let mut parser = Parser::new(tokens, Vec::new(), KsPath::new(), KsPath::new());
+    let mut parser = Parser::new(tokens, Vec::new());
     let expression = parser.parse_expression().unwrap();
 
     assert_eq!(expression, test_expression);
@@ -247,7 +246,7 @@ fn test_assigment_statement() {
     let mut lexer = Lexer::new(source.to_string());
     lexer.lexer().unwrap();
 
-    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new(), KsPath::new(), KsPath::new());
+    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new());
     let _ = parser.parse_statement().unwrap(); // Parsing first line
     let statement = parser.parse_statement().unwrap().unwrap(); // Then second, to ensure that value type is actually type-correct 
 
@@ -266,7 +265,7 @@ fn test_function_call_statement() {
         Expression::IntegerLiteral(20)
     ]);
 
-    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new(), KsPath::new(), KsPath::new());
+    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new());
     let expression = parser.parse_expression().unwrap();
 
     assert_eq!(expression, test_expression);
@@ -287,7 +286,7 @@ fn test_parser_front_unary_op() {
         })
     };
 
-    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new(), KsPath::new(), KsPath::new());
+    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new());
     let expression = parser.parse_expression().unwrap();
 
     assert_eq!(expression, test_expression);
@@ -304,7 +303,7 @@ fn test_parser_list_expression() {
         Expression::IntegerLiteral(230)
     ]);
 
-    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new(), KsPath::new(), KsPath::new());
+    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new());
     let expression = parser.parse_expression().unwrap();
 
     assert_eq!(expression, test_expression);
@@ -321,7 +320,7 @@ fn test_parser_list_index_1() {
         index: Box::new(Expression::IntegerLiteral(10))
     };
 
-    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new(), KsPath::new(), KsPath::new());
+    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new());
     let expression = parser.parse_expression().unwrap();
 
     assert_eq!(expression, test_expression);
@@ -345,7 +344,7 @@ fn test_parser_list_index_2() {
         index: Box::new(Expression::IntegerLiteral(2))
     };
 
-    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new(), KsPath::new(), KsPath::new());
+    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new());
     let expression = parser.parse_expression().unwrap();
 
     assert_eq!(expression, test_expression);
@@ -373,7 +372,7 @@ fn test_parser_list_index_3() {
         index: Box::new(Expression::IntegerLiteral(0))
     };
 
-    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new(), KsPath::new(), KsPath::new());
+    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new());
     let expression = parser.parse_expression().unwrap();
 
     assert_eq!(expression, test_expression);
@@ -389,7 +388,7 @@ fn test_parser_string_index_1() {
         index: Box::new(Expression::IntegerLiteral(10))
     };
 
-    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new(), KsPath::new(), KsPath::new());
+    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new());
     let expression = parser.parse_expression().unwrap();
 
     assert_eq!(expression, test_expression);
@@ -406,7 +405,7 @@ fn test_parser_index_assingment_statment() {
         value: Expression::IntegerLiteral(20)
     };
 
-    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new(), KsPath::new(), KsPath::new());
+    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new());
     let statement = parser.parse_statement().unwrap().unwrap();
 
     assert_eq!(statement, test_statement);
@@ -419,7 +418,7 @@ fn test_parser_tuple() {
     let mut lexer = Lexer::new(String::from("(10, \"Kurwa\")"));
     lexer.lexer().unwrap();
 
-    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new(), KsPath::new(), KsPath::new());
+    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new());
     let expression = parser.parse_expression().unwrap();
 
     assert_eq!(expression, test_expression)
@@ -442,7 +441,7 @@ fn test_parser_callback() {
     let mut lexer = Lexer::new(source.to_string());
     lexer.lexer().unwrap();
 
-    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new(), KsPath::new(), KsPath::new());
+    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new());
     let statement = parser.parse_statement().unwrap().unwrap();
 
     assert_eq!(statement, test_statement); 
@@ -468,7 +467,7 @@ fn test_parser_callback_with_type() {
     let mut lexer = Lexer::new(source.to_string());
     lexer.lexer().unwrap();
 
-    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new(), KsPath::new(), KsPath::new());
+    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new());
     let statement = parser.parse_statement().unwrap().unwrap();
 
     assert_eq!(statement, test_statement); 
@@ -501,7 +500,7 @@ fn test_parser_callback_with_parameters_and_type() {
     let mut lexer = Lexer::new(source.to_string());
     lexer.lexer().unwrap();
 
-    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new(), KsPath::new(), KsPath::new());
+    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new());
     let statement = parser.parse_statement().unwrap().unwrap();
 
     assert_eq!(statement, test_statement); 
