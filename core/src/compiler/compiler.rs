@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use super::instruction::Instruction;
 use super::constant::Constant;
 
-use crate::compiler::instruction;
 use crate::global::constants::{
     Instructions, 
     ANONYNOUS_FUNCTION_ENCAPSULATION, 
@@ -85,12 +84,26 @@ impl Compiler {
         instructions
     }
 
-    fn compile_identity(&self, segments: Vec<IdentifierTail>) -> Instructions {
+    fn compile_identity(&mut self, segments: Vec<IdentifierTail>) -> Instructions {
         let mut instructions: Instructions = Vec::new();
-        let segments_len = segments.len();
         
-        for segment in segments {
+        for (i, segment) in segments.iter().enumerate() {
+            let is_first = i == 0;
             
+            match segment {
+                IdentifierTail::Name(name) => {
+                    let name = name.clone();
+                    if is_first {
+                        instructions.push(Instruction::LoadVar(name));
+                    } else {
+                        instructions.push(Instruction::LoadFromModule(name));
+                    }
+                },
+                IdentifierTail::Index(index) => {
+                    instructions = self.compile_expression(&index, instructions);
+                    instructions.push(Instruction::AssignListIndex);
+                },
+            }
         }
 
         todo!()

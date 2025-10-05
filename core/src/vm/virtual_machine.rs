@@ -1020,9 +1020,8 @@ impl VirtualMachine {
                 self.public_define_variable(&name)?;
             },
             
-            Some(Instruction::Assign(name)) => {
-                let name = name.clone();
-                self.assign(name)?;
+            Some(Instruction::Assign) => {
+                // self.assign(name)?;
                 
                 self.step()?;
             },

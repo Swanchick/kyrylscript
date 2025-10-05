@@ -25,7 +25,7 @@ pub enum Instruction {
     Jump(i32),
     Store(String),
     PubStore(String),
-    Assign(String),
+    Assign,
     LoadConst(Constant),
     LoadVar(String),
     Closure(String),
@@ -40,6 +40,7 @@ pub enum Instruction {
     AssignListIndex,
     AssignTupleIndex(usize),
     LoadFromModule(String),
+    AssignModule(String),
     
     // System
     Enter,
