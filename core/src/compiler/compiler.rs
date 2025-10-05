@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use super::instruction::Instruction;
 use super::constant::Constant;
 
+use crate::compiler::instruction;
 use crate::global::constants::{
     Instructions, 
     ANONYNOUS_FUNCTION_ENCAPSULATION, 
@@ -13,6 +14,7 @@ use crate::global::constants::{
 };
 
 use crate::compiler::function::Function;
+use crate::parser::identifier_tail::IdentifierTail;
 use crate::parser::operator::Operator;
 use crate::parser::expression::Expression;
 use crate::parser::statement::Statement;
@@ -83,6 +85,17 @@ impl Compiler {
         instructions
     }
 
+    fn compile_identity(&self, segments: Vec<IdentifierTail>) -> Instructions {
+        let mut instructions: Instructions = Vec::new();
+        let segments_len = segments.len();
+        
+        for segment in segments {
+            
+        }
+
+        todo!()
+    }
+
     fn compile_statment(&mut self, statement: &Statement) -> Instructions {
         let mut instructions: Instructions = Vec::new();
         
@@ -112,10 +125,10 @@ impl Compiler {
                 instructions.push(store);
             }
 
-            Statement::Assignment { name, value } => {
-                instructions = self.compile_expression(value, instructions);
+            Statement::Assignment { segments, value } => {
+                // instructions = self.compile_expression(value, instructions);
 
-                instructions.push(Instruction::Assign(name.clone()));
+                // instructions.push(Instruction::Assign(name.clone()));
             },
 
             Statement::AssignmentIndex { name, index, value } => {
@@ -138,21 +151,21 @@ impl Compiler {
                 }
             },
 
-            Statement::AddValue { name, value } => {
-                instructions.push(Instruction::LoadVar(name.clone()));
-                instructions = self.compile_expression(value, instructions);
+            Statement::AddValue { segments, value } => {
+                // instructions.push(Instruction::LoadVar(name.clone()));
+                // instructions = self.compile_expression(value, instructions);
 
-                instructions.push(Instruction::Add);
+                // instructions.push(Instruction::Add);
 
-                instructions.push(Instruction::Store(name.clone()));
+                // instructions.push(Instruction::Store(name.clone()));
             }, 
 
-            Statement::RemoveValue { name, value } => {
-                instructions.push(Instruction::LoadVar(name.clone()));
-                instructions = self.compile_expression(value, instructions);
+            Statement::RemoveValue { segments, value } => {
+                // instructions.push(Instruction::LoadVar(name.clone()));
+                // instructions = self.compile_expression(value, instructions);
 
-                instructions.push(Instruction::Minus);
-                instructions.push(Instruction::Store(name.clone()));
+                // instructions.push(Instruction::Minus);
+                // instructions.push(Instruction::Store(name.clone()));
             },
 
             Statement::ReturnStatement { value } => {
@@ -457,6 +470,10 @@ impl Compiler {
                     instructions.push(Instruction::LoadFromTuple(*index as usize));
                 }
             }
+
+            Expression::Module(module) => {
+
+            },
         }
 
         instructions

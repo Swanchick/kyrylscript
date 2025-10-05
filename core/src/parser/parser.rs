@@ -2,7 +2,10 @@ use crate::lexer::token::Token;
 use crate::lexer::token_pos::TokenPos;
 use crate::native_registry::native_registry::NativeRegistry;
 use crate::native_registry::native_types::NativeTypes;
-use crate::global::data_type::DataType;
+use crate::global::data_type::{self, DataType};
+
+use crate::parser::identifier_tail::{self, IdentifierTail};
+use crate::parser::{expression, statement};
 
 use super::operator::Operator;
 use super::expression::Expression;
@@ -11,13 +14,14 @@ use super::semantic_analyzer::SemanticAnalyzer;
 use super::statement::Statement;
 use super::context::Context;
 
+use std::collections::HashMap;
 use std::io;
 
 pub struct Parser {
     tokens: Vec<Token>,
     token_pos: Vec<TokenPos>,
-    current_token: usize,
     semantic_analyzer: SemanticAnalyzer,
+    current_token: usize,
     function_context: Context,
 }
 
@@ -51,8 +55,8 @@ impl Parser {
         Parser {
             tokens,
             token_pos,
+            semantic_analyzer,
             current_token: 0,
-            semantic_analyzer: semantic_analyzer,
             function_context: Context::None,
         }
     }
@@ -85,8 +89,8 @@ impl Parser {
         Parser {
             tokens,
             token_pos,
-            current_token: 0,
             semantic_analyzer: semantic_analyzer,
+            current_token: 0,
             function_context: Context::None,
         }
     }
@@ -179,52 +183,73 @@ impl Parser {
                 return Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid context for public visibility!"));
             }
         }
+        
+        println!("Hello World {:?}", self.is_end());
 
         match self.advance() {
-            Some(Token::Let) => return Ok(Some(self.parse_variable_declaration_statement(public)?)),
-            Some(Token::Return) => return Ok(Some(self.parse_return_statement()?)),
-            Some(Token::If) => return Ok(Some(self.parse_if_statement()?)),
-            Some(Token::While) => return Ok(Some(self.parse_while_statement()?)),
-            Some(Token::For) => return Ok(Some(self.parse_for_statement()?)),
-            Some(Token::Function) => return Ok(Some(self.parse_function(public)?)),
-            Some(Token::Identifier(name)) => {
-                match self.advance() {
-                    Some(Token::Equal) => return Ok(Some(self.parse_assignment_statement(name)?)),
-                    Some(Token::PlusEqual) => return Ok(Some(self.parse_add_value_statment(name)?)),
-                    Some(Token::MinusEqual) => return Ok(Some(self.parse_remove_value_statement(name)?)),
-                    Some(Token::Question) => return Ok(Some(self.parse_early_return(name)?)),
-                    Some(Token::LeftSquareBracket) => {
-                        let mut indexes: Vec<Expression> = Vec::new();
-                
-                        loop {
+            Some(Token::Let) => Ok(Some(self.parse_variable_declaration_statement(public)?)),
+            Some(Token::Return) => Ok(Some(self.parse_return_statement()?)),
+            Some(Token::If) => Ok(Some(self.parse_if_statement()?)),
+            Some(Token::While) => Ok(Some(self.parse_while_statement()?)),
+            Some(Token::For) => Ok(Some(self.parse_for_statement()?)),
+            Some(Token::Function) => Ok(Some(self.parse_function(public)?)),
+            None => {
+                println!("Hello World 2");
+                Ok(None)
+            },
+            _ => {
+                self.back();
+                println!("Hello World 1");
+                Ok(Some(self.parse_identifier_tail()?))
+            },
+        }
+    }
+
+    fn parse_identifier_tail(&mut self) -> io::Result<Statement> {
+        let mut segments: Vec<IdentifierTail> = Vec::new();
+        let backup_token_pos = self.current_token;
+
+        loop {
+            match self.advance() {
+                Some(Token::Identifier(name)) => {
+                    segments.push(IdentifierTail::Name(name));
+                    
+                    match self.advance() {
+                        Some(Token::Dot) => {},
+                        Some(Token::LeftSquareBracket) => {
                             let index = self.parse_expression()?;
                             self.consume_token(Token::RightSquareBracket)?;
 
-                            indexes.push(index);
-
-                            if !self.match_token(&Token::LeftSquareBracket) {
-                                break;
-                            }
-                        }
-                        
-                        if self.match_token(&Token::Equal) {
+                            segments.push(IdentifierTail::Index(index));
+                        },
+                        _ => {
+                            self.current_token = backup_token_pos;
                             let value  = self.parse_expression()?;
-                            self.consume_token(Token::Semicolon)?;
 
-                            return Ok(Some(Statement::AssignmentIndex { name: name, index: indexes, value: value }));
+                            return Ok(Statement::Expression { 
+                                value, 
+                            });
                         }
                     }
+                },
+                Some(Token::Equal) => {
+                    return self.parse_assignment_statement(&segments);
+                },
+                Some(Token::PlusEqual) => {
+                    return self.parse_add_value_statment(&segments);
+                },
+                Some(Token::MinusEqual) => todo!(),
+                Some(Token::Question) => todo!(),
+                _ => {
+                    self.current_token = backup_token_pos;
+                    let value  = self.parse_expression()?;
 
-                    _ => self.back(),
-                }
-            },
-
-            None => return Ok(None),
-            _ => {},
+                    return Ok(Statement::Expression { 
+                        value, 
+                    });
+                },
+            }
         }
-        
-        self.back();
-        Ok(Some(self.parse_expression_statement()?))
     }
 
     pub fn parse_function(&mut self, public: bool) -> io::Result<Statement> {
@@ -322,18 +347,42 @@ impl Parser {
         Ok(Statement::Expression { value: expression })
     }
 
-    fn parse_add_value_statment(&mut self, name: String) -> io::Result<Statement> {
+    fn parse_add_value_statment(&mut self, segments: &Vec<IdentifierTail>) -> io::Result<Statement> {
+        let identifier_type = self.semantic_analyzer.get_data_type_from_segments(segments)?;
+        
         let expression = self.parse_expression()?;
+        let data_type = self.semantic_analyzer.get_data_type(&expression)?;
+
+        if !(data_type == DataType::Float || data_type == DataType::Int || data_type == DataType::String) {
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid data type for add assignment!"))
+        }
+
+        if identifier_type == data_type {
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "Add assignment value mismatch!"))
+        }
+
         self.consume_token(Token::Semicolon)?;
 
-        Ok(Statement::AddValue { name: name, value: expression })
+        Ok(Statement::AddValue { segments: segments.clone(), value: expression })
     }
 
-    fn parse_remove_value_statement(&mut self, name: String) -> io::Result<Statement> {
+    fn parse_remove_value_statement(&mut self, segments: &Vec<IdentifierTail>) -> io::Result<Statement> {
+        let identifier_type = self.semantic_analyzer.get_data_type_from_segments(segments)?;
+        
         let expression = self.parse_expression()?;
+        let data_type = self.semantic_analyzer.get_data_type(&expression)?;
+
+        if !(data_type == DataType::Float || data_type == DataType::Int) {
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid data type for add assignment!"))
+        }
+
+        if identifier_type == data_type {
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "Add assignment value mismatch!"))
+        }
+
         self.consume_token(Token::Semicolon)?;
 
-        Ok(Statement::RemoveValue { name: name, value: expression })
+        Ok(Statement::RemoveValue { segments: segments.clone(), value: expression })
     }
 
     fn parse_variable_declaration_statement(&mut self, public: bool) -> io::Result<Statement> {
@@ -392,12 +441,14 @@ impl Parser {
         Err(io::Error::new(io::ErrorKind::InvalidData, "No function context for return!"))
     }
 
-    fn parse_assignment_statement(&mut self, name: String) -> io::Result<Statement> {
+    fn parse_assignment_statement(&mut self, segments: &Vec<IdentifierTail>) -> io::Result<Statement> {
+        let identifier_type = self.semantic_analyzer.get_data_type_from_segments(&segments)?;
+        println!("{:?}", identifier_type);
+        
         let expression = self.parse_expression()?;
         let data_type = self.semantic_analyzer.get_data_type(&expression)?;
-        let data_type_to_check = self.semantic_analyzer.get_variable(&name)?;
 
-        match data_type_to_check {
+        match identifier_type {
             DataType::Void(Some (null_type)) => {
                 if *null_type != data_type && !DataType::is_void(&data_type) {
                     return Err(io::Error::new(io::ErrorKind::InvalidData, "Assignment value mismatch!"))
@@ -405,7 +456,7 @@ impl Parser {
             }
 
             _ => {
-                if data_type_to_check != data_type && !DataType::is_void(&data_type) {
+                if identifier_type != data_type && !DataType::is_void(&data_type) {
                     return Err(io::Error::new(io::ErrorKind::InvalidData, "Assignment value mismatch!"))
                 }
             }
@@ -413,7 +464,10 @@ impl Parser {
 
         self.consume_token(Token::Semicolon)?;
 
-        Ok(Statement::Assignment { name: name, value: expression })
+        Ok(Statement::Assignment { 
+            segments: segments.clone(), 
+            value: expression 
+        })
     }
 
     fn parse_function_call_parameters(&mut self) -> io::Result<Vec<Expression>> {
@@ -758,6 +812,23 @@ impl Parser {
                     Ok(Expression::Identifier(name))
                 }
             },
+            Some(Token::LeftBrace) => {
+                let mut module: HashMap<String, Expression> = HashMap::new();
+
+                loop {
+                    let field_name: String = self.consume_identifier()?;
+                    self.consume_token(Token::Colon)?;
+                    let expression = self.parse_expression()?;
+                    module.insert(field_name, expression);
+                    if !self.match_token(&Token::Comma) {
+                        break;
+                    }
+                }
+
+                self.consume_token(Token::RightBrace)?;
+
+                Ok(Expression::Module(module))
+            },
             None => Err(io::Error::new(io::ErrorKind::InvalidData, "Expected expression got nothing!")),
             _ => Err(io::Error::new(io::ErrorKind::InvalidData, format!("Expected expression got {}", self.peek())))
         }
@@ -859,7 +930,26 @@ impl Parser {
                 self.consume_token(Token::RightParenthesis)?;
 
                 Ok(DataType::Tuple(data_types))
-            }
+            },
+            Some(Token::LeftBrace) => {
+                let mut module: HashMap<String, DataType> = HashMap::new();
+                
+                loop {
+                    let field_name = self.consume_identifier()?;
+                    self.consume_token(Token::Colon)?;
+                    let data_type = self.parse_data_type()?;
+
+                    module.insert(field_name, data_type);
+
+                    if !self.match_token(&Token::Comma) {
+                        break;
+                    }
+                }
+
+                self.consume_token(Token::RightBrace)?;
+
+                Ok(DataType::Module(module))
+            },
             _ => Err(io::Error::new(io::ErrorKind::InvalidData, "Cannot parse the data type!"))
         }
     }

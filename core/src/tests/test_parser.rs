@@ -1,5 +1,6 @@
 use std::vec;
 
+use crate::parser::identifier_tail::IdentifierTail;
 use crate::parser::parameter::Parameter;
 use crate::*;
 use lexer::lexer::Lexer;
@@ -239,7 +240,9 @@ fn test_assigment_statement() {
     );
 
     let test_statement = Statement::Assignment {
-        name: String::from("a"),
+        segments: vec![
+            IdentifierTail::Name(String::from("a")),
+        ],
         value: Expression::StringLiteral(String::from("Hello World"))
     };
 

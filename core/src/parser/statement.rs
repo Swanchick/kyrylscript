@@ -3,6 +3,7 @@ use std::rc::Rc;
 
 use crate::global::data_type::DataType;
 use crate::parser::analyzer_enviroment::AnalyzerEnviroment;
+use crate::parser::identifier_tail::IdentifierTail;
 
 use super::expression::Expression;
 use super::parameter::Parameter;
@@ -17,7 +18,7 @@ pub enum Statement {
         value: Option<Expression>
     },
     Assignment {
-        name: String,
+        segments: Vec<IdentifierTail>,
         value: Expression
     },
     AssignmentIndex {
@@ -26,11 +27,11 @@ pub enum Statement {
         value: Expression
     },
     AddValue {
-        name: String,
+        segments: Vec<IdentifierTail>,
         value: Expression
     },
     RemoveValue {
-        name: String,
+        segments: Vec<IdentifierTail>,
         value: Expression
     },
     ReturnStatement {

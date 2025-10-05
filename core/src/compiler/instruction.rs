@@ -31,7 +31,7 @@ pub enum Instruction {
     Closure(String),
     Call { args: usize },
     
-    // List & Tuple
+    // List & Tuple & Module
     LoadList(usize),
     LoadTuple(usize),
     LoadFromList,
@@ -39,6 +39,7 @@ pub enum Instruction {
     LoadFromTuple(usize),
     AssignListIndex,
     AssignTupleIndex(usize),
+    LoadFromModule(String),
     
     // System
     Enter,

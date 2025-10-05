@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::global::data_type::DataType;
 use crate::parser::statement::Statement;
 
@@ -16,6 +18,7 @@ pub enum Expression {
     FunctionCall(String, Vec<Expression>),
     ListLiteral(Vec<Expression>),
     TupleLiteral(Vec<Expression>),
+    Module(HashMap<String, Expression>),
     FunctionLiteral { 
         parameters: Vec<Parameter>, 
         return_type: DataType, 

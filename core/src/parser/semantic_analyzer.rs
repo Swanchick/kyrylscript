@@ -1,10 +1,12 @@
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 use std::io;
 
 use crate::native_registry::native_function::NativeFunction;
+use crate::parser::identifier_tail::IdentifierTail;
 use crate::parser::operator::Operator;
-use crate::global::data_type::DataType;
+use crate::global::data_type::{self, DataType};
 
 use super::analyzer_enviroment::AnalyzerEnviroment;
 use super::expression::Expression;
@@ -226,6 +228,55 @@ impl SemanticAnalyzer {
         Ok(left)
     }
 
+    pub fn get_data_type_from_segments(&self, segments: &Vec<IdentifierTail>) -> io::Result<DataType> {
+        let mut last_segment: Option<DataType> = None;
+        
+        for identifier in segments {
+            match identifier {
+                IdentifierTail::Name(name) => {
+                    if let Some(data_type) = last_segment.clone() {
+                        if let DataType::Module(module) = data_type {
+                            let data_type = module.get(name);
+                            if let Some(data_type) = data_type {
+                                last_segment = Some(data_type.clone());
+                            } else {
+                                return Err(io::Error::new(
+                                    io::ErrorKind::InvalidData, 
+                                    format!("Cannot find {} in module!", name)
+                                ));
+                            }
+                        } else {
+                            return Err(io::Error::new(
+                                io::ErrorKind::InvalidData, 
+                                "This is not a module!"
+                            ))
+                        }
+
+                    } else {
+                        let data_type = self.get_variable(&name)?;
+                        last_segment = Some(data_type);
+                    }
+                },
+                IdentifierTail::Index(index) => {
+                    let index_data_type = self.get_data_type(&index)?;
+                    if index_data_type != DataType::Int {
+                        return Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid data type for list indexing"))
+                    }
+                    
+                    if let Some(DataType::List(data_type)) = last_segment {
+                        last_segment = Some(*data_type);
+                    } 
+                },
+            }
+        }
+        
+        if let Some(data_type) = last_segment {
+            Ok(data_type)
+        } else {
+            Err(io::Error::new(io::ErrorKind::InvalidData, "Cannot get type from identifier segment!"))
+        }
+    }
+
     pub fn get_data_type(&self, expression: &Expression) -> io::Result<DataType> {
         match expression {
             Expression::BinaryOp { left, operator, right } => {
@@ -329,6 +380,16 @@ impl SemanticAnalyzer {
                 }
                 
                 Ok(DataType::Function { parameters: data_types, return_type: Box::new(return_type.clone()) })
+            },
+            Expression::Module(module) => {
+                let mut module_type: HashMap<String, DataType> = HashMap::new(); 
+
+                for (field_name, expression) in module {
+                    let data_type = self.get_data_type(expression)?;
+                    module_type.insert(field_name.clone(), data_type);
+                }
+
+                Ok(DataType::Module(module_type))
             },
             Expression::IntegerLiteral(_) => Ok(DataType::Int),
             Expression::FloatLiteral(_) => Ok(DataType::Float),
