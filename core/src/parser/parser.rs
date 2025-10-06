@@ -183,8 +183,6 @@ impl Parser {
                 return Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid context for public visibility!"));
             }
         }
-        
-        println!("Hello World {:?}", self.is_end());
 
         match self.advance() {
             Some(Token::Let) => Ok(Some(self.parse_variable_declaration_statement(public)?)),
@@ -194,12 +192,10 @@ impl Parser {
             Some(Token::For) => Ok(Some(self.parse_for_statement()?)),
             Some(Token::Function) => Ok(Some(self.parse_function(public)?)),
             None => {
-                println!("Hello World 2");
                 Ok(None)
             },
             _ => {
                 self.back();
-                println!("Hello World 1");
                 Ok(Some(self.parse_identifier_tail()?))
             },
         }
@@ -443,7 +439,6 @@ impl Parser {
 
     fn parse_assignment_statement(&mut self, segments: &Vec<IdentifierTail>) -> io::Result<Statement> {
         let identifier_type = self.semantic_analyzer.get_data_type_from_segments(&segments)?;
-        println!("{:?}", identifier_type);
         
         let expression = self.parse_expression()?;
         let data_type = self.semantic_analyzer.get_data_type(&expression)?;

@@ -84,12 +84,10 @@ impl Compiler {
         instructions
     }
 
-    fn compile_identity(&mut self, segments: Vec<IdentifierTail>) -> Instructions {
-        let mut instructions: Instructions = Vec::new();
-        
+    fn compile_identity(&mut self, segments: &Vec<IdentifierTail>, mut instructions: Instructions) -> Instructions {
         for (i, segment) in segments.iter().enumerate() {
             let is_first = i == 0;
-            
+
             match segment {
                 IdentifierTail::Name(name) => {
                     let name = name.clone();
@@ -101,12 +99,12 @@ impl Compiler {
                 },
                 IdentifierTail::Index(index) => {
                     instructions = self.compile_expression(&index, instructions);
-                    instructions.push(Instruction::AssignListIndex);
+                    instructions.push(Instruction::LoadFromList);
                 },
             }
         }
 
-        todo!()
+        instructions
     }
 
     fn compile_statment(&mut self, statement: &Statement) -> Instructions {
@@ -136,35 +134,32 @@ impl Compiler {
                 };
 
                 instructions.push(store);
-            }
-
-            Statement::Assignment { segments, value } => {
-                // instructions = self.compile_expression(value, instructions);
-
-                // instructions.push(Instruction::Assign(name.clone()));
             },
+            Statement::Assignment { segments, value } => {
+                instructions = self.compile_identity(segments, instructions);
+                instructions = self.compile_expression(value, instructions);
 
+                instructions.push(Instruction::Assign);
+            },
             Statement::AssignmentIndex { name, index, value } => {
-                instructions.push(Instruction::LoadVar(name.clone()));
-                
-                for (i, index_value) in index.iter().enumerate() {
-                    let is_last = i == index.len() - 1;
-                    
-                    if is_last {
-                        instructions = self.compile_expression(value, instructions);
-                        instructions = self.compile_expression(index_value, instructions);
-
-                        instructions.push(Instruction::AssignListIndex);
-
-                        break;
-                    }
-
-                    instructions = self.compile_expression(index_value, instructions);
-                    instructions.push(Instruction::LoadFromList);
-                }
+                // instructions.push(Instruction::LoadVar(name.clone()));
+                // for (i, index_value) in index.iter().enumerate() {
+                //     let is_last = i == index.len() - 1;
+                //     if is_last {
+                //         instructions = self.compile_expression(value, instructions);
+                //         instructions = self.compile_expression(index_value, instructions);
+                //         instructions.push(Instruction::AssignListIndex);
+                //         break;
+                //     }
+                //     instructions = self.compile_expression(index_value, instructions);
+                //     instructions.push(Instruction::LoadFromList);
+                // }
             },
 
             Statement::AddValue { segments, value } => {
+                instructions = self.compile_identity(segments, instructions);
+
+                
                 // instructions.push(Instruction::LoadVar(name.clone()));
                 // instructions = self.compile_expression(value, instructions);
 

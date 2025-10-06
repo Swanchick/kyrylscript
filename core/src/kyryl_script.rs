@@ -21,14 +21,8 @@ impl KyrylScript {
         let tokens = lexer.get_tokens().clone();
         let token_pos = lexer.get_token_pos().clone();
 
-        for token in &tokens {
-            println!("{}", token);
-        }
-        println!("===================");
-
         let mut parser = Parser::new(tokens, token_pos);
         let block = parser.start();
-
 
         if let Err(e) = block {
             println!("{}", e);
@@ -39,17 +33,18 @@ impl KyrylScript {
             ));
         }
 
-        // let block = block?;
+        let block = block?;
 
-        // let mut compiler = Compiler::new();
-        // compiler.start_compile(&block);
+        let mut compiler = Compiler::new();
+        compiler.start_compile(&block);
+        compiler.display();
+        println!("====================");
+        let mut vm = VirtualMachine::from(compiler.functions());
+        let result = vm.initialize();
 
-        // let mut vm = VirtualMachine::from(compiler.functions());
-        // let result = vm.initialize();
-
-        // if let Err(e) = result {
-        //     e.display();
-        // }
+        if let Err(e) = result {
+            e.display();
+        }
 
         Ok(())
     }

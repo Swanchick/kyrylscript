@@ -690,6 +690,41 @@ impl VirtualMachine {
         Ok(())
     }
 
+    fn load_from_list_stay(&mut self) -> KsResult<()> {
+        let index = self.load_integer()? as usize;
+        let stack = self.variable_stack.last();
+
+        match stack {
+            Some(VariableStack::Variable(variable)) => {
+                if let Value::List(list) = variable.value() {
+                    let reference = list.get(index);
+                    if let Some(reference) = reference {
+                        self.variable_stack.push(VariableStack::Reference(*reference));
+                    } else {
+                        return Err(KsError::runtime("List indexing out of bounces!"));
+                    }
+                }
+            },
+            Some(VariableStack::Reference(reference)) => {
+                let variable = self.environment.variable(&reference)?;
+                if let Value::List(list) = variable.value() {
+                    let reference = list.get(index);
+                    if let Some(reference) = reference {
+                        self.variable_stack.push(VariableStack::Reference(*reference));
+                    } else {
+                        return Err(KsError::runtime("List indexing out of bounces!"));
+                    }
+                }
+            },
+            _ => 
+                return Err(KsError::runtime("There is no more variable stacks!"))
+        }
+
+        self.step()?;
+        
+        Ok(())
+    }
+
     fn load_from_tuple(&mut self, index: usize) -> KsResult<()> {
         let stack = self.variable_stack.pop();
 
@@ -720,7 +755,7 @@ impl VirtualMachine {
         }
 
         self.step()?;
-        
+
         Ok(())
     }
 
@@ -744,21 +779,32 @@ impl VirtualMachine {
         Ok(())
     }
 
-    fn assign(&mut self, name: String) -> KsResult<()> {
-        let reference = self.environment.reference(&name)?;
-        let stack = self.variable_stack.pop();
+    fn extract_reference(&self, stack: Option<VariableStack>) -> KsResult<u64> {
+        if let Some(VariableStack::Reference(reference)) = stack {
+            Ok(reference)
+        } else {
+            Err(KsError::runtime("Cannot extact reference!"))
+        }
+    }
 
-        match stack {
+    fn assign(&mut self) -> KsResult<()> {
+        println!("{:?}", self.variable_stack);
+
+        let assign_value = self.variable_stack.pop();
+        let assign_to = self.variable_stack.pop();
+        let reference = self.extract_reference(assign_to)?;
+
+        match assign_value {
             Some(VariableStack::Variable(variable)) => 
                 self.environment.assign_to_reference(reference, variable)?,
             Some(VariableStack::Reference(assign_reference)) => {
                 self.assign_with_reference(reference, assign_reference)?;
-                self.environment.assign_to_name(&name, &assign_reference)?;
-            } 
+                // self.environment.assign_to_name(&name, &assign_reference)?;
+            },
             _ => 
                 return Err(KsError::runtime("There is no more variable stacks!"))
         }
-        
+
         Ok(())
     }
 
@@ -1021,7 +1067,7 @@ impl VirtualMachine {
             },
             
             Some(Instruction::Assign) => {
-                // self.assign(name)?;
+                self.assign()?;
                 
                 self.step()?;
             },
@@ -1061,6 +1107,8 @@ impl VirtualMachine {
             Some(Instruction::AssignTupleIndex(index)) => self.assign_collection_index(*index as i32)?,
             Some(Instruction::AssignListIndex) => self.assign_list_index()?,
             Some(Instruction::LoadFromList) => self.load_from_list()?,
+            Some(Instruction::LoadFromListStay) => self.load_from_list_stay()?,
+            Some(Instruction::LoadFromModuleStay(name)) => todo!(),
             Some(Instruction::LoadFromTuple(index)) => self.load_from_tuple(*index)?,
             Some(Instruction::ListLen) => self.list_len()?,
             Some(Instruction::Return) => self.on_return()?,

@@ -35,11 +35,13 @@ pub enum Instruction {
     LoadList(usize),
     LoadTuple(usize),
     LoadFromList,
+    LoadFromListStay,
     ListLen,
     LoadFromTuple(usize),
     AssignListIndex,
     AssignTupleIndex(usize),
     LoadFromModule(String),
+    LoadFromModuleStay(String),
     AssignModule(String),
     
     // System

@@ -1,2 +1,2 @@
-let test = {name: [10, 20, 30, 40, 50, 60, 70, 80], surname: "Lebedenko"};
-test.name[2] = 100;
+let test = [10, 20, 30, 40, 50, 60, 70];
+test[2] = 100;
