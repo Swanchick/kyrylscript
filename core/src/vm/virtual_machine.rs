@@ -25,6 +25,7 @@ pub struct VirtualMachine {
     variable_stack: Vec<VariableStack>,
     call_stack: Vec<CallStack>,
     compilation: HashMap<String, Function>
+    
 }
 
 impl VirtualMachine {

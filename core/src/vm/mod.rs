@@ -5,3 +5,5 @@ pub mod environment;
 pub mod call_stack;
 pub mod variable_stack;
 mod anchor;
+mod tail_stack;
+mod var_info;
