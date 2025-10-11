@@ -398,23 +398,6 @@ fn test_parser_string_index_1() {
 }
 
 #[test]
-fn test_parser_index_assingment_statment() {
-    let mut lexer = Lexer::new(String::from("some_list[10][20] = 20;"));
-    lexer.lexer().unwrap();
-
-    let test_statement = Statement::AssignmentIndex { 
-        name: String::from("some_list"), 
-        index: vec![Expression::IntegerLiteral(10), Expression::IntegerLiteral(20)],
-        value: Expression::IntegerLiteral(20)
-    };
-
-    let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new());
-    let statement = parser.parse_statement().unwrap().unwrap();
-
-    assert_eq!(statement, test_statement);
-}
-
-#[test]
 fn test_parser_tuple() {
     let test_expression = Expression::TupleLiteral(vec![Expression::IntegerLiteral(10), Expression::StringLiteral(String::from("Kurwa"))]);
 

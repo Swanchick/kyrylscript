@@ -21,11 +21,6 @@ pub enum Statement {
         segments: Vec<IdentifierTail>,
         value: Expression
     },
-    AssignmentIndex {
-        name: String,
-        index: Vec<Expression>,
-        value: Expression
-    },
     AddValue {
         segments: Vec<IdentifierTail>,
         value: Expression

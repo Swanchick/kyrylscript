@@ -141,20 +141,6 @@ impl Compiler {
 
                 instructions.push(Instruction::Assign);
             },
-            Statement::AssignmentIndex { name, index, value } => {
-                // instructions.push(Instruction::LoadVar(name.clone()));
-                // for (i, index_value) in index.iter().enumerate() {
-                //     let is_last = i == index.len() - 1;
-                //     if is_last {
-                //         instructions = self.compile_expression(value, instructions);
-                //         instructions = self.compile_expression(index_value, instructions);
-                //         instructions.push(Instruction::AssignListIndex);
-                //         break;
-                //     }
-                //     instructions = self.compile_expression(index_value, instructions);
-                //     instructions.push(Instruction::LoadFromList);
-                // }
-            },
 
             Statement::AddValue { segments, value } => {
                 instructions = self.compile_identity(segments, instructions);
