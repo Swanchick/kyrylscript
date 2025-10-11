@@ -32,6 +32,7 @@ pub enum Instruction {
     Call(usize),
     
     // List & Tuple & Module
+    LoadModule(usize),
     LoadList(usize),
     LoadTuple(usize),
     LoadFromList,

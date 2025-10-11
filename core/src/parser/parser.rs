@@ -227,6 +227,12 @@ impl Parser {
                         }
                     }
                 },
+                Some(Token::LeftSquareBracket) => {
+                    let index = self.parse_expression()?;
+                    self.consume_token(Token::RightSquareBracket)?;
+
+                    segments.push(IdentifierTail::Index(index));
+                },
                 Some(Token::Equal) => {
                     return self.parse_assignment_statement(&segments);
                 },
