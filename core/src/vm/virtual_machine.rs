@@ -13,6 +13,7 @@ use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
 use crate::native_registry::native_registry::NativeRegistry;
 use crate::native_registry::native_types::NativeTypes;
+use crate::vm::tail_stack::TailStack;
 
 use super::variable_stack::VariableStack;
 use super::call_stack::CallStack;
@@ -24,8 +25,8 @@ pub struct VirtualMachine {
     environment: Environment,
     variable_stack: Vec<VariableStack>,
     call_stack: Vec<CallStack>,
-    compilation: HashMap<String, Function>
-    
+    compilation: HashMap<String, Function>,
+    tail_stack: Option<TailStack>,
 }
 
 impl VirtualMachine {
@@ -36,7 +37,8 @@ impl VirtualMachine {
             call_stack: vec![
                 CallStack::new(Vec::new()),
             ],
-            compilation
+            compilation,
+            tail_stack: None,
         }
     }
 
@@ -691,41 +693,6 @@ impl VirtualMachine {
         Ok(())
     }
 
-    fn load_from_list_stay(&mut self) -> KsResult<()> {
-        let index = self.load_integer()? as usize;
-        let stack = self.variable_stack.last();
-
-        match stack {
-            Some(VariableStack::Variable(variable)) => {
-                if let Value::List(list) = variable.value() {
-                    let reference = list.get(index);
-                    if let Some(reference) = reference {
-                        self.variable_stack.push(VariableStack::Reference(*reference));
-                    } else {
-                        return Err(KsError::runtime("List indexing out of bounces!"));
-                    }
-                }
-            },
-            Some(VariableStack::Reference(reference)) => {
-                let variable = self.environment.variable(&reference)?;
-                if let Value::List(list) = variable.value() {
-                    let reference = list.get(index);
-                    if let Some(reference) = reference {
-                        self.variable_stack.push(VariableStack::Reference(*reference));
-                    } else {
-                        return Err(KsError::runtime("List indexing out of bounces!"));
-                    }
-                }
-            },
-            _ => 
-                return Err(KsError::runtime("There is no more variable stacks!"))
-        }
-
-        self.step()?;
-        
-        Ok(())
-    }
-
     fn load_from_tuple(&mut self, index: usize) -> KsResult<()> {
         let stack = self.variable_stack.pop();
 
@@ -1108,12 +1075,10 @@ impl VirtualMachine {
             Some(Instruction::AssignTupleIndex(index)) => self.assign_collection_index(*index as i32)?,
             Some(Instruction::AssignListIndex) => self.assign_list_index()?,
             Some(Instruction::LoadFromList) => self.load_from_list()?,
-            Some(Instruction::LoadFromListStay) => self.load_from_list_stay()?,
-            Some(Instruction::LoadFromModuleStay(name)) => todo!(),
             Some(Instruction::LoadFromTuple(index)) => self.load_from_tuple(*index)?,
             Some(Instruction::ListLen) => self.list_len()?,
             Some(Instruction::Return) => self.on_return()?,
-            Some(Instruction::Call { args }) => self.extract_function(args.clone())?,
+            Some(Instruction::Call(args)) => self.extract_function(args.clone())?,
             Some(Instruction::Jump(distance)) => self.jump(*distance)?,
             Some(Instruction::JumpIfFalse(distance)) => self.jump_if_false(*distance)?,
 

@@ -29,19 +29,17 @@ pub enum Instruction {
     LoadConst(Constant),
     LoadVar(String),
     Closure(String),
-    Call { args: usize },
+    Call(usize),
     
     // List & Tuple & Module
     LoadList(usize),
     LoadTuple(usize),
     LoadFromList,
-    LoadFromListStay,
     ListLen,
     LoadFromTuple(usize),
     AssignListIndex,
     AssignTupleIndex(usize),
     LoadFromModule(String),
-    LoadFromModuleStay(String),
     AssignModule(String),
     
     // System

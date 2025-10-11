@@ -396,7 +396,7 @@ impl Compiler {
                 }
 
                 instructions.push(Instruction::LoadVar(name.clone()));
-                instructions.push(Instruction::Call { args: arguments.len() });
+                instructions.push(Instruction::Call(arguments.len()));
             },
             
             Expression::ListLiteral(elements) => {
