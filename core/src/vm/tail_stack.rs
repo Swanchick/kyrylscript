@@ -1,7 +1,7 @@
 use crate::vm::var_info::VarInfo;
 
  pub enum TailStack {
-    Variable(VarInfo),
+    Variable(String),
     Index {
         index: usize,
         info: VarInfo,

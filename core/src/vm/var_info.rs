@@ -1,11 +1,32 @@
+use crate::global::utils::{ks_error::KsError, ks_result::KsResult};
+use super::variable::Variable;
+
 pub struct VarInfo {
-    reference: u64,
+    reference: Option<u64>,
     depth: usize,
 }
 
 impl VarInfo {
-    pub fn reference(&self) -> &u64 {
-        &self.reference
+    pub fn new(reference: u64, depth: usize) -> VarInfo {
+        VarInfo { 
+            reference: Some(reference), 
+            depth, 
+        }
+    }
+
+    pub fn from(variable: &Variable) -> KsResult<VarInfo> {
+        Ok(VarInfo { 
+            reference: Some(variable.reference()?), 
+            depth: variable.depth()
+        })
+    }
+    
+    pub fn reference(&self) -> KsResult<&u64> {
+        if let Some(reference) = &self.reference {
+            Ok(reference)
+        } else {
+            Err(KsError::runtime("Variable doesn't have a reference!"))
+        }
     }
 
     pub fn depth(&self) -> &usize {

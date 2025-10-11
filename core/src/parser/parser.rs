@@ -2,11 +2,9 @@ use crate::lexer::token::Token;
 use crate::lexer::token_pos::TokenPos;
 use crate::native_registry::native_registry::NativeRegistry;
 use crate::native_registry::native_types::NativeTypes;
-use crate::global::data_type::{self, DataType};
+use crate::global::data_type::DataType;
 
-use crate::parser::identifier_tail::{self, IdentifierTail};
-use crate::parser::{expression, statement};
-
+use super::identifier_tail::IdentifierTail;
 use super::operator::Operator;
 use super::expression::Expression;
 use super::parameter::Parameter;
@@ -184,6 +182,7 @@ impl Parser {
             }
         }
 
+
         match self.advance() {
             Some(Token::Let) => Ok(Some(self.parse_variable_declaration_statement(public)?)),
             Some(Token::Return) => Ok(Some(self.parse_return_statement()?)),
@@ -221,7 +220,7 @@ impl Parser {
                         _ => {
                             self.current_token = backup_token_pos;
                             let value  = self.parse_expression()?;
-
+                            self.consume_token(Token::Semicolon)?;
                             return Ok(Statement::Expression { 
                                 value, 
                             });
@@ -238,8 +237,8 @@ impl Parser {
                 Some(Token::Question) => todo!(),
                 _ => {
                     self.current_token = backup_token_pos;
-                    let value  = self.parse_expression()?;
-
+                    let value = self.parse_expression()?;
+                    self.consume_token(Token::Semicolon)?;
                     return Ok(Statement::Expression { 
                         value, 
                     });
@@ -825,15 +824,19 @@ impl Parser {
                 Ok(Expression::Module(module))
             },
             None => Err(io::Error::new(io::ErrorKind::InvalidData, "Expected expression got nothing!")),
-            _ => Err(io::Error::new(io::ErrorKind::InvalidData, format!("Expected expression got {}", self.peek())))
+            token => {
+                if let Some(token) = token {
+                    Err(io::Error::new(io::ErrorKind::InvalidData, format!("Expected expression got {}", token)))
+                } else {
+                    Err(io::Error::new(io::ErrorKind::InvalidData, "Expected expression got nothing!"))
+                }
+            }
         }
     }
 
     fn parse_expression_function(&mut self) -> io::Result<Expression> {
         self.consume_token(Token::LeftParenthesis)?;
-
         self.semantic_analyzer.enter_function_enviroment();
-
         let parameters = self.parse_parameters()?;
 
         let return_type = if self.match_token(&Token::Colon) {
@@ -850,7 +853,7 @@ impl Parser {
             parameters: DataType::from_parameters(&parameters), 
             return_type: Box::new(return_type.clone())
         };
-        
+
         self.function_context = Context::Function{ return_data: function_data_type.clone() };
         let block = self.parse_block_statement()?;
         self.function_context = Context::None;
@@ -865,11 +868,11 @@ impl Parser {
     }
 
     fn check(&self, token: &Token) -> bool {
-        if self.is_end() {
-            return false;
+        if let Some(original_token) = self.tokens.get(self.current_token) {            
+            original_token == token
+        } else {
+            false
         }
-        
-        self.peek() == token
     }
 
     fn parse_data_type(&mut self) -> io::Result<DataType> {        
@@ -880,7 +883,7 @@ impl Parser {
             Some(Token::Bool) => Ok(DataType::Bool),
             Some(Token::Function) => {
                 self.consume_token(Token::LeftParenthesis)?;
-                
+
                 let mut parameters: Vec<DataType> = Vec::new();
 
                 if !self.match_token(&Token::RightParenthesis) {
@@ -928,34 +931,29 @@ impl Parser {
             },
             Some(Token::LeftBrace) => {
                 let mut module: HashMap<String, DataType> = HashMap::new();
-                
                 loop {
                     let field_name = self.consume_identifier()?;
                     self.consume_token(Token::Colon)?;
-                    let data_type = self.parse_data_type()?;
 
+                    let data_type = self.parse_data_type()?;
                     module.insert(field_name, data_type);
 
                     if !self.match_token(&Token::Comma) {
                         break;
                     }
                 }
-
                 self.consume_token(Token::RightBrace)?;
-
                 Ok(DataType::Module(module))
             },
             _ => Err(io::Error::new(io::ErrorKind::InvalidData, "Cannot parse the data type!"))
         }
     }
 
-    fn consume_token(&mut self, token: Token) -> io::Result<Token> {
+    fn consume_token(&mut self, token: Token) -> io::Result<()> {
         if self.check(&token) {
-            
-
-            Ok(self.advance().unwrap())
+            self.advance();
+            Ok(())
         } else {
-
             if self.is_end() {
                 Err(io::Error::new(io::ErrorKind::InvalidData, format!("Expected token: {:?} got nothing!", token)))
             } else {
@@ -975,14 +973,10 @@ impl Parser {
     }
 
     fn advance(&mut self) -> Option<Token> {
-        if self.is_end() {
-            return None;
-        }
-
-        if self.current_token < self.tokens.len() {
-            let token = self.peek().clone();
+        if let Some(token) = self.tokens.get(self.current_token) {
+            let token = token.clone();
             self.current_token += 1;
-            Some(token)
+            return Some(token);
         } else {
             None
         }

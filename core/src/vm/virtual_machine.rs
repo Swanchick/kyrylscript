@@ -13,8 +13,9 @@ use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
 use crate::native_registry::native_registry::NativeRegistry;
 use crate::native_registry::native_types::NativeTypes;
-use crate::vm::tail_stack::TailStack;
 
+use super::tail_stack::TailStack;
+use super::var_info::VarInfo;
 use super::variable_stack::VariableStack;
 use super::call_stack::CallStack;
 use super::environment::Environment;
@@ -125,17 +126,27 @@ impl VirtualMachine {
             Constant::Function(name) => {
                 let native = NativeRegistry::get();
                 let native = native.borrow();
-                
+
                 if let Some(NativeTypes::Function(_)) = native.get_native(name) {
                     Value::NativeFunction(name.clone())
                 } else {
                     Value::Function(name.clone())
                 }
             },
-            Constant::Null => Value::Null
+            Constant::Null => Value::Null,
         };
 
         Variable::empty(value, self.depth())
+    }
+
+    fn load_var(&mut self, name: String) -> KsResult<()> {
+        let reference = self.environment.find_reference(&name)?;
+        self.tail_stack = Some(TailStack::Variable(name));
+
+        self.variable_stack.push(VariableStack::Reference(reference));
+        self.step()?;
+        
+        Ok(())
     }
 
     fn define_variable(&mut self, name: &str) -> KsResult<()> {
@@ -667,6 +678,12 @@ impl VirtualMachine {
                 if let Value::List(list) = variable.value() {
                     let reference = list.get(index);
                     if let Some(reference) = reference {
+                        self.tail_stack = Some(TailStack::Index { 
+                            index: index, 
+                            info: VarInfo::from(&variable)?
+                        });
+
+
                         self.variable_stack.push(VariableStack::Reference(*reference));
                     } else {
                         return Err(KsError::runtime("List indexing out of bounces!"));
@@ -678,6 +695,11 @@ impl VirtualMachine {
                 if let Value::List(list) = variable.value() {
                     let reference = list.get(index);
                     if let Some(reference) = reference {
+                        self.tail_stack = Some(TailStack::Index { 
+                            index: index, 
+                            info: VarInfo::from(&variable)?
+                        });
+
                         self.variable_stack.push(VariableStack::Reference(*reference));
                     } else {
                         return Err(KsError::runtime("List indexing out of bounces!"));
@@ -701,6 +723,11 @@ impl VirtualMachine {
                 if let Value::Tuple(list) = variable.value() {
                     let reference = list.get(index);
                     if let Some(reference) = reference {
+                        self.tail_stack = Some(TailStack::Index { 
+                            index: index, 
+                            info: VarInfo::from(&variable)?
+                        });
+
                         self.variable_stack.push(VariableStack::Reference(*reference));
                     } else {
                         return Err(KsError::runtime("List indexing out of bounces!"));
@@ -712,6 +739,11 @@ impl VirtualMachine {
                 if let Value::Tuple(list) = variable.value() {
                     let reference = list.get(index);
                     if let Some(reference) = reference {
+                        self.tail_stack = Some(TailStack::Index { 
+                            index: index, 
+                            info: VarInfo::from(&variable)?
+                        });
+
                         self.variable_stack.push(VariableStack::Reference(*reference));
                     } else {
                         return Err(KsError::runtime("List indexing out of bounces!"));
@@ -755,6 +787,28 @@ impl VirtualMachine {
         }
     }
 
+    fn change_reference_holder(&mut self, new_reference: u64) -> KsResult<()> {
+        match &self.tail_stack {
+            Some(TailStack::Index { index, info }) => {
+                let reference = info.reference()?;
+                let depth = info.depth();
+                let list = self.environment.variable_by_depth_mut(reference, *depth)?;
+                if let Value::List(references) | Value::Tuple(references) = list.value_mut() {
+                    references[*index] = new_reference;
+                }
+            },
+            Some(TailStack::Module { name, info }) => {
+
+            },
+            Some(TailStack::Variable(name)) => {
+                self.environment.assign_to_name(name, &new_reference)?;
+            },
+            _ => {}
+        }
+        
+        Ok(())
+    }
+
     fn assign(&mut self) -> KsResult<()> {
         println!("{:?}", self.variable_stack);
 
@@ -767,7 +821,8 @@ impl VirtualMachine {
                 self.environment.assign_to_reference(reference, variable)?,
             Some(VariableStack::Reference(assign_reference)) => {
                 self.assign_with_reference(reference, assign_reference)?;
-                // self.environment.assign_to_name(&name, &assign_reference)?;
+
+                self.change_reference_holder(assign_reference)?;
             },
             _ => 
                 return Err(KsError::runtime("There is no more variable stacks!"))
@@ -880,18 +935,6 @@ impl VirtualMachine {
             Some(Instruction::LoadConst(constant)) => {
                 let variable = self.constant_to_variable(&constant);
                 self.variable_stack.push(VariableStack::Variable(variable));
-                self.step()?;
-            },
-
-            Some(Instruction::LoadVar(name)) => {                
-                let reference = self.environment.find_reference(&name);
-
-                if let Some(reference) = reference {
-                    self.variable_stack.push(VariableStack::Reference(reference));
-                } else {
-                    return Err(KsError::runtime(&format!("Cannot find variable {}!", name)));
-                }
-
                 self.step()?;
             },
 
@@ -1071,6 +1114,7 @@ impl VirtualMachine {
                 self.step()?;
             },
 
+            Some(Instruction::LoadVar(name)) => self.load_var(name.clone())?,
             Some(Instruction::Clone) => self.clone()?,
             Some(Instruction::AssignTupleIndex(index)) => self.assign_collection_index(*index as i32)?,
             Some(Instruction::AssignListIndex) => self.assign_list_index()?,

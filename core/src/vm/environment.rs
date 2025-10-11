@@ -43,14 +43,14 @@ impl Environment {
         self.references.last_mut()
     }
 
-    pub fn find_reference(&self, name: &str) -> Option<u64> {
+    pub fn find_reference(&self, name: &str) -> KsResult<u64> {
         for i in (0..self.variables.len()).rev() {
             if let Some(reference) = self.variables[i].get(name) {
-                return Some(*reference);
+                return Ok(*reference);
             }
         }
 
-        None
+        Err(KsError::runtime(&format!("Cannot find variable {}!", name)))
     }
 
     pub fn variable(&self, reference: &u64) -> KsResult<&Variable> {
@@ -63,6 +63,20 @@ impl Environment {
         Err(KsError::runtime(
             &format!("Cannot find variable with reference {}", reference)
         ))
+    }
+
+    pub fn variable_by_depth_mut(&mut self, reference: &u64, depth: usize) -> KsResult<&mut Variable> {
+        let references = self.references.get_mut(depth);
+
+        if let Some(references) = references {
+            if let Some(variable) = references.get_mut(reference) {
+                Ok(variable)
+            } else {
+                Err(KsError::runtime(&format!("Cannot find reference {}", reference)))
+            }
+        } else {
+            Err(KsError::runtime("Incorrect depth!"))
+        }
     }
 
     pub fn variable_remove(&mut self, reference: &u64) -> KsResult<Variable> {
