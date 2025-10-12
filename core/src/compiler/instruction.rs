@@ -38,8 +38,6 @@ pub enum Instruction {
     LoadFromList,
     ListLen,
     LoadFromTuple(usize),
-    AssignListIndex,
-    AssignTupleIndex(usize),
     LoadFromModule(String),
     AssignModule(String),
     

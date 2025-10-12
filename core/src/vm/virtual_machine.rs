@@ -810,8 +810,6 @@ impl VirtualMachine {
     }
 
     fn assign(&mut self) -> KsResult<()> {
-        println!("{:?}", self.variable_stack);
-
         let assign_value = self.variable_stack.pop();
         let assign_to = self.variable_stack.pop();
         let reference = self.extract_reference(assign_to)?;
@@ -1116,8 +1114,6 @@ impl VirtualMachine {
 
             Some(Instruction::LoadVar(name)) => self.load_var(name.clone())?,
             Some(Instruction::Clone) => self.clone()?,
-            Some(Instruction::AssignTupleIndex(index)) => self.assign_collection_index(*index as i32)?,
-            Some(Instruction::AssignListIndex) => self.assign_list_index()?,
             Some(Instruction::LoadFromList) => self.load_from_list()?,
             Some(Instruction::LoadFromTuple(index)) => self.load_from_tuple(*index)?,
             Some(Instruction::ListLen) => self.list_len()?,
