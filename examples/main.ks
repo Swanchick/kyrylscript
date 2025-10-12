@@ -1,6 +1,9 @@
 let person = {
     name: "Kyryl",
-    age: 19
+    age: 19,
+    add(a: int, b: int): int {
+        return a + b;
+    }
 };
 
 println(person);

@@ -425,7 +425,11 @@ impl Parser {
     }
 
     fn parse_return_statement(&mut self) -> io::Result<Statement> {
-        if let Context::Function{ return_data} = self.function_context.clone() {
+        println!("Context: {:?}", self.function_context);
+
+        if let Context::Function { return_data} = self.function_context.clone() {
+            println!("Hello World");
+
             let expression = self.parse_expression()?;
             let data_type = self.semantic_analyzer.get_data_type(&expression)?;
 
@@ -535,8 +539,8 @@ impl Parser {
         self.semantic_analyzer.exit_function_enviroment()?;
 
         Ok(Statement::WhileStatement {
-                condition: condition,
-                body: block
+            condition: condition,
+            body: block
         })
     }
 
@@ -816,10 +820,49 @@ impl Parser {
                 let mut module: HashMap<String, Expression> = HashMap::new();
 
                 loop {
+                    println!("{:?}", self.peek());
+
                     let field_name: String = self.consume_identifier()?;
-                    self.consume_token(Token::Colon)?;
-                    let expression = self.parse_expression()?;
-                    module.insert(field_name, expression);
+                    match self.advance() {
+                        Some(Token::Colon) => {
+                            let expression = self.parse_expression()?;
+                            module.insert(field_name, expression);
+                        },
+                        Some(Token::LeftParenthesis) => {
+                            self.semantic_analyzer.enter_function_enviroment();
+                            let parameters = self.parse_parameters()?;
+
+                            let return_type = if self.match_token(&Token::Colon) {
+                                self.parse_data_type()?
+                            } else {
+                                DataType::void()
+                            };
+
+                            self.consume_token(Token::LeftBrace)?;
+
+                            println!("===============");
+                            let function_data_type = DataType::Function {
+                                parameters: DataType::from_parameters(&parameters),
+                                return_type: Box::new(return_type.clone())
+                            };
+
+                            self.function_context = Context::Function { return_data: function_data_type };
+                            let block = self.parse_block_statement()?;
+                            self.function_context = Context::None;
+                            println!("===============");
+
+                            self.semantic_analyzer.exit_function_enviroment()?;
+
+                            module.insert(field_name, Expression::FunctionLiteral {
+                                parameters,
+                                return_type,
+                                block
+                            });
+                        },
+                        _ => {}
+                    }
+
+
                     if !self.match_token(&Token::Comma) {
                         break;
                     }
