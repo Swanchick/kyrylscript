@@ -25,26 +25,26 @@ pub struct Parser {
 
 impl Parser {
     pub fn new(
-        tokens: Vec<Token>, 
-        token_pos: Vec<TokenPos>, 
+        tokens: Vec<Token>,
+        token_pos: Vec<TokenPos>,
     ) -> Parser {
         let mut semantic_analyzer = SemanticAnalyzer::new();
-        
+
         let registry = NativeRegistry::get();
         {
             let registry = registry.borrow();
 
             for (name, native) in registry.get_natives() {
                 match native {
-                    NativeTypes::Function(function) => 
+                    NativeTypes::Function(function) =>
                         semantic_analyzer.register_rust_function(name.clone(), function),
-                    NativeTypes::Int(name, _) => 
+                    NativeTypes::Int(name, _) =>
                         semantic_analyzer.save_variable(name.clone(), DataType::Int),
-                    NativeTypes::Boolean(name, _) => 
+                    NativeTypes::Boolean(name, _) =>
                         semantic_analyzer.save_variable(name.clone(), DataType::Bool),
                     NativeTypes::Float(name, _) =>
                         semantic_analyzer.save_variable(name.clone(), DataType::Float),
-                    NativeTypes::String(name, _) => 
+                    NativeTypes::String(name, _) =>
                         semantic_analyzer.save_variable(name.clone(), DataType::String),
                 }
             }
@@ -60,9 +60,9 @@ impl Parser {
     }
 
     pub fn with_semantic_analyzer(
-        tokens: Vec<Token>, 
-        token_pos: Vec<TokenPos>, 
-        mut semantic_analyzer: SemanticAnalyzer, 
+        tokens: Vec<Token>,
+        token_pos: Vec<TokenPos>,
+        mut semantic_analyzer: SemanticAnalyzer,
     ) -> Parser {
         let registry = NativeRegistry::get();
         {
@@ -70,20 +70,20 @@ impl Parser {
 
             for (name, native) in registry.get_natives() {
                 match native {
-                    NativeTypes::Function(function) => 
+                    NativeTypes::Function(function) =>
                         semantic_analyzer.register_rust_function(name.clone(), function),
-                    NativeTypes::Int(name, _) => 
+                    NativeTypes::Int(name, _) =>
                         semantic_analyzer.save_variable(name.clone(), DataType::Int),
-                    NativeTypes::Boolean(name, _) => 
+                    NativeTypes::Boolean(name, _) =>
                         semantic_analyzer.save_variable(name.clone(), DataType::Bool),
                     NativeTypes::Float(name, _) =>
                         semantic_analyzer.save_variable(name.clone(), DataType::Float),
-                    NativeTypes::String(name, _) => 
+                    NativeTypes::String(name, _) =>
                         semantic_analyzer.save_variable(name.clone(), DataType::String),
                 }
             }
         }
-        
+
         Parser {
             tokens,
             token_pos,
@@ -122,10 +122,10 @@ impl Parser {
 
     pub fn parse_block_statement(&mut self) -> io::Result<Vec<Statement>> {
         let mut statements: Vec<Statement> = Vec::new();
-        
+
         while !(self.match_token(&Token::RightBrace) || self.is_end()) {
             let statement = self.parse_statement()?;
-            
+
 
             if let Some(statement) = statement {
                 statements.push(statement);
@@ -141,9 +141,9 @@ impl Parser {
         if self.match_token(&Token::RightParenthesis) {
             return Ok(Vec::new());
         }
-        
+
         let mut parameters: Vec<Parameter> = Vec::new();
-        
+
         loop {
             let parameter = self.parse_parameter()?;
             parameters.push(parameter);
@@ -158,11 +158,11 @@ impl Parser {
         Ok(parameters)
     }
 
-    fn parse_parameter(&mut self) -> io::Result<Parameter> { 
+    fn parse_parameter(&mut self) -> io::Result<Parameter> {
         let name = self.consume_identifier()?;
         self.consume_token(Token::Colon)?;
         let data_type = self.parse_data_type()?;
-        
+
         self.semantic_analyzer.save_variable(name.clone(), data_type.clone());
 
         let parameter = Parameter {
@@ -208,7 +208,7 @@ impl Parser {
             match self.advance() {
                 Some(Token::Identifier(name)) => {
                     segments.push(IdentifierTail::Name(name));
-                    
+
                     match self.advance() {
                         Some(Token::Dot) => {},
                         Some(Token::LeftSquareBracket) => {
@@ -221,8 +221,8 @@ impl Parser {
                             self.current_token = backup_token_pos;
                             let value  = self.parse_expression()?;
                             self.consume_token(Token::Semicolon)?;
-                            return Ok(Statement::Expression { 
-                                value, 
+                            return Ok(Statement::Expression {
+                                value,
                             });
                         }
                     }
@@ -245,8 +245,8 @@ impl Parser {
                     self.current_token = backup_token_pos;
                     let value = self.parse_expression()?;
                     self.consume_token(Token::Semicolon)?;
-                    return Ok(Statement::Expression { 
-                        value, 
+                    return Ok(Statement::Expression {
+                        value,
                     });
                 },
             }
@@ -269,9 +269,9 @@ impl Parser {
         };
 
         self.consume_token(Token::LeftBrace)?;
-        
-        let function_data_type = DataType::Function { 
-            parameters: DataType::from_parameters(&parameters), 
+
+        let function_data_type = DataType::Function {
+            parameters: DataType::from_parameters(&parameters),
             return_type: Box::new(function_type.clone())
         };
 
@@ -283,23 +283,23 @@ impl Parser {
 
         if public {
             self.semantic_analyzer.global_save_variable(
-                function_name.clone(), 
+                function_name.clone(),
                 function_data_type
             );
         } else {
             self.semantic_analyzer.save_variable(
-                function_name.clone(), 
+                function_name.clone(),
                 function_data_type
             );
         }
 
         Ok(
-            Statement::Function { 
+            Statement::Function {
                 name: function_name,
                 public: public,
-                return_type: function_type, 
-                parameters: parameters, 
-                body: block 
+                return_type: function_type,
+                parameters: parameters,
+                body: block
             }
         )
     }
@@ -335,7 +335,7 @@ impl Parser {
         let body = self.parse_block_statement()?;
 
         self.semantic_analyzer.exit_function_enviroment()?;
-        
+
         Ok(Statement::ForLoopStatement { name: name, list: expression, body: body })
     }
 
@@ -350,7 +350,7 @@ impl Parser {
 
     fn parse_add_value_statment(&mut self, segments: &Vec<IdentifierTail>) -> io::Result<Statement> {
         let identifier_type = self.semantic_analyzer.get_data_type_from_segments(segments)?;
-        
+
         let expression = self.parse_expression()?;
         let data_type = self.semantic_analyzer.get_data_type(&expression)?;
 
@@ -369,7 +369,7 @@ impl Parser {
 
     fn parse_remove_value_statement(&mut self, segments: &Vec<IdentifierTail>) -> io::Result<Statement> {
         let identifier_type = self.semantic_analyzer.get_data_type_from_segments(segments)?;
-        
+
         let expression = self.parse_expression()?;
         let data_type = self.semantic_analyzer.get_data_type(&expression)?;
 
@@ -394,16 +394,16 @@ impl Parser {
         } else {
             None
         };
-        
+
         self.consume_token(Token::Equal)?;
         let expression = self.parse_expression()?;
 
         let dt = self.semantic_analyzer.get_data_type(&expression)?;
-        
+
         if let Some(data_type_to_check) = &data_type {
             if dt != data_type_to_check.clone() && !DataType::is_void(&dt) {
                 return Err(io::Error::new(io::ErrorKind::InvalidData, "Different data types in expression and actual data type."));
-            } 
+            }
         }
 
         if public {
@@ -424,7 +424,7 @@ impl Parser {
         )
     }
 
-    fn parse_return_statement(&mut self) -> io::Result<Statement> { 
+    fn parse_return_statement(&mut self) -> io::Result<Statement> {
         if let Context::Function{ return_data} = self.function_context.clone() {
             let expression = self.parse_expression()?;
             let data_type = self.semantic_analyzer.get_data_type(&expression)?;
@@ -437,14 +437,14 @@ impl Parser {
                 self.consume_token(Token::Semicolon)?;
                 return Ok(Statement::ReturnStatement { value: Some(expression) });
             }
-        } 
+        }
 
         Err(io::Error::new(io::ErrorKind::InvalidData, "No function context for return!"))
     }
 
     fn parse_assignment_statement(&mut self, segments: &Vec<IdentifierTail>) -> io::Result<Statement> {
         let identifier_type = self.semantic_analyzer.get_data_type_from_segments(&segments)?;
-        
+
         let expression = self.parse_expression()?;
         let data_type = self.semantic_analyzer.get_data_type(&expression)?;
 
@@ -464,15 +464,15 @@ impl Parser {
 
         self.consume_token(Token::Semicolon)?;
 
-        Ok(Statement::Assignment { 
-            segments: segments.clone(), 
-            value: expression 
+        Ok(Statement::Assignment {
+            segments: segments.clone(),
+            value: expression
         })
     }
 
     fn parse_function_call_parameters(&mut self) -> io::Result<Vec<Expression>> {
         let mut parameters: Vec<Expression> = Vec::new();
-        
+
         loop {
             let expression = self.parse_expression()?;
             parameters.push(expression);
@@ -501,7 +501,7 @@ impl Parser {
 
         let else_block= if self.match_token(&Token::Else) {
             self.consume_token(Token::LeftBrace)?;
-            
+
             self.semantic_analyzer.enter_function_enviroment();
             let result = self.parse_block_statement()?;
             self.semantic_analyzer.exit_function_enviroment()?;
@@ -522,7 +522,7 @@ impl Parser {
 
     fn parse_while_statement(&mut self) -> io::Result<Statement> {
         let condition = self.parse_expression()?;
-        
+
         let condition_data_type = self.semantic_analyzer.get_data_type(&condition)?;
         if condition_data_type != DataType::Bool {
             return Err(io::Error::new(io::ErrorKind::InvalidData, "While statment condition mismatch data_type, expected bool!"));
@@ -546,13 +546,13 @@ impl Parser {
 
     fn parse_logic_or(&mut self) -> io::Result<Expression> {
         let mut expression = self.parse_logic_and()?;
-        
+
         while self.match_token(&Token::Or) {
             let right = self.parse_logic_and()?;
 
             expression = Expression::BinaryOp { left: Box::new(expression), operator: Operator::Or, right: Box::new(right) }
         }
-        
+
         Ok(expression)
     }
 
@@ -577,7 +577,7 @@ impl Parser {
                 self.match_token(&Token::LessEqual)     ||
                 self.match_token(&Token::GreaterThan)   ||
                 self.match_token(&Token::LessThan)
-        {    
+        {
             let operator = match self.previous() {
                 Token::EqualEqual => Operator::EqualEqual,
                 Token::NotEqual => Operator::NotEqual,
@@ -598,7 +598,7 @@ impl Parser {
 
     fn parse_addition(&mut self) -> io::Result<Expression> {
         let mut expression = self.parse_multiplication()?;
-        
+
         while self.match_token(&Token::Plus) || self.match_token(&Token::Minus) {
             let operator = match self.previous() {
                 Token::Plus => Operator::Plus,
@@ -651,9 +651,9 @@ impl Parser {
                 Token::Not => Operator::Not,
                 _ => unreachable!()
             };
-            
+
             let expression = self.parse_front_unary()?;
-            
+
             Ok(
                 Expression::UnaryOp {
                     expression: Box::new(expression),
@@ -667,8 +667,8 @@ impl Parser {
 
     fn parse_front_unary(&mut self) -> io::Result<Expression> {
         let left = self.parse_identifier_index()?;
-        
-        if self.match_token(&Token::PlusPlus) 
+
+        if self.match_token(&Token::PlusPlus)
             || self.match_token(&Token::MinusMinus)
             || self.match_token(&Token::Not) {
 
@@ -678,7 +678,7 @@ impl Parser {
                 Token::Not => Operator::Clone,
                 _ => unreachable!()
             };
-            
+
             Ok(
                 Expression::FrontUnaryOp {
                     expression: Box::new(left),
@@ -695,18 +695,18 @@ impl Parser {
 
         if self.match_token(&Token::LeftSquareBracket) {
             let mut index: Option<Expression> = None;
-            
+
             loop {
                 let value = self.parse_expression()?;
-                
+
                 if let Some(i) = index {
-                    index = Some(Expression::ListIndex { left: Box::new(i), index: Box::new(value) }); 
+                    index = Some(Expression::ListIndex { left: Box::new(i), index: Box::new(value) });
                 } else {
                     index = Some(Expression::ListIndex { left: Box::new(left.clone()), index: Box::new(value)});
                 }
-                
+
                 self.consume_token(Token::RightSquareBracket)?;
-                
+
                 if !self.match_token(&Token::LeftSquareBracket) {
                     break;
                 }
@@ -754,7 +754,7 @@ impl Parser {
 
             Some(Token::LeftParenthesis) => {
                 let expression = self.parse_expression()?;
-                
+
                 match self.advance() {
                     Some(Token::RightParenthesis) => {
                         Ok(expression)
@@ -855,8 +855,8 @@ impl Parser {
 
         self.consume_token(Token::LeftBrace)?;
 
-        let function_data_type = DataType::Function { 
-            parameters: DataType::from_parameters(&parameters), 
+        let function_data_type = DataType::Function {
+            parameters: DataType::from_parameters(&parameters),
             return_type: Box::new(return_type.clone())
         };
 
@@ -874,14 +874,14 @@ impl Parser {
     }
 
     fn check(&self, token: &Token) -> bool {
-        if let Some(original_token) = self.tokens.get(self.current_token) {            
+        if let Some(original_token) = self.tokens.get(self.current_token) {
             original_token == token
         } else {
             false
         }
     }
 
-    fn parse_data_type(&mut self) -> io::Result<DataType> {        
+    fn parse_data_type(&mut self) -> io::Result<DataType> {
         match self.advance() {
             Some(Token::Int) => Ok(DataType::Int),
             Some(Token::Float) => Ok(DataType::Float),
@@ -971,7 +971,7 @@ impl Parser {
     fn consume_identifier(&mut self) -> io::Result<String> {
         let token= self.advance();
 
-        if let Some(Token::Identifier(name)) = token {            
+        if let Some(Token::Identifier(name)) = token {
             Ok(name.to_string())
         } else {
             Err(io::Error::new(io::ErrorKind::InvalidData, "Expected token identefier!"))
