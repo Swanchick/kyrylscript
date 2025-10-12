@@ -13,6 +13,7 @@ use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
 use crate::native_registry::native_registry::NativeRegistry;
 use crate::native_registry::native_types::NativeTypes;
+use crate::vm::variable_stack;
 
 use super::tail_stack::TailStack;
 use super::var_info::VarInfo;
@@ -829,11 +830,55 @@ impl VirtualMachine {
         Ok(())
     }
 
-    fn load_module(&mut self, size: usize) -> KsResult<()> {
-        for _ in 0..size {
-            let name = self.variable_stack.pop();
-            let stack = self.variable_stack.pop();
+    fn load_string(&mut self) -> KsResult<String> {
+        let stack = self.variable_stack.pop();
+
+        match stack {
+            Some(VariableStack::Variable(variable)) => {
+                if let Value::String(string) = variable.value() {
+                    Ok(string.to_string())
+                } else {
+                    Err(KsError::runtime("Expected string!"))
+                }
+            },
+            Some(VariableStack::Reference(reference)) => {
+                let variable = self.environment.variable(&reference)?;
+                if let Value::String(string) = variable.value() {
+                    Ok(string.to_string())
+                } else {
+                    Err(KsError::runtime("Expected string!"))
+                }
+            },
+            _ => Err(KsError::runtime("Cannot load string from VariableStack!"))
         }
+    }
+
+    fn load_module(&mut self, size: usize) -> KsResult<()> {
+        let mut module: HashMap<String, u64> = HashMap::new();
+
+        for _ in 0..(size) {
+            let name = self.load_string()?;
+            let stack = self.variable_stack.pop();
+
+            match stack {
+                Some(VariableStack::Variable(variable)) => {
+                    let reference = self.environment.define_reference(variable)?;
+
+                    module.insert(name, reference);
+                },
+                Some(VariableStack::Reference(reference)) => {
+                    module.insert(name, reference);
+                },
+                _ => return Err(KsError::runtime("Cannot get stack!"))
+            }
+        }
+
+        println!("Hello World");
+
+        let module_variable = Variable::empty(Value::Module(module), self.depth());
+        self.variable_stack.push(VariableStack::Variable(module_variable));
+
+        self.step()?;
 
         Ok(())
     }

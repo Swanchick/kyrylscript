@@ -1,5 +1,6 @@
-let test = [10, 20, 30, 40, 50, 60, 70, 80, 90];
+let person = {
+    name: "Kyryl",
+    age: 19
+};
 
-test[2] = 500;
-
-println(test);
+println(person);

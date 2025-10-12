@@ -4,10 +4,11 @@ use core::global::utils::ks_result::KsResult;
 use core::vm::environment::Environment;
 use core::vm::value::Value;
 use core::vm::variable::Variable;
+use std::collections::HashMap;
 
 fn collection_to_string(environment: &mut Environment, references: &Vec<u64>, mut buffer: String) -> KsResult<String> {
     let references_len = references.len();
-    
+
     for (i, reference) in references.iter().enumerate() {
         let variable = environment.variable(reference)?;
         let variable_string = value_to_string(environment, variable.clone())?;
@@ -17,7 +18,25 @@ fn collection_to_string(environment: &mut Environment, references: &Vec<u64>, mu
             buffer.push_str(", ");
         }
     }
-    
+
+    Ok(buffer)
+}
+
+fn module_to_string(environment: &mut Environment, module: &HashMap<String, u64>, mut buffer: String)-> KsResult<String> {
+    let module_len = module.len();
+
+    for (i, (name, reference)) in module.iter().enumerate() {
+        let variable = environment.variable(reference)?;
+        let variable_string = value_to_string(environment, variable.clone())?;
+        buffer.push_str(name);
+        buffer.push_str(": ");
+        buffer.push_str(variable_string.as_str());
+
+        if i != module_len - 1 {
+            buffer.push_str(", ");
+        }
+    }
+
     Ok(buffer)
 }
 
@@ -43,13 +62,20 @@ fn value_to_string(environment: &mut Environment, variable: Variable) -> KsResul
             buffer.push(')');
             Ok(buffer)
         },
+        Value::Module(module) => {
+            let mut buffer = String::new();
+            buffer.push('{');
+            buffer = module_to_string(environment, module, buffer)?;
+            buffer.push('}');
+            Ok(buffer)
+        },
         Value::Null => Ok(String::from("null")),
     }
 }
 
 pub fn ks_print(environment: &mut Environment, mut args: Vec<Variable>) -> KsResult<Variable> {
     args.reverse();
-    
+
     while let Some(arg) = args.pop() {
         let out = value_to_string(environment, arg)?;
         print!("{}", out);
@@ -57,7 +83,7 @@ pub fn ks_print(environment: &mut Environment, mut args: Vec<Variable>) -> KsRes
     Ok(Variable::null(environment.depth()))
 }
 
-pub fn ks_println(environment: &mut Environment, args: Vec<Variable>) -> KsResult<Variable> {    
+pub fn ks_println(environment: &mut Environment, args: Vec<Variable>) -> KsResult<Variable> {
     ks_print(environment, args)?;
     println!("");
 

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Null,
@@ -8,5 +10,6 @@ pub enum Value {
     List(Vec<u64>),
     Tuple(Vec<u64>),
     Function(String),
-    NativeFunction(String)
+    NativeFunction(String),
+    Module(HashMap<String, u64>),
 }
