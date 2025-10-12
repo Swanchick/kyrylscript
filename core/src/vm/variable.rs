@@ -8,7 +8,7 @@ pub struct Variable {
     reference: Option<u64>,
     depth: usize,
     owners: usize,
-} 
+}
 
 impl Variable {
     pub fn new(value: Value, reference: u64, depth: usize) -> Variable {
@@ -30,8 +30,8 @@ impl Variable {
     }
 
     pub fn null(depth: usize) -> Variable {
-        Variable { 
-            value: Value::Null, 
+        Variable {
+            value: Value::Null,
             reference: None,
             depth,
             owners: 0

@@ -20,9 +20,9 @@ pub struct Environment {
 
 impl Environment {
     pub fn new() -> Environment {
-        Environment { 
+        Environment {
             current_reference: 0,
-            variables: Vec::new(), 
+            variables: Vec::new(),
             references: Vec::new(),
         }
     }
@@ -58,7 +58,7 @@ impl Environment {
             if let Some(variable) = scope.get(reference) {
                 return Ok(variable)
             }
-        } 
+        }
 
         Err(KsError::runtime(
             &format!("Cannot find variable with reference {}", reference)
@@ -84,7 +84,7 @@ impl Environment {
             if let Some(variable) = scope.remove(reference) {
                 return Ok(variable)
             }
-        } 
+        }
 
         Err(KsError::runtime(
             &format!("Cannot find variable with reference {}", reference)
@@ -105,12 +105,12 @@ impl Environment {
 
     pub fn variable_mut(&mut self, reference: &u64) -> KsResult<&mut Variable> {
         let scopes = &mut self.references;
-        
+
         for scope in scopes.iter_mut().rev() {
             if let Some(variable) = scope.get_mut(reference) {
                 return Ok(variable)
             }
-        } 
+        }
 
         Err(KsError::runtime(
             &format!("Cannot find variable with reference {}", reference)
@@ -120,10 +120,10 @@ impl Environment {
     pub fn define_variable(&mut self, name: &str, mut variable: Variable) {
         let current_reference = self.current_reference;
         let current_scope = self.current_scope_mut();
-        
+
         if let Some(current_scope) = current_scope {
             current_scope.insert(
-                name.to_string(), 
+                name.to_string(),
                 current_reference
             );
 
@@ -140,10 +140,10 @@ impl Environment {
     pub fn define_variable_at_depth(&mut self, name: &str, mut variable: Variable, depth: usize) {
         let current_reference = self.current_reference;
         let current_scope = self.variables.get_mut(depth);
-        
+
         if let Some(current_scope) = current_scope {
             current_scope.insert(
-                name.to_string(), 
+                name.to_string(),
                 current_reference
             );
 
@@ -162,7 +162,7 @@ impl Environment {
 
         if let Some(current_scope) = current_scope {
             current_scope.insert(
-                name.to_string(), 
+                name.to_string(),
                 *reference
             );
         }
@@ -178,7 +178,7 @@ impl Environment {
 
         if let Some(current_scope) = current_scope {
             current_scope.insert(
-                name.to_string(), 
+                name.to_string(),
                 *reference
             );
         }
@@ -265,7 +265,7 @@ impl Environment {
         }
     }
 
-    pub fn tree_reference<F>(&mut self, variable: Variable, mut f: F) -> KsResult<()> 
+    pub fn tree_reference<F>(&mut self, variable: Variable, mut f: F) -> KsResult<()>
     where F: FnMut(&mut Self, Frame) -> KsResult<()>
     {
         let mut frames: Vec<Frame> = vec![
@@ -275,10 +275,10 @@ impl Environment {
         while let Some(mut frame) = frames.pop() {
             let next = {
                 match frame.variable.value() {
-                    Value::List(references) 
-                    | Value::Tuple(references) => 
+                    Value::List(references)
+                    | Value::Tuple(references) =>
                         TreeReference::Branch(&references, frame.index),
-                    _ => 
+                    _ =>
                         TreeReference::Leaf,
                 }
             };
@@ -306,23 +306,23 @@ impl Environment {
         let low_scope = self.references.get_mut(low_depth);
         let reference = variable.reference()?;
 
-        
+
         if let Some(low_scope) = low_scope {
             low_scope.insert(reference, variable);
-        } 
-        
+        }
+
         Ok(())
     }
 
     pub fn anchor(&mut self, low_depth: usize, variable: Variable) -> KsResult<()> {
         self.tree_reference(variable, |this, frame| {
             this.anchor_insert(frame.variable, low_depth)
-        })?;  
+        })?;
 
         Ok(())
     }
 
-    pub fn anchor_reference(&mut self, low_depth: usize, reference: u64) -> KsResult<()> {        
+    pub fn anchor_reference(&mut self, low_depth: usize, reference: u64) -> KsResult<()> {
         let variable = self.variable_remove(&reference)?;
         self.anchor(low_depth, variable)?;
 
@@ -337,12 +337,12 @@ impl Environment {
         while let Some(mut frame) = frames.pop() {
             let next = {
                 let variable = self.variable(&frame.reference)?;
-                
+
                 match variable.value() {
-                    Value::List(references) 
-                    | Value::Tuple(references) => 
+                    Value::List(references)
+                    | Value::Tuple(references) =>
                         TreeReference::Branch(&references, frame.index),
-                    _ => 
+                    _ =>
                         TreeReference::Leaf,
                 }
             };
@@ -350,7 +350,7 @@ impl Environment {
             match next {
                 TreeReference::Branch(references, index) => {
                     let reference = frame.reference;
-                    
+
                     if let Some(reference) = references.get(index) {
                         frame.step();
                         frames.push(frame);
@@ -358,7 +358,7 @@ impl Environment {
                     } else {
                         let mut variable = self.variable(&reference)?.clone();
                         match variable.value_mut() {
-                            Value::List(child_references) 
+                            Value::List(child_references)
                             | Value::Tuple(child_references) => {
                                 *child_references = frame.new_references;
                             },
@@ -386,7 +386,7 @@ impl Environment {
                 }
             }
         }
-        
+
 
         let variable = self.variable_remove(&parent_reference)?;
         Ok(variable)
@@ -418,7 +418,7 @@ impl Environment {
         println!("Variables =================");
         for (depth, scope) in self.variables.iter().enumerate() {
             println!("Depth: {}", depth);
-            
+
             for (name, reference) in scope {
                 println!("{} -> {}", name, reference);
             }
@@ -426,7 +426,7 @@ impl Environment {
         println!("References ================");
         for (depth, scope) in self.references.iter().enumerate() {
             println!("Depth: {}", depth);
-            
+
             for (reference, variable) in scope {
                 println!("{}: {:?}", reference, variable);
             }
@@ -450,7 +450,7 @@ impl Environment {
                 let variable = self.variable_mut(&reference)?;
                 variable.remove_owner();
             }
-        } 
+        }
 
         self.references.pop();
 

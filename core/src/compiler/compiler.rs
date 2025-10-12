@@ -466,7 +466,12 @@ impl Compiler {
             }
 
             Expression::Module(module) => {
+                for (name, expression) in module {
+                    instructions = self.compile_expression(expression, instructions);
+                    instructions.push(Instruction::LoadConst(Constant::String(name.clone())));
+                }
 
+                instructions.push(Instruction::LoadModule(module.len()));
             },
         }
 

@@ -8,19 +8,19 @@ pub struct VarInfo {
 
 impl VarInfo {
     pub fn new(reference: u64, depth: usize) -> VarInfo {
-        VarInfo { 
-            reference: Some(reference), 
-            depth, 
+        VarInfo {
+            reference: Some(reference),
+            depth,
         }
     }
 
     pub fn from(variable: &Variable) -> KsResult<VarInfo> {
-        Ok(VarInfo { 
-            reference: Some(variable.reference()?), 
+        Ok(VarInfo {
+            reference: Some(variable.reference()?),
             depth: variable.depth()
         })
     }
-    
+
     pub fn reference(&self) -> KsResult<&u64> {
         if let Some(reference) = &self.reference {
             Ok(reference)
