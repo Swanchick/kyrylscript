@@ -856,7 +856,7 @@ impl VirtualMachine {
     fn load_module(&mut self, size: usize) -> KsResult<()> {
         let mut module: HashMap<String, u64> = HashMap::new();
 
-        for _ in 0..(size) {
+        for _ in 0..size {
             let name = self.load_string()?;
             let stack = self.variable_stack.pop();
 
@@ -872,8 +872,6 @@ impl VirtualMachine {
                 _ => return Err(KsError::runtime("Cannot get stack!"))
             }
         }
-
-        println!("Hello World");
 
         let module_variable = Variable::empty(Value::Module(module), self.depth());
         self.variable_stack.push(VariableStack::Variable(module_variable));
