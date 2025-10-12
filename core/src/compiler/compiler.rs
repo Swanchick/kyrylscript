@@ -4,11 +4,11 @@ use super::instruction::Instruction;
 use super::constant::Constant;
 
 use crate::global::constants::{
-    Instructions, 
-    ANONYNOUS_FUNCTION_ENCAPSULATION, 
-    FUNCTION_ENCAPSULATION, 
-    ITERATOR_LIST_NAME, 
-    ITERATOR_NAME, 
+    Instructions,
+    ANONYNOUS_FUNCTION_ENCAPSULATION,
+    FUNCTION_ENCAPSULATION,
+    ITERATOR_LIST_NAME,
+    ITERATOR_NAME,
     MAIN_FUNCTION
 };
 
@@ -25,7 +25,7 @@ pub struct Compiler {
 
 impl Compiler {
     pub fn new() -> Compiler {
-        Compiler { 
+        Compiler {
             functions: HashMap::new(),
             last_anonymous_function: 0
         }
@@ -109,7 +109,7 @@ impl Compiler {
 
     fn compile_statment(&mut self, statement: &Statement) -> Instructions {
         let mut instructions: Instructions = Vec::new();
-        
+
         match statement {
             Statement::VariableDeclaration {
                 name,
@@ -145,14 +145,14 @@ impl Compiler {
             Statement::AddValue { segments, value } => {
                 instructions = self.compile_identity(segments, instructions);
 
-                
+
                 // instructions.push(Instruction::LoadVar(name.clone()));
                 // instructions = self.compile_expression(value, instructions);
 
                 // instructions.push(Instruction::Add);
 
                 // instructions.push(Instruction::Store(name.clone()));
-            }, 
+            },
 
             Statement::RemoveValue { segments, value } => {
                 // instructions.push(Instruction::LoadVar(name.clone()));
@@ -183,13 +183,13 @@ impl Compiler {
                 let body_len = body.len() as i32;
 
                 instructions = self.compile_expression(condition, instructions);
-                
+
                 let mut jump_distance = body_len + 1;
-                
+
 
                 let mut else_body = if let Some(else_body) = else_body {
                     jump_distance += 1;
-                    
+
                     self.compile_statments(else_body, Vec::new())
                 } else {
                     Vec::new()
@@ -202,16 +202,16 @@ impl Compiler {
                 instructions.push(Instruction::Exit);
             },
 
-            Statement::WhileStatement { 
-                condition, 
-                body 
+            Statement::WhileStatement {
+                condition,
+                body
             } => {
                 let mut body = self.compile_statments(body, Vec::new());
                 let body_len = body.len() as i32;
-                
+
                 let mut condition = self.compile_expression(condition, Vec::new());
                 let condition_len = condition.len() as i32;
-                
+
                 instructions.append(&mut condition);
                 instructions.push(Instruction::JumpIfFalse(body_len + 4));
                 instructions.push(Instruction::Enter);
@@ -221,15 +221,15 @@ impl Compiler {
                 instructions.push(Instruction::Jump(-body_len - condition_len - 3));
             },
 
-            Statement::ForLoopStatement { 
-                name, 
-                list, 
-                body 
+            Statement::ForLoopStatement {
+                name,
+                list,
+                body
             } => {
                 let name = name.clone();
                 let iter_name = format!("{}{}", ITERATOR_NAME, name);
                 let iter_list_name = format!("{}{}", ITERATOR_LIST_NAME, name);
-                
+
                 instructions.push(Instruction::Enter);
 
                 instructions.push(Instruction::LoadConst(Constant::Integer(0)));
@@ -244,16 +244,16 @@ impl Compiler {
                 condition_body.push(Instruction::LoadVar(iter_list_name.clone()));
                 condition_body.push(Instruction::ListLen);
                 condition_body.push(Instruction::Less);
-                
+
                 let mut for_body: Instructions = Vec::new();
-                
+
                 for_body.push(Instruction::Enter);
-                
+
                 for_body.push(Instruction::LoadVar(iter_list_name.clone()));
                 for_body.push(Instruction::LoadVar(iter_name.clone()));
                 for_body.push(Instruction::LoadFromList);
                 for_body.push(Instruction::Store(name));
-                
+
                 for_body = self.compile_statments(body, for_body);
 
                 for_body.push(Instruction::Exit);
@@ -262,7 +262,7 @@ impl Compiler {
                 for_body.push(Instruction::LoadConst(Constant::Integer(1)));
                 for_body.push(Instruction::Add);
                 for_body.push(Instruction::Store(iter_name.clone()));
-                
+
                 let for_body_len = for_body.len() as i32;
                 let condition_body_len = condition_body.len() as i32;
                 for_body.push(Instruction::Jump(-condition_body_len - for_body_len - 1));
@@ -294,19 +294,19 @@ impl Compiler {
                 let mut function_instructions: Instructions = Vec::new();
                 function_instructions = self.compile_statments(body, function_instructions);
 
-                let args: Vec<String> = 
+                let args: Vec<String> =
                     parameters
                         .iter()
                         .map(|parameter| parameter.name.clone())
                         .collect();
 
                 self.functions.insert(
-                    final_function_name.clone(), 
+                    final_function_name.clone(),
                     Function::new(function_instructions, args)
                 );
 
                 instructions.push(Instruction::LoadConst(Constant::Function(final_function_name)));
-                
+
                 let store = if *public {
                     Instruction::PubStore(name)
                 } else {
@@ -316,9 +316,9 @@ impl Compiler {
                 instructions.push(store);
             }
 
-            Statement::EarlyReturn { 
-                name, 
-                body 
+            Statement::EarlyReturn {
+                name,
+                body
             } => {
                 let name = name.clone();
 
@@ -375,7 +375,7 @@ impl Compiler {
             Expression::StringLiteral(string) => instructions.push(Instruction::LoadConst(Constant::String(string.clone()))),
             Expression::BooleanLiteral(boolean) => instructions.push(Instruction::LoadConst(Constant::Boolean(*boolean))),
             Expression::Identifier(name) => instructions.push(Instruction::LoadVar(name.clone())),
-            
+
             Expression::FunctionCall(name, arguments) => {
                 for argument in arguments {
                     instructions = self.compile_expression(argument, instructions);
@@ -384,7 +384,7 @@ impl Compiler {
                 instructions.push(Instruction::LoadVar(name.clone()));
                 instructions.push(Instruction::Call(arguments.len()));
             },
-            
+
             Expression::ListLiteral(elements) => {
                 for element in elements {
                     instructions = self.compile_expression(element, instructions);
@@ -415,8 +415,8 @@ impl Compiler {
                 block,
             } => {
                 let function_name = format!(
-                    "{}{}", 
-                    ANONYNOUS_FUNCTION_ENCAPSULATION, 
+                    "{}{}",
+                    ANONYNOUS_FUNCTION_ENCAPSULATION,
                     self.last_anonymous_function
                 );
 
@@ -424,14 +424,14 @@ impl Compiler {
                 let mut function_instructions: Instructions = Vec::new();
                 function_instructions = self.compile_statments(block, function_instructions);
 
-                let args: Vec<String> = 
+                let args: Vec<String> =
                     parameters
                         .iter()
                         .map(|parameter| parameter.name.clone())
                         .collect();
 
                 self.functions.insert(
-                    function_name.clone(), 
+                    function_name.clone(),
                     Function::new(function_instructions, args)
                 );
 
@@ -459,7 +459,7 @@ impl Compiler {
 
             Expression::TupleIndex { left, indeces } => {
                 instructions = self.compile_expression(&left, instructions);
-                
+
                 for index in indeces {
                     instructions.push(Instruction::LoadFromTuple(*index as usize));
                 }
@@ -474,8 +474,8 @@ impl Compiler {
     }
 
     fn compile_binary_op(
-        &mut self, 
-        left: &Box<Expression>, 
+        &mut self,
+        left: &Box<Expression>,
         right: &Box<Expression>,
         operator: &Operator,
         mut instructions: Instructions
@@ -501,13 +501,13 @@ impl Compiler {
     }
 
     fn compile_unary_op(
-        &mut self, 
-        expression: &Box<Expression>, 
+        &mut self,
+        expression: &Box<Expression>,
         operator: &Operator,
         mut instructions: Instructions
     ) -> Instructions {
         instructions = self.compile_expression(&expression, instructions);
-        
+
         match operator {
             Operator::Not => instructions.push(Instruction::Not),
             Operator::Minus => instructions.push(Instruction::Minus),
