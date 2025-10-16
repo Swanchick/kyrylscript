@@ -4,4 +4,5 @@ use crate::parser::expression::Expression;
 pub enum IdentifierTail {
     Name(String),
     Index(Expression),
+    TupleIndex(i32),
 }

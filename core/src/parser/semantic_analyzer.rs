@@ -267,6 +267,17 @@ impl SemanticAnalyzer {
                         last_segment = Some(*data_type);
                     } 
                 },
+                IdentifierTail::TupleIndex(index) => {
+                    if let Some(DataType::Tuple(data_types)) = &last_segment {
+                        if let Some(data_type) = data_types.get(*index as usize) {
+                            last_segment = Some(data_type.clone());
+                        } else {
+                            return Err(io::Error::new(
+                                io::ErrorKind::InvalidData, 
+                                format!("Cannot access the type by tuple index {}", index)))
+                        }
+                    }
+                },
             }
         }
         
@@ -323,11 +334,13 @@ impl SemanticAnalyzer {
             },
             
             Expression::Identifier(name) => {
-                match self.local.borrow().get_variable_type(name) {
-                    Ok(DataType::Void(_)) => Ok(DataType::void()),
-                    Ok(data_type) => Ok(data_type.clone()),
-                    Err(_) => Err(io::Error::new(io::ErrorKind::InvalidData, format!("Variable {} not found!", name)))
-                }
+                todo!()
+                
+                // match self.local.borrow().get_variable_type(name) {
+                //     Ok(DataType::Void(_)) => Ok(DataType::void()),
+                //     Ok(data_type) => Ok(data_type.clone()),
+                //     Err(_) => Err(io::Error::new(io::ErrorKind::InvalidData, format!("Variable {} not found!", name)))
+                // }
             },
 
             Expression::FunctionCall(name, call_parameters) => {

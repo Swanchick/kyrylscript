@@ -101,6 +101,9 @@ impl Compiler {
                     instructions = self.compile_expression(&index, instructions);
                     instructions.push(Instruction::LoadFromList);
                 },
+                IdentifierTail::TupleIndex(index) => {
+                    instructions.push(Instruction::LoadFromTuple(*index as usize));
+                }
             }
         }
 
@@ -374,7 +377,10 @@ impl Compiler {
             Expression::FloatLiteral(float) => instructions.push(Instruction::LoadConst(Constant::Float(*float))),
             Expression::StringLiteral(string) => instructions.push(Instruction::LoadConst(Constant::String(string.clone()))),
             Expression::BooleanLiteral(boolean) => instructions.push(Instruction::LoadConst(Constant::Boolean(*boolean))),
-            Expression::Identifier(name) => instructions.push(Instruction::LoadVar(name.clone())),
+            
+            Expression::Identifier(segments) => {
+                instructions = self.compile_identity(segments, instructions);
+            },
 
             Expression::FunctionCall(name, arguments) => {
                 for argument in arguments {

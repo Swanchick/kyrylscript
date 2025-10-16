@@ -3,6 +3,7 @@ use crate::lexer::token_pos::TokenPos;
 use crate::native_registry::native_registry::NativeRegistry;
 use crate::native_registry::native_types::NativeTypes;
 use crate::global::data_type::DataType;
+use crate::parser::statement;
 
 use super::identifier_tail::IdentifierTail;
 use super::operator::Operator;
@@ -182,72 +183,85 @@ impl Parser {
             }
         }
 
-
         match self.advance() {
             Some(Token::Let) => Ok(Some(self.parse_variable_declaration_statement(public)?)),
+            Some(Token::Function) => Ok(Some(self.parse_function(public)?)),
             Some(Token::Return) => Ok(Some(self.parse_return_statement()?)),
             Some(Token::If) => Ok(Some(self.parse_if_statement()?)),
             Some(Token::While) => Ok(Some(self.parse_while_statement()?)),
             Some(Token::For) => Ok(Some(self.parse_for_statement()?)),
-            Some(Token::Function) => Ok(Some(self.parse_function(public)?)),
             None => {
                 Ok(None)
             },
             _ => {
                 self.back();
-                Ok(Some(self.parse_identifier_tail()?))
+                let backup_token = self.current_token;
+                let segments = self.parse_identifier_tail()?;
+
+                if segments.is_empty() {
+                    self.current_token = backup_token;
+                    let value = self.parse_expression()?;
+                    return Ok(Some(Statement::Expression { value }))
+                }
+
+                self.parse_assignment(backup_token, segments)
             },
         }
     }
 
-    fn parse_identifier_tail(&mut self) -> io::Result<Statement> {
+    fn parse_assignment(&mut self, backup_token: usize, segments: Vec<IdentifierTail>) -> io::Result<Option<Statement>> {
+        match self.advance() {
+            Some(Token::Equal) => {
+                let statement = self.parse_assignment_statement(&segments)?;
+                Ok(Some(statement))
+            },
+            Some(Token::PlusEqual) => {
+                let statement = self.parse_add_value_statment(&segments)?;
+                Ok(Some(statement))
+            },
+            Some(Token::MinusEqual) => todo!(),
+            Some(Token::Question) => todo!(),
+            _ => {
+                self.current_token = backup_token;
+                let value = self.parse_expression()?;
+                Ok(Some(Statement::Expression { value }))
+            }
+        }
+    }
+
+    fn parse_identifier_tail(&mut self) -> io::Result<Vec<IdentifierTail>> {
         let mut segments: Vec<IdentifierTail> = Vec::new();
-        let backup_token_pos = self.current_token;
 
         loop {
             match self.advance() {
                 Some(Token::Identifier(name)) => {
-                    segments.push(IdentifierTail::Name(name));
-
-                    match self.advance() {
-                        Some(Token::Dot) => {},
-                        Some(Token::LeftSquareBracket) => {
-                            let index = self.parse_expression()?;
-                            self.consume_token(Token::RightSquareBracket)?;
-
-                            segments.push(IdentifierTail::Index(index));
-                        },
-                        _ => {
-                            self.current_token = backup_token_pos;
-                            let value  = self.parse_expression()?;
-                            self.consume_token(Token::Semicolon)?;
-                            return Ok(Statement::Expression {
-                                value,
-                            });
-                        }
+                    if segments.is_empty() {
+                        segments.push(IdentifierTail::Name(name));
                     }
+                },
+                Some(Token::Dot) => {
+                    let name = self.consume_identifier()?;
+                    segments.push(IdentifierTail::Name(name));
                 },
                 Some(Token::LeftSquareBracket) => {
                     let index = self.parse_expression()?;
-                    self.consume_token(Token::RightSquareBracket)?;
-
+                    self.consume_token(Token::RightSquareBracket);
+                    
                     segments.push(IdentifierTail::Index(index));
                 },
-                Some(Token::Equal) => {
-                    return self.parse_assignment_statement(&segments);
-                },
-                Some(Token::PlusEqual) => {
-                    return self.parse_add_value_statment(&segments);
-                },
-                Some(Token::MinusEqual) => todo!(),
-                Some(Token::Question) => todo!(),
+                Some(Token::Arrow) => {
+                    if let Some(Token::IntegerLiteral(int)) = self.advance() {
+                        segments.push(IdentifierTail::TupleIndex(int));
+                    } else {
+                        return Err(io::Error::new(
+                            io::ErrorKind::InvalidData,
+                            "Invalid tuple indexing!",
+                        ));
+                    }
+                }
                 _ => {
-                    self.current_token = backup_token_pos;
-                    let value = self.parse_expression()?;
-                    self.consume_token(Token::Semicolon)?;
-                    return Ok(Statement::Expression {
-                        value,
-                    });
+                    self.back();
+                    return Ok(segments);
                 },
             }
         }
@@ -666,7 +680,7 @@ impl Parser {
     }
 
     fn parse_front_unary(&mut self) -> io::Result<Expression> {
-        let left = self.parse_identifier_index()?;
+        let left = self.parse_primary()?;
 
         if self.match_token(&Token::PlusPlus)
             || self.match_token(&Token::MinusMinus)
@@ -688,65 +702,6 @@ impl Parser {
         } else {
             Ok(left)
         }
-    }
-
-    fn parse_identifier_index(&mut self) -> io::Result<Expression> {
-        let left = self.parse_tuple_index()?;
-
-        if self.match_token(&Token::LeftSquareBracket) {
-            let mut index: Option<Expression> = None;
-
-            loop {
-                let value = self.parse_expression()?;
-
-                if let Some(i) = index {
-                    index = Some(Expression::ListIndex { left: Box::new(i), index: Box::new(value) });
-                } else {
-                    index = Some(Expression::ListIndex { left: Box::new(left.clone()), index: Box::new(value)});
-                }
-
-                self.consume_token(Token::RightSquareBracket)?;
-
-                if !self.match_token(&Token::LeftSquareBracket) {
-                    break;
-                }
-            }
-
-            Ok(index.unwrap())
-        } else {
-            Ok(left)
-        }
-    }
-
-    fn parse_tuple_index(&mut self) -> io::Result<Expression> {
-        let left = self.parse_primary()?;
-
-        if self.match_token(&Token::Dot) {
-            let mut indeces: Vec<i32> = Vec::new();
-
-            loop {
-                if let Token::IntegerLiteral(index) = self.peek() {
-                    indeces.push(*index);
-                    self.advance();
-                }
-
-                if !self.match_token(&Token::Arrow) {
-                    break;
-                }
-            }
-
-            Ok(Expression::TupleIndex { left: Box::new(left), indeces: indeces })
-
-        } else {
-            Ok(left)
-        }
-    }
-
-    fn parse_identifier_action(&mut self) -> io::Result<Expression> {
-        
-        
-        
-        todo!()
     }
 
     fn parse_primary(&mut self) -> io::Result<Expression> {
@@ -804,20 +759,10 @@ impl Parser {
 
                 Ok(Expression::ListLiteral(expressions))
             },
-            Some(Token::Identifier(name)) => {
-                let name = name.to_owned();
-                if self.match_token(&Token::LeftParenthesis) {
-                    if self.match_token(&Token::RightParenthesis) {
-                        return Ok(Expression::FunctionCall(name, Vec::new()));
-                    }
-
-                    let parameters = self.parse_function_call_parameters()?;
-                    self.consume_token(Token::RightParenthesis)?;
-
-                    Ok(Expression::FunctionCall(name, parameters))
-                } else {
-                    Ok(Expression::Identifier(name))
-                }
+            Some(Token::Identifier(_)) => {
+                self.back();
+                let identifier_tail = self.parse_identifier_tail()?;
+                Ok(Expression::Identifier(identifier_tail))
             },
             Some(Token::LeftBrace) => {
                 self.parse_module()

@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
 use crate::global::data_type::DataType;
-use crate::parser::statement::Statement;
+use super::identifier_tail::IdentifierTail;
+use super::statement::Statement;
 
 use super::parameter::Parameter;
 
@@ -14,7 +15,7 @@ pub enum Expression {
     FloatLiteral(f64),
     StringLiteral(String),
     BooleanLiteral(bool),
-    Identifier(String),
+    Identifier(Vec<IdentifierTail>),
     FunctionCall(String, Vec<Expression>),
     ListLiteral(Vec<Expression>),
     TupleLiteral(Vec<Expression>),
