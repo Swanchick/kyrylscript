@@ -1,4 +1,6 @@
-use crate::global::utils::{ks_error::KsError, ks_result::KsResult};
+use crate::global::utils::ks_result::KsResult;
+use crate::global::utils::ks_error::KsError;
+
 use super::variable::Variable;
 
 pub struct VarInfo {

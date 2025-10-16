@@ -425,11 +425,7 @@ impl Parser {
     }
 
     fn parse_return_statement(&mut self) -> io::Result<Statement> {
-        println!("Context: {:?}", self.function_context);
-
         if let Context::Function { return_data} = self.function_context.clone() {
-            println!("Hello World");
-
             let expression = self.parse_expression()?;
             let data_type = self.semantic_analyzer.get_data_type(&expression)?;
 
@@ -734,7 +730,7 @@ impl Parser {
                     self.advance();
                 }
 
-                if !self.match_token(&Token::Dot) {
+                if !self.match_token(&Token::Arrow) {
                     break;
                 }
             }
@@ -744,6 +740,13 @@ impl Parser {
         } else {
             Ok(left)
         }
+    }
+
+    fn parse_identifier_action(&mut self) -> io::Result<Expression> {
+        
+        
+        
+        todo!()
     }
 
     fn parse_primary(&mut self) -> io::Result<Expression> {
@@ -817,60 +820,7 @@ impl Parser {
                 }
             },
             Some(Token::LeftBrace) => {
-                let mut module: HashMap<String, Expression> = HashMap::new();
-
-                loop {
-                    println!("{:?}", self.peek());
-
-                    let field_name: String = self.consume_identifier()?;
-                    match self.advance() {
-                        Some(Token::Colon) => {
-                            let expression = self.parse_expression()?;
-                            module.insert(field_name, expression);
-                        },
-                        Some(Token::LeftParenthesis) => {
-                            self.semantic_analyzer.enter_function_enviroment();
-                            let parameters = self.parse_parameters()?;
-
-                            let return_type = if self.match_token(&Token::Colon) {
-                                self.parse_data_type()?
-                            } else {
-                                DataType::void()
-                            };
-
-                            self.consume_token(Token::LeftBrace)?;
-
-                            println!("===============");
-                            let function_data_type = DataType::Function {
-                                parameters: DataType::from_parameters(&parameters),
-                                return_type: Box::new(return_type.clone())
-                            };
-
-                            self.function_context = Context::Function { return_data: function_data_type };
-                            let block = self.parse_block_statement()?;
-                            self.function_context = Context::None;
-                            println!("===============");
-
-                            self.semantic_analyzer.exit_function_enviroment()?;
-
-                            module.insert(field_name, Expression::FunctionLiteral {
-                                parameters,
-                                return_type,
-                                block
-                            });
-                        },
-                        _ => {}
-                    }
-
-
-                    if !self.match_token(&Token::Comma) {
-                        break;
-                    }
-                }
-
-                self.consume_token(Token::RightBrace)?;
-
-                Ok(Expression::Module(module))
+                self.parse_module()
             },
             None => Err(io::Error::new(io::ErrorKind::InvalidData, "Expected expression got nothing!")),
             token => {
@@ -881,6 +831,59 @@ impl Parser {
                 }
             }
         }
+    }
+
+    fn parse_module(&mut self) -> io::Result<Expression> {
+        let mut module: HashMap<String, Expression> = HashMap::new();
+
+        loop {
+            let field_name: String = self.consume_identifier()?;
+            match self.advance() {
+                Some(Token::Colon) => {
+                    let expression = self.parse_expression()?;
+                    module.insert(field_name, expression);
+                },
+                Some(Token::LeftParenthesis) => {
+                    self.semantic_analyzer.enter_function_enviroment();
+                    let parameters = self.parse_parameters()?;
+
+                    let return_type = if self.match_token(&Token::Colon) {
+                        self.parse_data_type()?
+                    } else {
+                        DataType::void()
+                    };
+
+                    self.consume_token(Token::LeftBrace)?;
+
+                    let function_data_type = DataType::Function {
+                        parameters: DataType::from_parameters(&parameters),
+                        return_type: Box::new(return_type.clone())
+                    };
+
+                    self.function_context = Context::Function { return_data: function_data_type };
+                    let block = self.parse_block_statement()?;
+                    self.function_context = Context::None;
+
+                    self.semantic_analyzer.exit_function_enviroment()?;
+
+                    module.insert(field_name, Expression::FunctionLiteral {
+                        parameters,
+                        return_type,
+                        block
+                    });
+                },
+                _ => {}
+            }
+
+
+            if !self.match_token(&Token::Comma) {
+                break;
+            }
+        }
+
+        self.consume_token(Token::RightBrace)?;
+
+        Ok(Expression::Module(module))
     }
 
     fn parse_expression_function(&mut self) -> io::Result<Expression> {
