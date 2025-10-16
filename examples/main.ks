@@ -6,5 +6,4 @@ let person = {
     }
 };
 
-println(person);
-let a = person.name[10]->2[10].shit + 1;
+println(person.add(person.age, 20));

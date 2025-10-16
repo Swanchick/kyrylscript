@@ -6,7 +6,8 @@ use std::io;
 use crate::native_registry::native_function::NativeFunction;
 use crate::parser::identifier_tail::IdentifierTail;
 use crate::parser::operator::Operator;
-use crate::global::data_type::{self, DataType};
+use crate::global::data_type::DataType;
+
 
 use super::analyzer_enviroment::AnalyzerEnviroment;
 use super::expression::Expression;
@@ -278,6 +279,26 @@ impl SemanticAnalyzer {
                         }
                     }
                 },
+                IdentifierTail::Call(call_parameters) => {
+                    match last_segment {
+                        Some(DataType::Function { parameters, return_type }) => {
+                            for (call_parameter, parameter) in call_parameters.iter().zip(parameters) {
+                                let call_parameter = self.get_data_type(call_parameter)?;
+
+                                if call_parameter != parameter && !DataType::is_void(&call_parameter) {
+                                    return Err(io::Error::new(io::ErrorKind::InvalidData, "Function signature mismatch"));
+                                }
+                            }
+
+                            last_segment = Some(*return_type);
+                        }
+                        Some(DataType::RustFunction { return_type }) => {
+                            last_segment = Some(*return_type);
+                        }
+                        _ => 
+                            return Err(io::Error::new(io::ErrorKind::InvalidData, "It's not a function!")),
+                    }
+                }
             }
         }
         
@@ -331,16 +352,6 @@ impl SemanticAnalyzer {
                 let left = self.get_data_type(&left)?;
 
                 self.tuple_index(left, indeces)
-            },
-            
-            Expression::Identifier(name) => {
-                todo!()
-                
-                // match self.local.borrow().get_variable_type(name) {
-                //     Ok(DataType::Void(_)) => Ok(DataType::void()),
-                //     Ok(data_type) => Ok(data_type.clone()),
-                //     Err(_) => Err(io::Error::new(io::ErrorKind::InvalidData, format!("Variable {} not found!", name)))
-                // }
             },
 
             Expression::FunctionCall(name, call_parameters) => {
@@ -404,6 +415,7 @@ impl SemanticAnalyzer {
 
                 Ok(DataType::Module(module_type))
             },
+            Expression::Identifier(segments) => self.get_data_type_from_segments(segments),
             Expression::IntegerLiteral(_) => Ok(DataType::Int),
             Expression::FloatLiteral(_) => Ok(DataType::Float),
             Expression::StringLiteral(_) => Ok(DataType::String),

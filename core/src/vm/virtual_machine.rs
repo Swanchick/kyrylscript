@@ -13,7 +13,6 @@ use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
 use crate::native_registry::native_registry::NativeRegistry;
 use crate::native_registry::native_types::NativeTypes;
-use crate::vm::variable_stack;
 
 use super::tail_stack::TailStack;
 use super::var_info::VarInfo;
@@ -248,23 +247,38 @@ impl VirtualMachine {
     }
 
     fn extract_function(&mut self, args: usize) -> KsResult<()> {
-        let stack = self.variable_stack.pop();
+        let stack_len = self.variable_stack.len();
+        let stack = self.variable_stack.remove(stack_len - args - 1);
 
-        if let Some(VariableStack::Reference(reference)) = stack {
-            let function = {
-                let function = self.environment.variable(&reference)?;
-                function.clone()
-            };
+        match stack {
+            VariableStack::Variable(function) => {
+                match function.value() {
+                    Value::Function(name) =>
+                        self.call_function(name)?,
+                    Value::NativeFunction(name) => {
+                        self.call_native_function(name, args)?;
+                        self.step()?;
+                    },
+                    _ =>
+                        return Err(KsError::runtime("It's not a function!"))
+                }
+            },
+            VariableStack::Reference(reference) => {
+                let function = {
+                    let function = self.environment.variable(&reference)?;
+                    function.clone()
+                };
 
-            match function.value() {
-                Value::Function(name) =>
-                    self.call_function(name)?,
-                Value::NativeFunction(name) => {
-                    self.call_native_function(name, args)?;
-                    self.step()?;
-                },
-                _ =>
-                    return Err(KsError::runtime("It's not a function!"))
+                match function.value() {
+                    Value::Function(name) =>
+                        self.call_function(name)?,
+                    Value::NativeFunction(name) => {
+                        self.call_native_function(name, args)?;
+                        self.step()?;
+                    },
+                    _ =>
+                        return Err(KsError::runtime("It's not a function!"))
+                }
             }
         }
 
@@ -514,6 +528,7 @@ impl VirtualMachine {
                 self.environment.anchor_reference(current_depth - 1, reference)?;
                 let variable = self.environment.variable_remove(&reference)?;
                 self.variable_stack.push(VariableStack::Variable(variable));
+
             },
             Some(VariableStack::Reference(reference)) => {
                 let variable_depth = {
@@ -881,6 +896,54 @@ impl VirtualMachine {
         Ok(())
     }
 
+    fn load_from_module(&mut self, name: String) -> KsResult<()> {
+        let stack = self.variable_stack.pop();
+
+        match stack {
+            Some(VariableStack::Variable(variable)) => {
+                if let Value::Module(module) = variable.value() {
+                    let reference = module.get(&name);
+                    if let Some(reference) = reference {
+                        self.tail_stack = Some(TailStack::Module {
+                            name,
+                            info: VarInfo::from(&variable)?
+                        });
+
+                        self.variable_stack.push(VariableStack::Reference(*reference));
+                    } else {
+                        return Err(KsError::runtime(
+                            &format!("Module doesn't have field {}", name),
+                        ));
+                    }
+                }
+            },
+            Some(VariableStack::Reference(reference)) => {
+                let variable = self.environment.variable(&reference)?;
+                
+                if let Value::Module(module) = variable.value() {
+                    let reference = module.get(&name);
+                    if let Some(reference) = reference {
+                        self.tail_stack = Some(TailStack::Module {
+                            name,
+                            info: VarInfo::from(&variable)?
+                        });
+
+                        self.variable_stack.push(VariableStack::Reference(*reference));
+                    } else {
+                        return Err(KsError::runtime(
+                            &format!("Module doesn't have field {}", name),
+                        ));
+                    }
+                }
+            },
+            _ => 
+                return Err(KsError::runtime("There is no more variable stacks!"))
+        }
+
+        self.step()?;
+        Ok(())
+    }
+
     fn interpret(&mut self) -> KsResult<()> {
         let instruction = {
             let call_stack = self.call_stack_last();
@@ -1080,6 +1143,7 @@ impl VirtualMachine {
             Some(Instruction::LoadFromTuple(index)) => self.load_from_tuple(*index)?,
             Some(Instruction::ListLen) => self.list_len()?,
             Some(Instruction::LoadModule(size)) => self.load_module(*size)?,
+            Some(Instruction::LoadFromModule(name)) => self.load_from_module(name.clone())?,
             Some(Instruction::Return) => self.on_return()?,
             Some(Instruction::Call(args)) => self.extract_function(args.clone())?,
             Some(Instruction::Jump(distance)) => self.jump(*distance)?,

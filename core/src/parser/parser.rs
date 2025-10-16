@@ -3,7 +3,6 @@ use crate::lexer::token_pos::TokenPos;
 use crate::native_registry::native_registry::NativeRegistry;
 use crate::native_registry::native_types::NativeTypes;
 use crate::global::data_type::DataType;
-use crate::parser::statement;
 
 use super::identifier_tail::IdentifierTail;
 use super::operator::Operator;
@@ -201,6 +200,7 @@ impl Parser {
                 if segments.is_empty() {
                     self.current_token = backup_token;
                     let value = self.parse_expression()?;
+                    self.consume_token(Token::Semicolon)?;
                     return Ok(Some(Statement::Expression { value }))
                 }
 
@@ -213,10 +213,12 @@ impl Parser {
         match self.advance() {
             Some(Token::Equal) => {
                 let statement = self.parse_assignment_statement(&segments)?;
+                self.consume_token(Token::Semicolon)?;
                 Ok(Some(statement))
             },
             Some(Token::PlusEqual) => {
                 let statement = self.parse_add_value_statment(&segments)?;
+                self.consume_token(Token::Semicolon)?;
                 Ok(Some(statement))
             },
             Some(Token::MinusEqual) => todo!(),
@@ -224,6 +226,7 @@ impl Parser {
             _ => {
                 self.current_token = backup_token;
                 let value = self.parse_expression()?;
+                self.consume_token(Token::Semicolon)?;
                 Ok(Some(Statement::Expression { value }))
             }
         }
@@ -245,7 +248,7 @@ impl Parser {
                 },
                 Some(Token::LeftSquareBracket) => {
                     let index = self.parse_expression()?;
-                    self.consume_token(Token::RightSquareBracket);
+                    self.consume_token(Token::RightSquareBracket)?;
                     
                     segments.push(IdentifierTail::Index(index));
                 },
@@ -259,6 +262,16 @@ impl Parser {
                         ));
                     }
                 }
+                Some(Token::LeftParenthesis) => {
+                    if self.match_token(&Token::RightParenthesis) {
+                        segments.push(IdentifierTail::Call(Vec::new()));
+                    } else {
+                        let arguments = self.parse_function_call_parameters()?;
+                        self.consume_token(Token::RightParenthesis)?;
+                        segments.push(IdentifierTail::Call(arguments));
+                    }
+                    
+                },
                 _ => {
                     self.back();
                     return Ok(segments);

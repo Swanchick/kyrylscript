@@ -104,6 +104,13 @@ impl Compiler {
                 IdentifierTail::TupleIndex(index) => {
                     instructions.push(Instruction::LoadFromTuple(*index as usize));
                 }
+                IdentifierTail::Call(arguments) => {
+                    for argument in arguments {
+                        instructions = self.compile_expression(argument, instructions);
+                    }
+
+                    instructions.push(Instruction::Call(arguments.len()));
+                }
             }
         }
 
