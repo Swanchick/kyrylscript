@@ -200,7 +200,6 @@ impl Parser {
                 if segments.is_empty() {
                     self.current_token = backup_token;
                     let value = self.parse_expression()?;
-                    self.consume_token(Token::Semicolon)?;
                     return Ok(Some(Statement::Expression { value }))
                 }
 
@@ -213,12 +212,10 @@ impl Parser {
         match self.advance() {
             Some(Token::Equal) => {
                 let statement = self.parse_assignment_statement(&segments)?;
-                self.consume_token(Token::Semicolon)?;
                 Ok(Some(statement))
             },
             Some(Token::PlusEqual) => {
                 let statement = self.parse_add_value_statment(&segments)?;
-                self.consume_token(Token::Semicolon)?;
                 Ok(Some(statement))
             },
             Some(Token::MinusEqual) => todo!(),
@@ -226,7 +223,6 @@ impl Parser {
             _ => {
                 self.current_token = backup_token;
                 let value = self.parse_expression()?;
-                self.consume_token(Token::Semicolon)?;
                 Ok(Some(Statement::Expression { value }))
             }
         }
@@ -568,7 +564,9 @@ impl Parser {
     }
 
     pub fn parse_expression(&mut self) -> io::Result<Expression> {
-        self.parse_logic_or()
+        let expression = self.parse_logic_or()?;
+        self.consume_token(Token::Semicolon)?;
+        Ok(expression)
     }
 
     fn parse_logic_or(&mut self) -> io::Result<Expression> {
