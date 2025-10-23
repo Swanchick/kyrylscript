@@ -1,9 +1,11 @@
-let person = {
-    name: "Kyryl",
-    age: 19,
-    add(a: int, b: int): int {
-        return a + b;
-    }
-};
+function test(numbers: [int]) {
+    numbers[0] = numbers[1]!;
+    numbers[1] = numbers[0]!;
+}
 
-println(person.add(person.age, 20));
+
+
+let numbers = [10, 20, 30, 40, 50, 60, 70, 80];
+println(numbers);
+test(numbers);
+println(numbers);
