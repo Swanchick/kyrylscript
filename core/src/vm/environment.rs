@@ -279,6 +279,8 @@ impl Environment {
                     Value::List(references)
                     | Value::Tuple(references) =>
                         TreeReference::Branch(&references, frame.index),
+                    Value::Module(module) => 
+                        TreeReference::ModuleBranch(module, frame.index),
                     _ =>
                         TreeReference::Leaf,
                 }
@@ -286,6 +288,18 @@ impl Environment {
 
             match next {
                 TreeReference::Branch(references, index) => {
+                    if let Some(reference) = references.get(index) {
+                        let child = self.variable_remove(reference)?;
+                        frame.step();
+                        frames.push(frame);
+                        frames.push(Frame::new(child, 0))
+                    } else {
+                        f(self, frame)?;
+                    }
+                },
+                TreeReference::ModuleBranch(module, index) => {
+                    let references: Vec<&u64> = module.values().collect();
+                    
                     if let Some(reference) = references.get(index) {
                         let child = self.variable_remove(reference)?;
                         frame.step();
@@ -343,6 +357,8 @@ impl Environment {
                     Value::List(references)
                     | Value::Tuple(references) =>
                         TreeReference::Branch(&references, frame.index),
+                    Value::Module(module) => 
+                        TreeReference::ModuleBranch(module, frame.index),
                     _ =>
                         TreeReference::Leaf,
                 }
@@ -376,6 +392,9 @@ impl Environment {
                             last_frame.new_references.push(child_reference);
                         }
                     }
+                },
+                TreeReference::ModuleBranch(module, index) => {
+                    
                 },
                 TreeReference::Leaf => {
                     let reference = frame.reference;
