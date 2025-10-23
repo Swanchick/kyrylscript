@@ -28,6 +28,7 @@ pub enum Instruction {
     Assign,
     LoadConst(Constant),
     LoadVar(String),
+    LoadVarSave(String),
     Closure(String),
     Call(usize),
     
@@ -36,9 +37,12 @@ pub enum Instruction {
     LoadList(usize),
     LoadTuple(usize),
     LoadFromList,
+    LoadFromListSave,
     ListLen,
     LoadFromTuple(usize),
+    LoadFromTupleSave(usize),
     LoadFromModule(String),
+    LoadFromModuleSave(String),
     AssignModule(String),
     
     // System

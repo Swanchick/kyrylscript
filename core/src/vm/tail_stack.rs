@@ -1,5 +1,6 @@
 use crate::vm::var_info::VarInfo;
 
+#[derive(Debug)]
  pub enum TailStack {
     Variable(String),
     Index {

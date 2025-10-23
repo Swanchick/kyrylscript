@@ -84,7 +84,7 @@ impl Compiler {
         instructions
     }
 
-    fn compile_identity(&mut self, segments: &Vec<IdentifierTail>, mut instructions: Instructions) -> Instructions {
+    fn compile_identity(&mut self, segments: &Vec<IdentifierTail>, mut instructions: Instructions, save: bool) -> Instructions {
         for (i, segment) in segments.iter().enumerate() {
             let is_first = i == 0;
 
@@ -92,17 +92,33 @@ impl Compiler {
                 IdentifierTail::Name(name) => {
                     let name = name.clone();
                     if is_first {
-                        instructions.push(Instruction::LoadVar(name));
+                        if save {
+                            instructions.push(Instruction::LoadVarSave(name));
+                        } else {
+                            instructions.push(Instruction::LoadVar(name));
+                        }
                     } else {
-                        instructions.push(Instruction::LoadFromModule(name));
+                        if save {
+                            instructions.push(Instruction::LoadFromModuleSave(name));
+                        } else {
+                            instructions.push(Instruction::LoadFromModule(name));
+                        }
                     }
                 },
                 IdentifierTail::Index(index) => {
                     instructions = self.compile_expression(&index, instructions);
-                    instructions.push(Instruction::LoadFromList);
+                    if save {
+                        instructions.push(Instruction::LoadFromListSave);
+                    } else {
+                        instructions.push(Instruction::LoadFromList);
+                    }
                 },
                 IdentifierTail::TupleIndex(index) => {
-                    instructions.push(Instruction::LoadFromTuple(*index as usize));
+                    if save {
+                        instructions.push(Instruction::LoadFromTupleSave(*index as usize));
+                    } else {
+                        instructions.push(Instruction::LoadFromTuple(*index as usize));
+                    }
                 }
                 IdentifierTail::Call(arguments) => {
                     for argument in arguments {
@@ -146,14 +162,14 @@ impl Compiler {
                 instructions.push(store);
             },
             Statement::Assignment { segments, value } => {
-                instructions = self.compile_identity(segments, instructions);
+                instructions = self.compile_identity(segments, instructions, true);
                 instructions = self.compile_expression(value, instructions);
 
                 instructions.push(Instruction::Assign);
             },
 
             Statement::AddValue { segments, value } => {
-                instructions = self.compile_identity(segments, instructions);
+                instructions = self.compile_identity(segments, instructions, true);
 
 
                 // instructions.push(Instruction::LoadVar(name.clone()));
@@ -386,7 +402,7 @@ impl Compiler {
             Expression::BooleanLiteral(boolean) => instructions.push(Instruction::LoadConst(Constant::Boolean(*boolean))),
             
             Expression::Identifier(segments) => {
-                instructions = self.compile_identity(segments, instructions);
+                instructions = self.compile_identity(segments, instructions, false);
             },
 
             Expression::FunctionCall(name, arguments) => {

@@ -139,9 +139,11 @@ impl VirtualMachine {
         Variable::empty(value, self.depth())
     }
 
-    fn load_var(&mut self, name: String) -> KsResult<()> {
+    fn load_var(&mut self, name: String, save: bool) -> KsResult<()> {
         let reference = self.environment.find_reference(&name)?;
-        self.tail_stack = Some(TailStack::Variable(name));
+        if save {
+            self.tail_stack = Some(TailStack::Variable(name));
+        }
 
         self.variable_stack.push(VariableStack::Reference(reference));
         self.step()?;
@@ -684,7 +686,7 @@ impl VirtualMachine {
         Err(KsError::runtime("Cannot load integer"))
     }
 
-    fn load_from_list(&mut self) -> KsResult<()> {
+    fn load_from_list(&mut self, save: bool) -> KsResult<()> {
         let index = self.load_integer()? as usize;
 
         let stack = self.variable_stack.pop();
@@ -694,10 +696,12 @@ impl VirtualMachine {
                 if let Value::List(list) = variable.value() {
                     let reference = list.get(index);
                     if let Some(reference) = reference {
-                        self.tail_stack = Some(TailStack::Index {
-                            index: index,
-                            info: VarInfo::from(&variable)?
-                        });
+                        if save {
+                            self.tail_stack = Some(TailStack::Index {
+                                index: index,
+                                info: VarInfo::from(&variable)?
+                            });
+                        }
 
 
                         self.variable_stack.push(VariableStack::Reference(*reference));
@@ -711,10 +715,12 @@ impl VirtualMachine {
                 if let Value::List(list) = variable.value() {
                     let reference = list.get(index);
                     if let Some(reference) = reference {
-                        self.tail_stack = Some(TailStack::Index {
-                            index: index,
-                            info: VarInfo::from(&variable)?
-                        });
+                        if save {
+                            self.tail_stack = Some(TailStack::Index {
+                                index: index,
+                                info: VarInfo::from(&variable)?
+                            });
+                        }
 
                         self.variable_stack.push(VariableStack::Reference(*reference));
                     } else {
@@ -731,7 +737,7 @@ impl VirtualMachine {
         Ok(())
     }
 
-    fn load_from_tuple(&mut self, index: usize) -> KsResult<()> {
+    fn load_from_tuple(&mut self, index: usize, save: bool) -> KsResult<()> {
         let stack = self.variable_stack.pop();
 
         match stack {
@@ -739,10 +745,13 @@ impl VirtualMachine {
                 if let Value::Tuple(list) = variable.value() {
                     let reference = list.get(index);
                     if let Some(reference) = reference {
-                        self.tail_stack = Some(TailStack::Index {
-                            index: index,
-                            info: VarInfo::from(&variable)?
-                        });
+                        if save {
+                            self.tail_stack = Some(TailStack::Index {
+                                index: index,
+                                info: VarInfo::from(&variable)?
+                            });
+                        }
+                        
 
                         self.variable_stack.push(VariableStack::Reference(*reference));
                     } else {
@@ -755,10 +764,12 @@ impl VirtualMachine {
                 if let Value::Tuple(list) = variable.value() {
                     let reference = list.get(index);
                     if let Some(reference) = reference {
-                        self.tail_stack = Some(TailStack::Index {
-                            index: index,
-                            info: VarInfo::from(&variable)?
-                        });
+                        if save {
+                            self.tail_stack = Some(TailStack::Index {
+                                index: index,
+                                info: VarInfo::from(&variable)?
+                            });
+                        }
 
                         self.variable_stack.push(VariableStack::Reference(*reference));
                     } else {
@@ -835,12 +846,13 @@ impl VirtualMachine {
                 self.environment.assign_to_reference(reference, variable)?,
             Some(VariableStack::Reference(assign_reference)) => {
                 self.assign_with_reference(reference, assign_reference)?;
-
                 self.change_reference_holder(assign_reference)?;
             },
             _ =>
                 return Err(KsError::runtime("There is no more variable stacks!"))
         }
+
+        self.step()?;
 
         Ok(())
     }
@@ -896,7 +908,7 @@ impl VirtualMachine {
         Ok(())
     }
 
-    fn load_from_module(&mut self, name: String) -> KsResult<()> {
+    fn load_from_module(&mut self, name: String, save: bool) -> KsResult<()> {
         let stack = self.variable_stack.pop();
 
         match stack {
@@ -904,10 +916,12 @@ impl VirtualMachine {
                 if let Value::Module(module) = variable.value() {
                     let reference = module.get(&name);
                     if let Some(reference) = reference {
-                        self.tail_stack = Some(TailStack::Module {
-                            name,
-                            info: VarInfo::from(&variable)?
-                        });
+                        if save {
+                            self.tail_stack = Some(TailStack::Module {
+                                name,
+                                info: VarInfo::from(&variable)?
+                            });
+                        }
 
                         self.variable_stack.push(VariableStack::Reference(*reference));
                     } else {
@@ -923,10 +937,12 @@ impl VirtualMachine {
                 if let Value::Module(module) = variable.value() {
                     let reference = module.get(&name);
                     if let Some(reference) = reference {
-                        self.tail_stack = Some(TailStack::Module {
-                            name,
-                            info: VarInfo::from(&variable)?
-                        });
+                        if save {
+                            self.tail_stack = Some(TailStack::Module {
+                                name,
+                                info: VarInfo::from(&variable)?
+                            });
+                        }
 
                         self.variable_stack.push(VariableStack::Reference(*reference));
                     } else {
@@ -1100,12 +1116,6 @@ impl VirtualMachine {
                 self.public_define_variable(&name)?;
             },
 
-            Some(Instruction::Assign) => {
-                self.assign()?;
-
-                self.step()?;
-            },
-
             Some(Instruction::Enter) => {
                 self.enter_scope()?;
                 self.step()?;
@@ -1137,13 +1147,18 @@ impl VirtualMachine {
                 self.step()?;
             },
 
-            Some(Instruction::LoadVar(name)) => self.load_var(name.clone())?,
+            Some(Instruction::Assign) => self.assign()?,
+            Some(Instruction::LoadVar(name)) => self.load_var(name.clone(), false)?,
+            Some(Instruction::LoadVarSave(name)) => self.load_var(name.clone(), true)?,
             Some(Instruction::Clone) => self.clone()?,
-            Some(Instruction::LoadFromList) => self.load_from_list()?,
-            Some(Instruction::LoadFromTuple(index)) => self.load_from_tuple(*index)?,
+            Some(Instruction::LoadFromList) => self.load_from_list(false)?,
+            Some(Instruction::LoadFromListSave) => self.load_from_list(true)?,
+            Some(Instruction::LoadFromTuple(index)) => self.load_from_tuple(*index, false)?,
+            Some(Instruction::LoadFromTupleSave(index)) => self.load_from_tuple(*index, true)?,
             Some(Instruction::ListLen) => self.list_len()?,
             Some(Instruction::LoadModule(size)) => self.load_module(*size)?,
-            Some(Instruction::LoadFromModule(name)) => self.load_from_module(name.clone())?,
+            Some(Instruction::LoadFromModule(name)) => self.load_from_module(name.clone(), false)?,
+            Some(Instruction::LoadFromModuleSave(name)) => self.load_from_module(name.clone(), true)?,
             Some(Instruction::Return) => self.on_return()?,
             Some(Instruction::Call(args)) => self.extract_function(args.clone())?,
             Some(Instruction::Jump(distance)) => self.jump(*distance)?,

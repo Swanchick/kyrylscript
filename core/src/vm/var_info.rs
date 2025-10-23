@@ -3,6 +3,7 @@ use crate::global::utils::ks_error::KsError;
 
 use super::variable::Variable;
 
+#[derive(Debug)]
 pub struct VarInfo {
     reference: Option<u64>,
     depth: usize,

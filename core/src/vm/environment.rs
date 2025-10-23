@@ -235,6 +235,7 @@ impl Environment {
                 variable.set_depth(depth);
                 variable.set_reference(&reference);
                 variable.add_owner();
+                
                 scope.insert(reference, variable);
                 break;
             }
