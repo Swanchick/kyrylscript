@@ -1,15 +1,9 @@
-function test(numbers: [int]) {
-    let n1 = numbers[0]!;
-    let n2 = numbers[1]!;
-
-    // debug();
-
-    numbers[0] = n2;
-    numbers[1] = n1;
+function test(name: string, age: int): {name: string, age: int} {        
+    return {
+        name: name,
+        age: age
+    };
 }
 
-
-let numbers = [10, 20, 30, 40, 50, 60, 70, 80];
-println(numbers);
-test(numbers);
-println(numbers);
+let person = test("Kyryl", 19);
+println(person);

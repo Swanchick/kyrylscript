@@ -13,6 +13,7 @@ use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
 use crate::native_registry::native_registry::NativeRegistry;
 use crate::native_registry::native_types::NativeTypes;
+use crate::vm::variable_stack;
 
 use super::tail_stack::TailStack;
 use super::var_info::VarInfo;
@@ -228,7 +229,8 @@ impl VirtualMachine {
     }
 
     pub fn call_function(&mut self, name: &str) -> KsResult<()> {
-        let arg_names = self.enter_function(name)?;
+        let mut arg_names = self.enter_function(name)?;
+        arg_names.reverse();
 
         for arg_name in arg_names {
             let arg_stack = self.variable_stack.pop();
