@@ -827,7 +827,12 @@ impl VirtualMachine {
                 }
             },
             Some(TailStack::Module { name, info }) => {
-
+                let reference = info.reference()?;
+                let depth = info.depth();
+                let module = self.environment.variable_by_depth_mut(reference, *depth)?;
+                if let Value::Module(module) = module.value_mut() {
+                    module.insert(name.to_string(), new_reference);
+                }
             },
             Some(TailStack::Variable(name)) => {
                 self.environment.assign_to_name(name, &new_reference)?;
