@@ -13,7 +13,6 @@ use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
 use crate::native_registry::native_registry::NativeRegistry;
 use crate::native_registry::native_types::NativeTypes;
-use crate::vm::variable_stack;
 
 use super::tail_stack::TailStack;
 use super::var_info::VarInfo;
@@ -486,17 +485,10 @@ impl VirtualMachine {
 
         match stack {
             Some(VariableStack::Reference(reference)) => {
-                let is_collection = {
-                    let variable = self.environment.variable(&reference)?;
-                    matches!(variable.value(), Value::List(_)) || matches!(variable.value(), Value::Tuple(_))
-                };
-
-                let mut variable = if is_collection {
-                    self.environment.clone(reference)?
-                } else {
-                    self.environment.variable(&reference)?.clone()
-                };
-
+                let variable = self.environment.variable(&reference)?;
+                let variable = variable.clone();
+                let reference = self.environment.define_reference(variable)?;
+                let mut variable = self.environment.clone(reference)?;
                 variable.clear();
                 variable.set_depth(self.depth());
 

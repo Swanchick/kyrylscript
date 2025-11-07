@@ -344,7 +344,11 @@ impl Environment {
         Ok(())
     }
 
-    pub fn clone(&mut self, mut parent_reference: u64) -> KsResult<Variable> {
+    fn clone_single(&mut self, reference: u64) -> KsResult<Variable> {
+        todo!()
+    }
+
+    fn clone_collection(&mut self, mut parent_reference: u64) -> KsResult<Variable> {
         let mut frames = vec![
             ReferenceFrame::new(parent_reference, 0),
         ];
@@ -394,11 +398,14 @@ impl Environment {
                     }
                 },
                 TreeReference::ModuleBranch(module, index) => {
-                    
+                    todo!()
                 },
                 TreeReference::Leaf => {
+                    println!("here");
                     let reference = frame.reference;
-                    let variable = self.variable(&reference)?.clone();
+                    let mut variable = self.variable(&reference)?.clone();
+                    variable.clear_owners();
+                    variable.add_owner();
                     let reference = self.define_reference(variable)?;
                     if let Some(last_frame) = frames.last_mut() {
                         last_frame.new_references.push(reference);
@@ -407,9 +414,13 @@ impl Environment {
             }
         }
 
-
-        let variable = self.variable_remove(&parent_reference)?;
+        let mut variable = self.variable_remove(&parent_reference)?;
+        variable.clear_owners();
         Ok(variable)
+    }
+
+    pub fn clone(&mut self, reference: u64) -> KsResult<Variable> {
+        todo!()
     }
 
     pub fn free(&mut self, reference: &u64) -> KsResult<()> {
