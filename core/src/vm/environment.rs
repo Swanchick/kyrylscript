@@ -233,11 +233,14 @@ impl Environment {
     }
 
     pub fn assign_to_reference(&mut self, reference: u64, mut variable: Variable) -> KsResult<()> {
+        let original_variable = self.variable(&reference)?;
+        let original_owners = original_variable.owners();
+        
         for (depth, scope) in self.references.iter_mut().enumerate() {
             if scope.contains_key(&reference) {
                 variable.set_depth(depth);
                 variable.set_reference(&reference);
-                variable.add_owner();
+                variable.set_owners(original_owners);
                 
                 scope.insert(reference, variable);
                 break;
@@ -258,9 +261,16 @@ impl Environment {
     }
 
     pub fn add_variable_owner(&mut self, reference: u64, depth: usize) -> KsResult<()> {
+        println!("There 1");
+        
         if let Some(current_scope) = self.references.get_mut(depth) {
+            println!("There 2");
+            
             if let Some(variable) = current_scope.get_mut(&reference) {
+                println!("There 3");
+                println!("{:?}", variable);
                 variable.add_owner();
+                println!("{:?}", variable);
             }
 
             Ok(())
@@ -381,9 +391,9 @@ impl Environment {
         Ok(())
     }
 
-    fn anchor_insert(&mut self, mut variable: Variable, low_depth: usize) -> KsResult<()> {
+    fn anchor_insert(&mut self, reference: u64, low_depth: usize) -> KsResult<()> {
+        let mut variable = self.variable_remove(&reference)?;
         let low_scope = self.references.get_mut(low_depth);
-        let reference = variable.reference()?;
 
         if let Some(low_scope) = low_scope {
             variable.set_depth(low_depth);
@@ -393,18 +403,28 @@ impl Environment {
         Ok(())
     }
 
-    pub fn anchor(&mut self, low_depth: usize, variable: Variable) -> KsResult<()> {
-        self.tree_reference(variable, |this, frame| {
-            this.anchor_insert(frame.variable, low_depth)
-        })?;
+    pub fn anchor(&mut self, low_depth: usize, reference: u64) -> KsResult<()> {
+        self.variable_iter(
+            reference, 
+            |this, frame| {
+                this.anchor_insert(frame.reference, low_depth)?;
+                Ok(())
+            }, 
+            |this, frame| {
+                this.anchor_insert(frame.reference, low_depth)?;
+                Ok(())
+            },
+            |this, frame| {
+                this.anchor_insert(frame.reference, low_depth)?;
+                Ok(())
+            },
+        )?;
 
         Ok(())
     }
 
     pub fn anchor_reference(&mut self, low_depth: usize, reference: u64) -> KsResult<()> {
-        let variable = self.variable_remove(&reference)?;
-        self.anchor(low_depth, variable)?;
-
+        self.anchor(low_depth, reference)?;
         Ok(())
     }
 

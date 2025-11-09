@@ -62,12 +62,20 @@ impl Variable {
         self.depth
     }
 
+    pub fn owners(&self) -> usize {
+        self.owners
+    }
+
     pub fn add_owner(&mut self) {
         self.owners += 1;
     }
 
     pub fn remove_owner(&mut self) {
         self.owners -= 1;
+    }
+
+    pub fn set_owners(&mut self, owners: usize) {
+        self.owners = owners;
     }
 
     pub fn set_depth(&mut self, depth: usize) {

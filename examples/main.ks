@@ -1,21 +1,14 @@
-function test(numbers: [int]) {
-    println("========================== Check 1");
-    
-    let n1 = numbers[0]!;
-    numbers[0] = n1;
+let a = 10;
 
-    // debug();
+function test() {
+    let b = 20;
 
-    let n2 = numbers[0]!;
-    numbers[0] = n2;
+    a = b;
 
-    // debug();
+    b = 100;
 
+    debug();
 }
 
-let numbers = [10, 20];
-println(numbers);
-test(numbers);
-
-
-// println(numbers);
+test();
+println(a);
