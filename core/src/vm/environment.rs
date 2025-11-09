@@ -261,16 +261,9 @@ impl Environment {
     }
 
     pub fn add_variable_owner(&mut self, reference: u64, depth: usize) -> KsResult<()> {
-        println!("There 1");
-        
         if let Some(current_scope) = self.references.get_mut(depth) {
-            println!("There 2");
-            
             if let Some(variable) = current_scope.get_mut(&reference) {
-                println!("There 3");
-                println!("{:?}", variable);
                 variable.add_owner();
-                println!("{:?}", variable);
             }
 
             Ok(())

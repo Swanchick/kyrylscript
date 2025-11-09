@@ -833,8 +833,6 @@ impl VirtualMachine {
     }
 
     fn assign(&mut self) -> KsResult<()> {
-        println!("TAILSTACK: {:?}", self.tail_stack);
-        
         let assign_value = self.variable_stack.pop();
         let assign_to = self.variable_stack.pop();
         let reference = self.extract_reference(assign_to)?;
