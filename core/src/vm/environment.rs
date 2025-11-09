@@ -2,9 +2,11 @@ use std::collections::HashMap;
 
 use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
-use crate::vm::anchor::reference_frame::ReferenceFrame;
-use crate::vm::anchor::tree_reference::TreeReference;
+use crate::vm::anchor::variable_frame::VariableFrame;
+use crate::vm::anchor::variable_iter::VariableIter;
 
+use super::anchor::reference_frame::ReferenceFrame;
+use super::anchor::tree_reference::TreeReference;
 use super::variable::Variable;
 use super::value::Value;
 use super::anchor::frame::Frame;
@@ -16,6 +18,7 @@ pub struct Environment {
     current_reference: u64,
     variables: Vec<Scope>,
     references: Vec<ScopeReference>,
+    
 }
 
 impl Environment {
@@ -317,12 +320,73 @@ impl Environment {
         Ok(())
     }
 
-    fn anchor_insert(&mut self, variable: Variable, low_depth: usize) -> KsResult<()> {
+    fn variable_iter<COLLECTION, MODULE, LEAF>(
+        &mut self, 
+        reference: u64, 
+        mut collection_func: COLLECTION,
+        mut module_func: MODULE,
+        mut leaf_func: LEAF, 
+    ) -> KsResult<()>
+    where 
+        COLLECTION: FnMut(&mut Self, VariableFrame) -> KsResult<()>,
+        MODULE: FnMut(&mut Self, VariableFrame) -> KsResult<()>,
+        LEAF: FnMut(&mut Self, VariableFrame) -> KsResult<()>,
+    {
+        let mut frames: Vec<VariableFrame> = vec![
+            VariableFrame::new(reference, 0),
+        ];
+        
+        while let Some(mut frame) = frames.pop() {
+            let reference = &frame.reference;
+            let variable = self.variable(reference)?;
+            let next = {
+                match variable.value() {
+                    Value::List(references)
+                    | Value::Tuple(references) =>
+                        VariableIter::Collection(&references, frame.index),
+                    Value::Module(module) => 
+                        VariableIter::Module(&module, frame.index),
+                    _ =>
+                        VariableIter::Leaf,
+                }
+            };
+
+            match next {
+                VariableIter::Collection(collection, index) => {
+                    if let Some(child_reference) = collection.get(index) {
+                        frame.step();
+                        frames.push(frame);
+                        frames.push(VariableFrame::new(*child_reference, index))
+                    } else {
+                        collection_func(self, frame)?;
+                    }
+                },
+                VariableIter::Module(module, index) => {
+                    let references: Vec<&u64> = module.values().collect();
+
+                    if let Some(child_reference) = references.get(index) {
+                        frame.step();
+                        frames.push(frame);
+                        frames.push(VariableFrame::new(**child_reference, index))
+                    } else {
+                        module_func(self, frame)?;
+                    }
+                },
+                VariableIter::Leaf => {
+                    leaf_func(self, frame)?;
+                },
+            }
+        }
+
+        Ok(())
+    }
+
+    fn anchor_insert(&mut self, mut variable: Variable, low_depth: usize) -> KsResult<()> {
         let low_scope = self.references.get_mut(low_depth);
         let reference = variable.reference()?;
 
-
         if let Some(low_scope) = low_scope {
+            variable.set_depth(low_depth);
             low_scope.insert(reference, variable);
         }
 
@@ -342,10 +406,6 @@ impl Environment {
         self.anchor(low_depth, variable)?;
 
         Ok(())
-    }
-
-    fn clone_single(&mut self, reference: u64) -> KsResult<Variable> {
-        todo!()
     }
 
     fn clone_collection(&mut self, mut parent_reference: u64) -> KsResult<Variable> {
@@ -404,8 +464,7 @@ impl Environment {
                     println!("here");
                     let reference = frame.reference;
                     let mut variable = self.variable(&reference)?.clone();
-                    variable.clear_owners();
-                    variable.add_owner();
+                    variable.clear();
                     let reference = self.define_reference(variable)?;
                     if let Some(last_frame) = frames.last_mut() {
                         last_frame.new_references.push(reference);
@@ -414,13 +473,27 @@ impl Environment {
             }
         }
 
-        let mut variable = self.variable_remove(&parent_reference)?;
-        variable.clear_owners();
-        Ok(variable)
+        self.variable_remove(&parent_reference)
     }
 
     pub fn clone(&mut self, reference: u64) -> KsResult<Variable> {
-        todo!()
+        let variable = self.variable(&reference)?;
+
+        if let Value::List(_) | Value::Tuple(_) | Value::Module(_) = variable.value() {
+            let variable = variable.clone();
+            let reference = self.define_reference(variable)?;
+            let mut variable = self.clone_collection(reference)?;
+            variable.clear();
+            variable.set_depth(self.depth());
+
+            Ok(variable)
+        } else {
+            let mut variable = variable.clone();
+            variable.clear();
+            variable.set_depth(self.depth());
+
+            Ok(variable)
+        }
     }
 
     pub fn free(&mut self, reference: &u64) -> KsResult<()> {

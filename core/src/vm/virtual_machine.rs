@@ -485,12 +485,7 @@ impl VirtualMachine {
 
         match stack {
             Some(VariableStack::Reference(reference)) => {
-                let variable = self.environment.variable(&reference)?;
-                let variable = variable.clone();
-                let reference = self.environment.define_reference(variable)?;
-                let mut variable = self.environment.clone(reference)?;
-                variable.clear();
-                variable.set_depth(self.depth());
+                let variable = self.environment.clone(reference)?;
 
                 self.variable_stack.push(VariableStack::Variable(variable));
             },
@@ -782,6 +777,7 @@ impl VirtualMachine {
 
     fn assign_with_reference(&mut self, reference: u64, assign_reference: u64) -> KsResult<()> {
         let assign_variable = self.environment.variable(&assign_reference)?;
+
         let variable = self.environment.variable(&reference)?;
         let assign_depth = assign_variable.depth();
         let variable_depth = variable.depth();
@@ -790,6 +786,7 @@ impl VirtualMachine {
         self.environment.add_variable_owner(assign_reference, assign_depth)?;
 
         let scope_difference = variable_depth < assign_depth;
+
         if scope_difference {
             self.environment.anchor_reference(
                 variable_depth,
@@ -836,6 +833,8 @@ impl VirtualMachine {
     }
 
     fn assign(&mut self) -> KsResult<()> {
+        println!("TAILSTACK: {:?}", self.tail_stack);
+        
         let assign_value = self.variable_stack.pop();
         let assign_to = self.variable_stack.pop();
         let reference = self.extract_reference(assign_to)?;

@@ -70,10 +70,6 @@ impl Variable {
         self.owners -= 1;
     }
 
-    pub fn clear_owners(&mut self) {
-        self.owners = 0;
-    }
-
     pub fn set_depth(&mut self, depth: usize) {
         self.depth = depth;
     }
@@ -84,5 +80,6 @@ impl Variable {
 
     pub fn clear(&mut self) {
         self.reference = None;
+        self.owners = 0;
     }
 }
