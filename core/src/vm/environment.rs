@@ -509,6 +509,8 @@ impl Environment {
         }
     }
 
+
+    /// @deprecated at least will be
     pub fn free(&mut self, reference: &u64) -> KsResult<()> {
         for i in (0..self.references.len()).rev() {
             let scope = &mut self.references[i];
@@ -530,6 +532,8 @@ impl Environment {
 
         Err(KsError::runtime("No variable were found with reference!"))
     }
+
+    // create a new function here called free_name
 
     pub fn debug(&self) {
         println!("Variables =================");
@@ -563,9 +567,12 @@ impl Environment {
     pub fn exit(&mut self) -> KsResult<()> {
         let variables = self.variables.pop();
         if let Some(variables) = variables {
-            for (_, reference) in variables {
+            for (name, reference) in variables {
                 let variable = self.variable_mut(&reference)?;
                 variable.remove_owner();
+
+                
+
             }
         }
 
