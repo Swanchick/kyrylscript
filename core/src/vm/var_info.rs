@@ -7,20 +7,23 @@ use super::variable::Variable;
 pub struct VarInfo {
     reference: Option<u64>,
     depth: usize,
+    owner: usize,
 }
 
 impl VarInfo {
-    pub fn new(reference: u64, depth: usize) -> VarInfo {
+    pub fn new(reference: u64, depth: usize, owner: usize) -> VarInfo {
         VarInfo {
             reference: Some(reference),
             depth,
+            owner,
         }
     }
 
     pub fn from(variable: &Variable) -> KsResult<VarInfo> {
         Ok(VarInfo {
             reference: Some(variable.reference()?),
-            depth: variable.depth()
+            depth: variable.depth(),
+            owner: variable.owners(),
         })
     }
 
@@ -34,5 +37,9 @@ impl VarInfo {
 
     pub fn depth(&self) -> &usize {
         &self.depth
+    }
+
+    pub fn owner(&self) -> &usize {
+        &self.owner
     }
 }
