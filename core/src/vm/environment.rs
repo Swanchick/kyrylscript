@@ -10,15 +10,17 @@ use super::anchor::tree_reference::TreeReference;
 use super::variable::Variable;
 use super::value::Value;
 use super::anchor::frame::Frame;
+use super::var_info::VarInfo;
 
 type Scope = HashMap<String, u64>;
 type ScopeReference = HashMap<u64, Variable>;
+type ScopeInfo = HashMap<u64, VarInfo>;
 
 pub struct Environment {
     current_reference: u64,
     variables: Vec<Scope>,
     references: Vec<ScopeReference>,
-    
+    infos: ScopeInfo,
 }
 
 impl Environment {
@@ -27,6 +29,7 @@ impl Environment {
             current_reference: 0,
             variables: Vec::new(),
             references: Vec::new(),
+            infos: HashMap::new(),
         }
     }
 
@@ -38,12 +41,44 @@ impl Environment {
         &self.references
     }
 
-    fn current_scope_mut(&mut self) -> Option<&mut Scope> {
-        self.variables.last_mut()
+    fn current_scope_mut(&mut self) -> KsResult<&mut Scope> {
+        let last = self.variables.last_mut();
+        if let Some(last) = last {
+            Ok(last)
+        } else {
+            Err(KsError::runtime("Cannot access the last scope!"))
+        }
     }
 
-    fn current_scope_reference_mut(&mut self) -> Option<&mut ScopeReference> {
-        self.references.last_mut()
+    fn current_scope_reference_mut(&mut self) -> KsResult<&mut ScopeReference> {
+        let last = self.references.last_mut();
+        if let Some(last) = last {
+            Ok(last)
+        } else {
+            Err(KsError::runtime("Cannot access the last scope refernce!"))
+        }
+    }
+
+    fn variables_depth_mut(&mut self, depth: usize) -> KsResult<&mut Scope> {
+        let variables = self.variables.get_mut(depth);
+        if let Some(variables) = variables {
+            Ok(variables)
+        } else {
+            Err(KsError::runtime(
+                &format!("Cannot get a scope in this depth: {}", depth)
+            ))
+        }
+    }
+
+    fn references_depth_mut(&mut self, depth: usize) -> KsResult<&mut ScopeReference> {
+        let references = self.references.get_mut(depth);
+        if let Some(references) = references {
+            Ok(references)
+        } else {
+            Err(KsError::runtime(
+                &format!("Cannot get a scope in this depth: {}", depth)
+            ))
+        }
     }
 
     pub fn find_reference(&self, name: &str) -> KsResult<u64> {
@@ -120,55 +155,51 @@ impl Environment {
         ))
     }
 
-    pub fn define_variable(&mut self, name: &str, mut variable: Variable) {
+    pub fn define_variable(&mut self, name: &str, mut variable: Variable) -> KsResult<()> {
         let current_reference = self.current_reference;
-        let current_scope = self.current_scope_mut();
+        let current_scope = self.current_scope_mut()?;
 
-        if let Some(current_scope) = current_scope {
-            current_scope.insert(
-                name.to_string(),
-                current_reference
-            );
+        current_scope.insert(
+            name.to_string(),
+            current_reference
+        );
 
-            if let Some(current_scope_reference) = self.current_scope_reference_mut() {
-                variable.set_reference(&current_reference);
-                variable.add_owner();
-                current_scope_reference.insert(current_reference, variable);
+        let current_scope_reference = self.current_scope_reference_mut()?;
+        variable.set_reference(&current_reference);
+        variable.add_owner();
+        current_scope_reference.insert(current_reference, variable);
 
-                self.current_reference += 1;
-            }
-        }
+        self.current_reference += 1;
+
+        Ok(())
     }
 
-    pub fn define_variable_at_depth(&mut self, name: &str, mut variable: Variable, depth: usize) {
+    pub fn define_variable_at_depth(&mut self, name: &str, mut variable: Variable, depth: usize) -> KsResult<()> {
         let current_reference = self.current_reference;
-        let current_scope = self.variables.get_mut(depth);
+        let current_scope = self.variables_depth_mut(depth)?;
 
-        if let Some(current_scope) = current_scope {
-            current_scope.insert(
-                name.to_string(),
-                current_reference
-            );
+        current_scope.insert(
+            name.to_string(),
+            current_reference
+        );
 
-            if let Some(current_scope_reference) = self.current_scope_reference_mut() {
-                variable.set_reference(&current_reference);
-                variable.add_owner();
-                current_scope_reference.insert(current_reference, variable);
+        let current_scope_reference = self.current_scope_reference_mut()?;
+        variable.set_reference(&current_reference);
+        variable.add_owner();
+        current_scope_reference.insert(current_reference, variable);
 
-                self.current_reference += 1;
-            }
-        }
+        self.current_reference += 1;
+
+        Ok(())
     }
 
     pub fn define_name_reference(&mut self, name: &str, reference: &u64) -> KsResult<()> {
-        let current_scope = self.current_scope_mut();
+        let current_scope = self.current_scope_mut()?;
 
-        if let Some(current_scope) = current_scope {
-            current_scope.insert(
-                name.to_string(),
-                *reference
-            );
-        }
+        current_scope.insert(
+            name.to_string(),
+            *reference
+        );
 
         let variable = self.variable_mut(&reference)?;
         variable.add_owner();
@@ -177,14 +208,12 @@ impl Environment {
     }
 
     pub fn define_name_reference_at_depth(&mut self, name: &str, reference: &u64, depth: usize) -> KsResult<()> {
-        let current_scope = self.variables.get_mut(depth);
+        let current_scope = self.variables_depth_mut(depth)?;
 
-        if let Some(current_scope) = current_scope {
-            current_scope.insert(
-                name.to_string(),
-                *reference
-            );
-        }
+        current_scope.insert(
+            name.to_string(),
+            *reference
+        );
 
         let variable = self.variable_mut(&reference)?;
         variable.add_owner();
@@ -195,40 +224,32 @@ impl Environment {
     pub fn define_reference(&mut self, variable: Variable) -> KsResult<u64> {
         self.current_reference += 1;
         let reference = self.current_reference - 1;
-        let scope_reference = self.current_scope_reference_mut();
+        let scope_reference = self.current_scope_reference_mut()?;
 
-        if let Some(scope_reference) = scope_reference {
-            scope_reference.insert(reference, variable);
+        scope_reference.insert(reference, variable);
 
-            if let Some(variable) = scope_reference.get_mut(&(reference)) {
-                variable.set_reference(&reference);
-                variable.add_owner();
-                Ok(reference)
-            } else {
-                Err(KsError::runtime("There was a problem allocating a variable!"))
-            }
+        if let Some(variable) = scope_reference.get_mut(&(reference)) {
+            variable.set_reference(&reference);
+            variable.add_owner();
+            Ok(reference)
         } else {
-            Err(KsError::runtime("No reference scope!"))
+            Err(KsError::runtime("There was a problem allocating a variable!"))
         }
     }
 
     pub fn define_reference_at_depth(&mut self, variable: Variable, depth: usize) -> KsResult<u64> {
         self.current_reference += 1;
         let reference: u64 = self.current_reference - 1;
-        let scope_reference = self.references.get_mut(depth);
+        let scope_reference = self.references_depth_mut(depth)?;
 
-        if let Some(scope_reference) = scope_reference {
-            scope_reference.insert(reference, variable);
+        scope_reference.insert(reference, variable);
 
-            if let Some(variable) = scope_reference.get_mut(&(reference)) {
-                variable.set_reference(&reference);
-                variable.add_owner();
-                Ok(reference)
-            } else {
-                Err(KsError::runtime("There was a problem allocating a variable!"))
-            }
+        if let Some(variable) = scope_reference.get_mut(&(reference)) {
+            variable.set_reference(&reference);
+            variable.add_owner();
+            Ok(reference)
         } else {
-            Err(KsError::runtime("No reference scope!"))
+            Err(KsError::runtime("There was a problem allocating a variable!"))
         }
     }
 
@@ -261,15 +282,12 @@ impl Environment {
     }
 
     pub fn add_variable_owner(&mut self, reference: u64, depth: usize) -> KsResult<()> {
-        if let Some(current_scope) = self.references.get_mut(depth) {
-            if let Some(variable) = current_scope.get_mut(&reference) {
-                variable.add_owner();
-            }
-
-            Ok(())
-        } else {
-            Err(KsError::runtime("No scope were found!"))
+        let current_scope = self.references_depth_mut(depth)?;
+        if let Some(variable) = current_scope.get_mut(&reference) {
+            variable.add_owner();
         }
+
+        Ok(())
     }
 
     pub fn tree_reference<F>(&mut self, variable: Variable, mut f: F) -> KsResult<()>

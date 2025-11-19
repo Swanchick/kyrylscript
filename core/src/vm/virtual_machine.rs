@@ -156,7 +156,7 @@ impl VirtualMachine {
 
         match variable_stack {
             Some(VariableStack::Variable(variable)) => {
-                self.environment.define_variable(name, variable);
+                self.environment.define_variable(name, variable)?;
             },
 
             Some(VariableStack::Reference(reference)) => {
@@ -166,7 +166,7 @@ impl VirtualMachine {
             _ => self.environment.define_variable(
                 name,
                 Variable::null(self.depth())
-            )
+            )?
         }
 
         self.step()?;
@@ -183,7 +183,7 @@ impl VirtualMachine {
                     name,
                     variable,
                     0
-                );
+                )?;
             },
 
             Some(VariableStack::Reference(reference)) => {
@@ -198,7 +198,7 @@ impl VirtualMachine {
                 name,
                 Variable::null(self.depth()),
                 0
-            )
+            )?
         }
 
         self.step()?;
@@ -237,7 +237,7 @@ impl VirtualMachine {
             match arg_stack {
                 Some(VariableStack::Variable(mut variable)) => {
                     variable.set_depth(self.depth());
-                    self.environment.define_variable(&arg_name, variable);
+                    self.environment.define_variable(&arg_name, variable)?;
                 }
                 Some(VariableStack::Reference(reference)) =>
                     self.environment.define_name_reference(&arg_name, &reference)?,
@@ -1169,29 +1169,51 @@ impl VirtualMachine {
         Ok(())
     }
 
-    fn load_native(&mut self) {
+    fn load_native(&mut self) -> KsResult<()> {
         let native = NativeRegistry::get();
         let native = native.borrow();
 
         for (name, native) in native.get_natives() {
             match native {
                 NativeTypes::Function(_) =>
-                    self.environment.define_variable(name, Variable::empty(Value::NativeFunction(name.clone()), self.depth())),
+                    self.environment.define_variable(
+                        name, 
+                        Variable::empty(Value::NativeFunction(name.clone()), 
+                        self.depth())
+                    )?,
                 NativeTypes::Int(_, int) =>
-                    self.environment.define_variable(name, Variable::empty(Value::Integer(*int), self.depth())),
+                    self.environment.define_variable(
+                        name, 
+                        Variable::empty(Value::Integer(*int), 
+                        self.depth())
+                    )?,
                 NativeTypes::Float(_, float) =>
-                    self.environment.define_variable(name, Variable::empty(Value::Float(*float), self.depth())),
+                    self.environment.define_variable(
+                        name, 
+                        Variable::empty(Value::Float(*float), 
+                        self.depth())
+                    )?,
                 NativeTypes::Boolean(_, boolean) =>
-                    self.environment.define_variable(name, Variable::empty(Value::Boolean(*boolean), self.depth())),
+                    self.environment.define_variable(
+                        name, 
+                        Variable::empty(Value::Boolean(*boolean), 
+                        self.depth())
+                    )?,
                 NativeTypes::String(_, string) =>
-                    self.environment.define_variable(name, Variable::empty(Value::String(string.clone()), self.depth())),
+                    self.environment.define_variable(
+                        name, 
+                        Variable::empty(Value::String(string.clone()), 
+                        self.depth())
+                    )?,
             }
         }
+
+        Ok(())
     }
 
     pub fn initialize(&mut self) -> KsResult<()> {
         self.enter_scope()?;
-        self.load_native();
+        self.load_native()?;
         self.enter_function(MAIN_FUNCTION)?;
 
         while self.call_stack.len() > MIN_SCOPES {
