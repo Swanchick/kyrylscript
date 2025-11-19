@@ -7,23 +7,31 @@ use super::variable::Variable;
 pub struct VarInfo {
     reference: Option<u64>,
     depth: usize,
-    owner: usize,
+    owners: usize,
 }
 
 impl VarInfo {
-    pub fn new(reference: u64, depth: usize, owner: usize) -> VarInfo {
+    pub fn new(reference: u64, depth: usize, owners: usize) -> VarInfo {
         VarInfo {
             reference: Some(reference),
             depth,
-            owner,
+            owners,
         }
     }
 
-    pub fn from(variable: &Variable) -> KsResult<VarInfo> {
+    pub fn create(variable: &Variable, depth: usize) -> KsResult<VarInfo> {
+        Ok(VarInfo { 
+            reference: Some(variable.reference()?), 
+            depth, 
+            owners: 0, 
+        })
+    }
+
+    pub fn from(variable: &Variable, depth: usize, owners: usize) -> KsResult<VarInfo> {
         Ok(VarInfo {
             reference: Some(variable.reference()?),
-            depth: variable.depth(),
-            owner: variable.owners(),
+            depth,
+            owners,
         })
     }
 
@@ -39,7 +47,27 @@ impl VarInfo {
         &self.depth
     }
 
-    pub fn owner(&self) -> &usize {
-        &self.owner
+    pub fn owners(&self) -> &usize {
+        &self.owners
+    }
+
+    pub fn owned(&self) -> bool {
+        self.owners != 0
+    }
+
+    pub fn add_owner(&mut self) {
+        self.owners += 1;
+    }
+
+    pub fn remove_owner(&mut self) {
+        self.owners -= 1;
+    }
+    
+    pub fn set_depth(&mut self, depth: usize) {
+        self.depth = depth;
+    }
+
+    pub fn set_owners(&mut self, owners: usize) {
+        self.owners = owners;
     }
 }

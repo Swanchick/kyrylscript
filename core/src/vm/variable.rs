@@ -6,35 +6,27 @@ use super::value::Value;
 pub struct Variable {
     value: Value,
     reference: Option<u64>,
-    depth: usize,
-    owners: usize,
 }
 
 impl Variable {
-    pub fn new(value: Value, reference: u64, depth: usize) -> Variable {
+    pub fn new(value: Value, reference: u64) -> Variable {
         Variable {
             value,
             reference: Some(reference),
-            depth,
-            owners: 0
         }
     }
 
-    pub fn empty(value: Value, depth: usize) -> Variable {
+    pub fn empty(value: Value) -> Variable {
         Variable {
             value,
             reference: None,
-            depth,
-            owners: 0
         }
     }
 
-    pub fn null(depth: usize) -> Variable {
+    pub fn null() -> Variable {
         Variable {
             value: Value::Null,
             reference: None,
-            depth,
-            owners: 0
         }
     }
 
@@ -58,36 +50,7 @@ impl Variable {
         self.reference = Some(*reference);
     }
 
-    pub fn depth(&self) -> usize {
-        self.depth
-    }
-
-    pub fn owners(&self) -> usize {
-        self.owners
-    }
-
-    pub fn add_owner(&mut self) {
-        self.owners += 1;
-    }
-
-    pub fn remove_owner(&mut self) {
-        self.owners -= 1;
-    }
-
-    pub fn set_owners(&mut self, owners: usize) {
-        self.owners = owners;
-    }
-
-    pub fn set_depth(&mut self, depth: usize) {
-        self.depth = depth;
-    }
-
-    pub fn owned(&self) -> bool {
-        self.owners != 0
-    }
-
     pub fn clear(&mut self) {
         self.reference = None;
-        self.owners = 0;
     }
 }
