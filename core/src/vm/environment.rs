@@ -210,7 +210,7 @@ impl Environment {
         Ok(())
     }
 
-    pub fn define_variable(&mut self, name: &str, mut variable: Variable) -> KsResult<()> {
+    pub fn define_variable(&mut self, name: &str, mut variable: Variable) -> KsResult<u64> {
         let current_reference = self.current_reference;
 
         let current_scope = self.current_scope_mut()?;
@@ -233,7 +233,7 @@ impl Environment {
 
         self.current_reference += 1;
 
-        Ok(())
+        Ok(self.current_reference - 1)
     }
 
     pub fn define_variable_at_depth(&mut self, name: &str, mut variable: Variable, depth: usize) -> KsResult<()> {

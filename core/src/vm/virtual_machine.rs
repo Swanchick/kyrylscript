@@ -136,7 +136,7 @@ impl VirtualMachine {
             Constant::Null => Value::Null,
         };
 
-        Variable::empty(value, self.depth())
+        Variable::empty(value)
     }
 
     fn load_var(&mut self, name: String, save: bool) -> KsResult<()> {
@@ -158,15 +158,15 @@ impl VirtualMachine {
             Some(VariableStack::Variable(variable)) => {
                 self.environment.define_variable(name, variable)?;
             },
-
             Some(VariableStack::Reference(reference)) => {
                 self.environment.define_name_reference(name, &reference)?;
             },
-
-            _ => self.environment.define_variable(
-                name,
-                Variable::null(self.depth())
-            )?
+            _ => {
+                self.environment.define_variable(
+                    name,
+                    Variable::null(),
+                )?;
+            },
         }
 
         self.step()?;
@@ -196,7 +196,7 @@ impl VirtualMachine {
 
             _ => self.environment.define_variable_at_depth(
                 name,
-                Variable::null(self.depth()),
+                Variable::null(),
                 0
             )?
         }
@@ -235,9 +235,9 @@ impl VirtualMachine {
             let arg_stack = self.variable_stack.pop();
 
             match arg_stack {
-                Some(VariableStack::Variable(mut variable)) => {
-                    variable.set_depth(self.depth());
-                    self.environment.define_variable(&arg_name, variable)?;
+                Some(VariableStack::Variable(variable)) => {
+                    let reference = self.environment.define_variable(&arg_name, variable)?;
+                    self.environment.set_depth(&reference, self.depth());
                 }
                 Some(VariableStack::Reference(reference)) =>
                     self.environment.define_name_reference(&arg_name, &reference)?,
