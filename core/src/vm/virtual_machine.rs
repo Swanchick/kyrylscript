@@ -806,18 +806,16 @@ impl VirtualMachine {
 
     fn change_reference_holder(&mut self, new_reference: u64) -> KsResult<()> {
         match &self.tail_stack {
-            Some(TailStack::Index { index, info }) => {
-                let reference = info.reference()?;
-                let depth = info.depth();
-                let list = self.environment.variable_by_depth_mut(reference, *depth)?;
+            Some(TailStack::Index { index, info: tail_info }) => {
+                let reference = tail_info.reference()?;
+                let list = self.environment.variable_mut(reference)?;
                 if let Value::List(references) | Value::Tuple(references) = list.value_mut() {
                     references[*index] = new_reference;
                 }
             },
             Some(TailStack::Module { name, info }) => {
                 let reference = info.reference()?;
-                let depth = info.depth();
-                let module = self.environment.variable_by_depth_mut(reference, *depth)?;
+                let module = self.environment.variable_mut(reference)?;
                 if let Value::Module(module) = module.value_mut() {
                     module.insert(name.to_string(), new_reference);
                 }

@@ -42,7 +42,7 @@ impl Variable {
         if let Some(reference) = self.reference {
             Ok(reference)
         } else {
-            Err(KsError::runtime("No error in varaible"))
+            Err(KsError::runtime("No reference in variable!"))
         }
     }
 

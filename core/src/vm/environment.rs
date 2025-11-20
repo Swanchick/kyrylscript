@@ -59,10 +59,10 @@ impl Environment {
         }
     }
 
-    fn variables_depth_mut(&mut self, depth: usize) -> KsResult<&mut Scope> {
-        let variables = self.variables.get_mut(depth);
-        if let Some(variables) = variables {
-            Ok(variables)
+    fn references_depth(&self, depth: usize) -> KsResult<&ScopeReference> {
+        let references = self.references.get(depth);
+        if let Some(references) = references {
+            Ok(references)
         } else {
             Err(KsError::runtime(
                 &format!("Cannot get a scope in this depth: {}", depth)
@@ -81,6 +81,17 @@ impl Environment {
         }
     }
 
+    fn variables_depth_mut(&mut self, depth: usize) -> KsResult<&mut Scope> {
+        let variables = self.variables.get_mut(depth);
+        if let Some(variables) = variables {
+            Ok(variables)
+        } else {
+            Err(KsError::runtime(
+                &format!("Cannot get a scope in this depth: {}", depth)
+            ))
+        }
+    }
+
     pub fn find_reference(&self, name: &str) -> KsResult<u64> {
         for i in (0..self.variables.len()).rev() {
             if let Some(reference) = self.variables[i].get(name) {
@@ -92,28 +103,30 @@ impl Environment {
     }
 
     pub fn variable(&self, reference: &u64) -> KsResult<&Variable> {
-        for scope in self.references.iter().rev() {
-            if let Some(variable) = scope.get(reference) {
-                return Ok(variable)
-            }
-        }
+        let info = self.info(reference)?;
+        let scope = self.references_depth(*info.depth())?;
 
-        Err(KsError::runtime(
-            &format!("Cannot find variable with reference {}", reference)
-        ))
+        
+        if let Some(variable) = scope.get(reference) {
+            Ok(variable)
+        } else {
+            Err(KsError::runtime(
+                &format!("Cannot find variable with reference {}", reference)
+            ))
+        }
     }
 
-    pub fn variable_by_depth_mut(&mut self, reference: &u64, depth: usize) -> KsResult<&mut Variable> {
-        let references = self.references.get_mut(depth);
+    pub fn variable_mut(&mut self, reference: &u64) -> KsResult<&mut Variable> {
+        let info = self.info(reference)?;
+        let scope = self.references_depth_mut(*info.depth())?;
 
-        if let Some(references) = references {
-            if let Some(variable) = references.get_mut(reference) {
-                Ok(variable)
-            } else {
-                Err(KsError::runtime(&format!("Cannot find reference {}", reference)))
-            }
+        
+        if let Some(variable) = scope.get_mut(reference) {
+            Ok(variable)
         } else {
-            Err(KsError::runtime("Incorrect depth!"))
+            Err(KsError::runtime(
+                &format!("Cannot find variable with reference {}", reference)
+            ))
         }
     }
 
@@ -141,22 +154,19 @@ impl Environment {
         ))
     }
 
-    pub fn variable_mut(&mut self, reference: &u64) -> KsResult<&mut Variable> {
-        let scopes = &mut self.references;
-
-        for scope in scopes.iter_mut().rev() {
-            if let Some(variable) = scope.get_mut(reference) {
-                return Ok(variable)
-            }
-        }
-
-        Err(KsError::runtime(
-            &format!("Cannot find variable with reference {}", reference)
-        ))
-    }
-
     pub fn info(&self, reference: &u64) -> KsResult<&VarInfo> {
         let var_info = self.infos.get(reference);
+        if let Some(var_info) = var_info {
+            Ok(var_info)
+        } else {
+            Err(KsError::runtime(
+                &format!("Cannot variable info by that reference {}", reference)
+            ))
+        }
+    }
+
+    pub fn info_mut(&mut self, reference: &u64) -> KsResult<&mut VarInfo> {
+        let var_info = self.infos.get_mut(reference);
         if let Some(var_info) = var_info {
             Ok(var_info)
         } else {
@@ -169,17 +179,6 @@ impl Environment {
     fn owned(&self, reference: &u64) -> KsResult<bool> {
         let info = self.info(reference)?;
         Ok(info.owned())
-    }
-
-    pub fn info_mut(&mut self, reference: &u64) -> KsResult<&mut VarInfo> {
-        let var_info = self.infos.get_mut(reference);
-        if let Some(var_info) = var_info {
-            Ok(var_info)
-        } else {
-            Err(KsError::runtime(
-                &format!("Cannot variable info by that reference {}", reference)
-            ))
-        }
     }
 
     pub fn add_owner(&mut self, reference: &u64) -> KsResult<()> {
@@ -219,7 +218,7 @@ impl Environment {
             current_reference
         );
 
-        let mut var_info = VarInfo::create(&variable, self.depth())?;
+        let mut var_info = VarInfo::new(current_reference, self.depth());
         var_info.add_owner();
         self.infos.insert(
             current_reference, 
@@ -228,6 +227,7 @@ impl Environment {
 
         let current_scope_reference = self.current_scope_reference_mut()?;
         variable.set_reference(&current_reference);
+        
         current_scope_reference.insert(current_reference, variable);
 
 
@@ -245,7 +245,7 @@ impl Environment {
             current_reference
         );
 
-        let mut var_info = VarInfo::create(&variable, depth)?;
+        let mut var_info = VarInfo::new(current_reference, depth);
         var_info.add_owner();
         self.infos.insert(
             current_reference, 
@@ -289,7 +289,7 @@ impl Environment {
         self.current_reference += 1;
         let reference = self.current_reference - 1;
         
-        let mut var_info = VarInfo::create(&variable, self.depth())?;
+        let mut var_info = VarInfo::new(reference, self.depth());
         var_info.add_owner();
         self.infos.insert(reference, var_info);
 
@@ -302,9 +302,9 @@ impl Environment {
 
     pub fn define_reference_at_depth(&mut self, mut variable: Variable, depth: usize) -> KsResult<u64> {
         self.current_reference += 1;
-        let reference: u64 = self.current_reference - 1;
+        let reference = self.current_reference - 1;
 
-        let mut var_info = VarInfo::create(&variable, depth)?;
+        let mut var_info = VarInfo::new(reference, depth);
         var_info.add_owner();
         self.infos.insert(reference, var_info);
 
@@ -576,18 +576,22 @@ impl Environment {
 
         let scope = &mut self.references_depth_mut(*depth)?;
         if let Some(variable) = scope.remove(reference) {
-        self.tree_reference(variable, |this, frame| {
-            let mut variable = frame.variable;
-            let reference = variable.reference()?;
-            this.remove_owner(&reference)?;
-            if !this.owned(&reference)? {
-                variable.clear();
-            }
-            Ok(())
-        })?;
-    }
+            self.tree_reference(variable, |this, frame| {
+                let mut variable = frame.variable;
+                let reference = variable.reference()?;
+                this.remove_owner(&reference)?;
+                if !this.owned(&reference)? {
+                    variable.clear();
+                }
+                Ok(())
+            })?;
 
-        Err(KsError::runtime("No variable were found with reference!"))
+            Ok(())
+        } else {
+            Err(KsError::runtime(
+                &format!("No variable is found with reference {}!", reference),
+            ))
+        }
     }
 
     // create a new function here called free_name
@@ -609,6 +613,11 @@ impl Environment {
                 println!("{}: {:?}", reference, variable);
             }
         }
+        println!("Infos =====================");
+        for (reference, info) in &self.infos {
+            println!("{}: {:?}", reference, info);
+        }
+        
         println!("===========================");
     }
 

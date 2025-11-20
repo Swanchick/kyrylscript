@@ -11,11 +11,11 @@ pub struct VarInfo {
 }
 
 impl VarInfo {
-    pub fn new(reference: u64, depth: usize, owners: usize) -> VarInfo {
+    pub fn new(reference: u64, depth: usize) -> VarInfo {
         VarInfo {
             reference: Some(reference),
             depth,
-            owners,
+            owners: 0,
         }
     }
 
