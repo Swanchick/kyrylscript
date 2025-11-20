@@ -4,7 +4,7 @@ use core::vm::environment::Environment;
 use core::vm::value::Value;
 use core::vm::variable::Variable;
 
-pub fn ks_ref(environment: &mut Environment, args: Vec<Variable>) -> KsResult<Variable> {
+pub fn ks_ref(_: &mut Environment, args: Vec<Variable>) -> KsResult<Variable> {
     if args.len() > 1 {
         return Err(KsError::native("Too many arguments!"));
     }
@@ -14,6 +14,5 @@ pub fn ks_ref(environment: &mut Environment, args: Vec<Variable>) -> KsResult<Va
 
     Ok(Variable::empty(
         Value::Integer(reference as i32), 
-        environment.depth()
     ))
 }

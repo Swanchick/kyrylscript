@@ -7,7 +7,7 @@ use core::vm::environment::Environment;
 
 
 
-pub fn ks_len(environment: &mut Environment, args: Vec<Variable>) -> KsResult<Variable> {
+pub fn ks_len(_: &mut Environment, args: Vec<Variable>) -> KsResult<Variable> {
     if args.len() > 1 {
         return Err(KsError::runtime("Too many arguments!"));
     }
@@ -17,16 +17,14 @@ pub fn ks_len(environment: &mut Environment, args: Vec<Variable>) -> KsResult<Va
         Value::List(references)
         | Value::Tuple(references) => {
             let variable = Variable::empty(
-                Value::Integer(references.len() as i32), 
-                environment.depth()
+                Value::Integer(references.len() as i32),
             );
 
             Ok(variable)
         },
         Value::String(string) => {
             let variable = Variable::empty(
-                Value::Integer(string.len() as i32), 
-                environment.depth()
+                Value::Integer(string.len() as i32),
             );
 
             Ok(variable)

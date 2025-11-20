@@ -80,12 +80,12 @@ pub fn ks_print(environment: &mut Environment, mut args: Vec<Variable>) -> KsRes
         let out = value_to_string(environment, arg)?;
         print!("{}", out);
     }
-    Ok(Variable::null(environment.depth()))
+    Ok(Variable::null())
 }
 
 pub fn ks_println(environment: &mut Environment, args: Vec<Variable>) -> KsResult<Variable> {
     ks_print(environment, args)?;
     println!("");
 
-    Ok(Variable::null(environment.depth()))
+    Ok(Variable::null())
 }

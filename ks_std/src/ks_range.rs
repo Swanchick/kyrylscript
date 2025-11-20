@@ -18,7 +18,6 @@ pub fn ks_range(environment: &mut Environment, args: Vec<Variable>) -> KsResult<
         for i in 0..(*int as usize) {
             let variable = Variable::empty(
                 Value::Integer(i as i32), 
-                environment.depth()
             );
 
             variables.push(variable);
@@ -30,7 +29,6 @@ pub fn ks_range(environment: &mut Environment, args: Vec<Variable>) -> KsResult<
 
         Ok(Variable::empty(
             Value::List(references), 
-            environment.depth()
         ))
     } else {
         Err(KsError::native("Wrong type. Was expected int!"))

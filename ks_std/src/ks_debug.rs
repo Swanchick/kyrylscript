@@ -6,5 +6,5 @@ use core::vm::variable::Variable;
 pub fn ks_debug(environment: &mut Environment, _: Vec<Variable>) -> KsResult<Variable> {
     environment.debug();
 
-    Ok(Variable::null(environment.depth()))
+    Ok(Variable::null())
 }
