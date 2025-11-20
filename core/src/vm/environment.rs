@@ -448,7 +448,7 @@ impl Environment {
     }
 
     fn anchor_insert(&mut self, reference: u64, low_depth: usize) -> KsResult<()> {
-        self.set_depth(&reference, low_depth);
+        self.set_depth(&reference, low_depth)?;
 
         let variable = self.variable_remove(&reference)?;
         let low_scope = self.references_depth_mut(low_depth)?;

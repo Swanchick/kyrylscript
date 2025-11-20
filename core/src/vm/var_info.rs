@@ -27,11 +27,11 @@ impl VarInfo {
         })
     }
 
-    pub fn from(variable: &Variable, depth: usize, owners: usize) -> KsResult<VarInfo> {
+    pub fn from(variable: &Variable) -> KsResult<VarInfo> {
         Ok(VarInfo {
             reference: Some(variable.reference()?),
-            depth,
-            owners,
+            depth: 0,
+            owners: 0,
         })
     }
 

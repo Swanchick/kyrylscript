@@ -237,7 +237,7 @@ impl VirtualMachine {
             match arg_stack {
                 Some(VariableStack::Variable(variable)) => {
                     let reference = self.environment.define_variable(&arg_name, variable)?;
-                    self.environment.set_depth(&reference, self.depth());
+                    self.environment.set_depth(&reference, self.depth())?;
                 }
                 Some(VariableStack::Reference(reference)) =>
                     self.environment.define_name_reference(&arg_name, &reference)?,
@@ -501,7 +501,7 @@ impl VirtualMachine {
     }
 
     fn value_to_variable_stack(&mut self, value: Value) {
-        let variable = Variable::empty(value, self.depth());
+        let variable = Variable::empty(value);
 
         self.variable_stack.push(VariableStack::Variable(variable));
     }
@@ -522,10 +522,8 @@ impl VirtualMachine {
 
             },
             Some(VariableStack::Reference(reference)) => {
-                let variable_depth = {
-                    let variable = self.environment.variable(&reference)?;
-                    variable.depth()
-                };
+                let variable_info = self.environment.info(&reference)?;
+                let variable_depth = *variable_info.depth();
 
                 let variable_inside_function = variable_depth >= depth_to_return;
 
@@ -626,7 +624,6 @@ impl VirtualMachine {
                 if let Value::List(references) = variable.value() {
                     let variable = Variable::empty(
                         Value::Integer(references.len() as i32),
-                        self.depth()
                     );
 
                     self.variable_stack.push(VariableStack::Variable(variable));
@@ -638,7 +635,6 @@ impl VirtualMachine {
                 if let Value::List(references) = variable.value() {
                     let variable = Variable::empty(
                         Value::Integer(references.len() as i32),
-                        self.depth()
                     );
 
                     self.variable_stack.push(VariableStack::Variable(variable));
@@ -688,7 +684,7 @@ impl VirtualMachine {
                         if save {
                             self.tail_stack = Some(TailStack::Index {
                                 index: index,
-                                info: VarInfo::from(&variable)?
+                                info: VarInfo::from(&variable)?,
                             });
                         }
 
@@ -707,7 +703,7 @@ impl VirtualMachine {
                         if save {
                             self.tail_stack = Some(TailStack::Index {
                                 index: index,
-                                info: VarInfo::from(&variable)?
+                                info: VarInfo::from(&variable)?,
                             });
                         }
 
@@ -737,7 +733,7 @@ impl VirtualMachine {
                         if save {
                             self.tail_stack = Some(TailStack::Index {
                                 index: index,
-                                info: VarInfo::from(&variable)?
+                                info: VarInfo::from(&variable)?,
                             });
                         }
                         
@@ -756,7 +752,7 @@ impl VirtualMachine {
                         if save {
                             self.tail_stack = Some(TailStack::Index {
                                 index: index,
-                                info: VarInfo::from(&variable)?
+                                info: VarInfo::from(&variable)?,
                             });
                         }
 
@@ -776,21 +772,24 @@ impl VirtualMachine {
     }
 
     fn assign_with_reference(&mut self, reference: u64, assign_reference: u64) -> KsResult<()> {
-        let assign_variable = self.environment.variable(&assign_reference)?;
-
-        let variable = self.environment.variable(&reference)?;
-        let assign_depth = assign_variable.depth();
-        let variable_depth = variable.depth();
+        let assign_depth = {
+            let info = self.environment.info(&assign_reference)?;
+            *info.depth()
+        };
+        let variable_depth = {
+            let info = self.environment.info(&reference)?;
+            *info.depth()
+        };
 
         self.environment.free(&reference)?;
-        self.environment.add_variable_owner(assign_reference, assign_depth)?;
+        self.environment.add_owner(&assign_reference)?;
 
         let scope_difference = variable_depth < assign_depth;
 
         if scope_difference {
             self.environment.anchor_reference(
                 variable_depth,
-                assign_reference
+                assign_reference,
             )?;
         }
 
@@ -845,7 +844,7 @@ impl VirtualMachine {
                 self.change_reference_holder(assign_reference)?;
             },
             _ =>
-                return Err(KsError::runtime("There is no more variable stacks!"))
+                return Err(KsError::runtime("There is no more variable stacks!")),
         }
 
         self.step()?;
@@ -896,7 +895,7 @@ impl VirtualMachine {
             }
         }
 
-        let module_variable = Variable::empty(Value::Module(module), self.depth());
+        let module_variable = Variable::empty(Value::Module(module));
         self.variable_stack.push(VariableStack::Variable(module_variable));
 
         self.step()?;
@@ -1129,7 +1128,7 @@ impl VirtualMachine {
 
             Some(Instruction::LoadList(size)) => {
                 let referneces = self.load_references_collection(*size)?;
-                let variable = Variable::empty(Value::List(referneces), self.depth());
+                let variable = Variable::empty(Value::List(referneces));
                 self.variable_stack.push(VariableStack::Variable(variable));
 
                 self.step()?;
@@ -1137,7 +1136,7 @@ impl VirtualMachine {
 
             Some(Instruction::LoadTuple(size)) => {
                 let referneces = self.load_references_collection(*size)?;
-                let variable = Variable::empty(Value::Tuple(referneces), self.depth());
+                let variable = Variable::empty(Value::Tuple(referneces));
                 self.variable_stack.push(VariableStack::Variable(variable));
 
                 self.step()?;
@@ -1162,7 +1161,7 @@ impl VirtualMachine {
 
             _ => {
                 self.exit_function()?;
-                self.variable_stack.push(VariableStack::Variable(Variable::null(self.depth())));
+                self.variable_stack.push(VariableStack::Variable(Variable::null()));
             }
         }
 
@@ -1174,38 +1173,33 @@ impl VirtualMachine {
         let native = native.borrow();
 
         for (name, native) in native.get_natives() {
-            match native {
+            let _ = match native {
                 NativeTypes::Function(_) =>
                     self.environment.define_variable(
                         name, 
-                        Variable::empty(Value::NativeFunction(name.clone()), 
-                        self.depth())
+                        Variable::empty(Value::NativeFunction(name.clone()))
                     )?,
                 NativeTypes::Int(_, int) =>
                     self.environment.define_variable(
                         name, 
-                        Variable::empty(Value::Integer(*int), 
-                        self.depth())
+                        Variable::empty(Value::Integer(*int))
                     )?,
                 NativeTypes::Float(_, float) =>
                     self.environment.define_variable(
                         name, 
-                        Variable::empty(Value::Float(*float), 
-                        self.depth())
+                        Variable::empty(Value::Float(*float))
                     )?,
                 NativeTypes::Boolean(_, boolean) =>
                     self.environment.define_variable(
                         name, 
-                        Variable::empty(Value::Boolean(*boolean), 
-                        self.depth())
+                        Variable::empty(Value::Boolean(*boolean))
                     )?,
                 NativeTypes::String(_, string) =>
                     self.environment.define_variable(
                         name, 
-                        Variable::empty(Value::String(string.clone()), 
-                        self.depth())
+                        Variable::empty(Value::String(string.clone()))
                     )?,
-            }
+            };
         }
 
         Ok(())
