@@ -6,8 +6,8 @@ use core::lexer::lexer::Lexer;
 use core::parser::parser::Parser;
 use core::vm::virtual_machine::VirtualMachine;
 
-use ks_std::ks_register_std;
 use core::global::ks_path::KsPath;
+use ks_std::ks_register_std;
 
 fn main() {
     let args: Vec<String> = args().collect();

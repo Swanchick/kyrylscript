@@ -1,19 +1,19 @@
-use crate::global::constants::Instructions;
 use crate::compiler::instruction::Instruction;
+use crate::global::constants::Instructions;
 
 #[derive(Debug)]
 pub struct CallStack {
     instructions: Instructions,
     step: usize,
-    scopes: usize
+    scopes: usize,
 }
 
 impl CallStack {
     pub fn new(instructions: Instructions) -> CallStack {
-        CallStack { 
-            instructions, 
+        CallStack {
+            instructions,
             step: 0,
-            scopes: 0 
+            scopes: 0,
         }
     }
 
@@ -37,11 +37,11 @@ impl CallStack {
 
     pub fn peek(&self) -> Option<&Instruction> {
         self.instructions.get(self.step)
-    } 
+    }
 
     pub fn peek_mut(&mut self) -> Option<&mut Instruction> {
         self.instructions.get_mut(self.step)
-    } 
+    }
 
     pub fn scopes(&self) -> usize {
         self.scopes

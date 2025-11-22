@@ -1,14 +1,14 @@
 #[derive(Debug, Clone)]
 pub struct TokenPos {
     source: Option<String>,
-    line: i32
+    line: i32,
 }
 
 impl TokenPos {
     pub fn from(source: Option<String>, line: i32) -> TokenPos {
-        TokenPos { 
-            source: source, 
-            line: line
+        TokenPos {
+            source: source,
+            line: line,
         }
     }
 

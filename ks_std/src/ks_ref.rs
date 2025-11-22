@@ -12,7 +12,5 @@ pub fn ks_ref(_: &mut Environment, args: Vec<Variable>) -> KsResult<Variable> {
     let variable = &args[0];
     let reference = variable.reference()?;
 
-    Ok(Variable::empty(
-        Value::Integer(reference as i32), 
-    ))
+    Ok(Variable::empty(Value::Integer(reference as i32)))
 }

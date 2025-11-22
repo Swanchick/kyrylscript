@@ -1,5 +1,5 @@
-use crate::global::utils::ks_result::KsResult;
 use crate::global::utils::ks_error::KsError;
+use crate::global::utils::ks_result::KsResult;
 
 use super::variable::Variable;
 
@@ -20,10 +20,10 @@ impl VarInfo {
     }
 
     pub fn create(variable: &Variable, depth: usize) -> KsResult<VarInfo> {
-        Ok(VarInfo { 
-            reference: Some(variable.reference()?), 
-            depth, 
-            owners: 0, 
+        Ok(VarInfo {
+            reference: Some(variable.reference()?),
+            depth,
+            owners: 0,
         })
     }
 
@@ -62,7 +62,7 @@ impl VarInfo {
     pub fn remove_owner(&mut self) {
         self.owners -= 1;
     }
-    
+
     pub fn set_depth(&mut self, depth: usize) {
         self.depth = depth;
     }

@@ -4,5 +4,5 @@ pub enum LexerState {
     String,
     Number,
     Identifier,
-    Symbol
+    Symbol,
 }

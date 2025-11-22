@@ -60,7 +60,7 @@ pub fn get_token(text: &str) -> Option<Token> {
         "." => Some(Token::Dot),
         "::" => Some(Token::ColonColon),
         "->" => Some(Token::Arrow),
-        _ => None
+        _ => None,
     }
 }
 
@@ -76,7 +76,6 @@ pub enum Token {
     FloatLiteral(f64),
 
     // Keywords
-
     Let,
     Function,
     If,
@@ -100,49 +99,50 @@ pub enum Token {
     Root,
 
     // Symbols
-
-    LeftParenthesis, // (
-    RightParenthesis, // )
-    LeftBrace, // {
-    RightBrace, // }
-    LeftSquareBracket, // [
+    LeftParenthesis,    // (
+    RightParenthesis,   // )
+    LeftBrace,          // {
+    RightBrace,         // }
+    LeftSquareBracket,  // [
     RightSquareBracket, // ]
-    Semicolon, // ;
-    Colon, // :
-    Comma, // ,
-    Equal, // =
-    Plus, // +
-    PlusEqual, // +=
-    PlusPlus, // ++
-    Minus, // -
-    MinusEqual, // -=
-    MinusMinus, // --
-    Multiply, // *
-    Divide, // /
-    LessThan, // <
-    GreaterThan, // >
-    Not, // !
-    Power, // ^
-    EqualEqual, // ==
-    NotEqual, // ~=
-    LessEqual, // <=
-    GreaterEqual, // >=
-    And, // &&
-    Or, // ||
-    Question, // ?
-    Dot, // .
-    ColonColon, // ::
-    Arrow, // ->
+    Semicolon,          // ;
+    Colon,              // :
+    Comma,              // ,
+    Equal,              // =
+    Plus,               // +
+    PlusEqual,          // +=
+    PlusPlus,           // ++
+    Minus,              // -
+    MinusEqual,         // -=
+    MinusMinus,         // --
+    Multiply,           // *
+    Divide,             // /
+    LessThan,           // <
+    GreaterThan,        // >
+    Not,                // !
+    Power,              // ^
+    EqualEqual,         // ==
+    NotEqual,           // ~=
+    LessEqual,          // <=
+    GreaterEqual,       // >=
+    And,                // &&
+    Or,                 // ||
+    Question,           // ?
+    Dot,                // .
+    ColonColon,         // ::
+    Arrow,              // ->
 }
 
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Token::Identifier(name) => write!(f, "identifier ({})", name),
-            Token::StringLiteral(string_literal) => write!(f, "string literal ({})", string_literal),
+            Token::StringLiteral(string_literal) => {
+                write!(f, "string literal ({})", string_literal)
+            }
             Token::IntegerLiteral(number) => write!(f, "integer literal ({})", number),
             Token::FloatLiteral(number) => write!(f, "float literal ({})", number),
-            
+
             Token::Let => write!(f, "let"),
             Token::Function => write!(f, "function"),
             Token::If => write!(f, "if"),

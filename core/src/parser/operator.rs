@@ -16,5 +16,5 @@ pub enum Operator {
     Not,
     PlusPlus,
     MinusMinus,
-    Clone
+    Clone,
 }

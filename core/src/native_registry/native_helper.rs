@@ -1,4 +1,3 @@
-
 use crate::global::utils::ks_result::KsResult;
 use crate::vm::environment::Environment;
 use crate::vm::variable::Variable;
@@ -9,9 +8,7 @@ pub struct NativeHelper<'a> {
 
 impl<'a> NativeHelper<'a> {
     pub fn from(environment: &'a mut Environment) -> NativeHelper<'a> {
-        NativeHelper {
-            environment
-        }
+        NativeHelper { environment }
     }
 
     pub fn create_collections(&mut self, variables: Vec<Variable>) -> KsResult<Vec<u64>> {
@@ -23,5 +20,5 @@ impl<'a> NativeHelper<'a> {
         }
 
         Ok(references)
-    } 
+    }
 }

@@ -4,13 +4,13 @@ use super::native_function::NativeFunction;
 use super::native_types::NativeTypes;
 
 pub struct NativeBuffer {
-    natives: HashMap<String, NativeTypes>
+    natives: HashMap<String, NativeTypes>,
 }
 
 impl NativeBuffer {
     pub fn new() -> NativeBuffer {
         NativeBuffer {
-            natives: HashMap::new()
+            natives: HashMap::new(),
         }
     }
 

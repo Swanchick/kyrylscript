@@ -8,61 +8,60 @@ use crate::parser::identifier_tail::IdentifierTail;
 use super::expression::Expression;
 use super::parameter::Parameter;
 
-
 #[derive(PartialEq, Debug, Clone)]
 pub enum Statement {
     VariableDeclaration {
         name: String,
         public: bool,
         data_type: Option<DataType>,
-        value: Option<Expression>
+        value: Option<Expression>,
     },
     Assignment {
         segments: Vec<IdentifierTail>,
-        value: Expression
+        value: Expression,
     },
     AddValue {
         segments: Vec<IdentifierTail>,
-        value: Expression
+        value: Expression,
     },
     RemoveValue {
         segments: Vec<IdentifierTail>,
-        value: Expression
+        value: Expression,
     },
     ReturnStatement {
-        value: Option<Expression>
+        value: Option<Expression>,
     },
     IfStatement {
         condition: Expression,
         body: Vec<Statement>,
-        else_body: Option<Vec<Statement>>
+        else_body: Option<Vec<Statement>>,
     },
     WhileStatement {
         condition: Expression,
-        body: Vec<Statement>
+        body: Vec<Statement>,
     },
     ForLoopStatement {
         name: String,
         list: Expression,
-        body: Vec<Statement>
+        body: Vec<Statement>,
     },
     Expression {
-        value: Expression
+        value: Expression,
     },
     Function {
         name: String,
         public: bool,
         return_type: DataType,
         parameters: Vec<Parameter>,
-        body: Vec<Statement>
+        body: Vec<Statement>,
     },
     EarlyReturn {
         name: String,
-        body: Option<Vec<Statement>>
+        body: Option<Vec<Statement>>,
     },
     Use {
         file_name: String,
         body: Vec<Statement>,
-        global: Rc<RefCell<AnalyzerEnviroment>>
-    }
+        global: Rc<RefCell<AnalyzerEnviroment>>,
+    },
 }

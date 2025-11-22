@@ -3,13 +3,9 @@ pub struct VariableFrame {
     pub index: usize,
 }
 
-
 impl VariableFrame {
     pub fn new(reference: u64, index: usize) -> VariableFrame {
-        VariableFrame { 
-            reference, 
-            index 
-        }
+        VariableFrame { reference, index }
     }
 
     pub fn step(&mut self) {

@@ -1,6 +1,6 @@
 use std::cell::RefCell;
-use std::rc::Rc;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 use super::native_buffer::NativeBuffer;
 
@@ -11,7 +11,7 @@ thread_local! {
 }
 
 pub struct NativeRegistry {
-    natives: HashMap<String, NativeTypes>
+    natives: HashMap<String, NativeTypes>,
 }
 
 impl NativeRegistry {
@@ -20,11 +20,9 @@ impl NativeRegistry {
     }
 
     pub fn new() -> Rc<RefCell<NativeRegistry>> {
-        Rc::new(RefCell::new(
-            NativeRegistry { 
-                natives: HashMap::new()
-            }
-        ))
+        Rc::new(RefCell::new(NativeRegistry {
+            natives: HashMap::new(),
+        }))
     }
 
     pub fn add_buffer(&mut self, buffer: NativeBuffer) {
@@ -40,5 +38,4 @@ impl NativeRegistry {
     pub fn get_native(&self, name: &str) -> Option<&NativeTypes> {
         self.natives.get(name)
     }
-
 }

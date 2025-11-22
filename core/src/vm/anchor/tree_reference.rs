@@ -5,6 +5,3 @@ pub enum TreeReference<'a> {
     ModuleBranch(&'a HashMap<String, u64>, usize),
     Leaf,
 }
-
-
-

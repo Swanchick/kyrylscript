@@ -7,10 +7,7 @@ pub struct Frame {
 
 impl Frame {
     pub fn new(variable: Variable, index: usize) -> Frame {
-        Frame {
-            variable,
-            index,
-        }
+        Frame { variable, index }
     }
 
     pub fn step(&mut self) {

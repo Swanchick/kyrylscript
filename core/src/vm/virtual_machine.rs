@@ -4,23 +4,20 @@ use crate::compiler::constant::Constant;
 use crate::compiler::function::Function;
 use crate::compiler::instruction::Instruction;
 use crate::global::constants::{
-    FUNCTION_ENCAPSULATION,
-    MAIN_FUNCTION,
-    MAX_DEPTH_RECURSION,
-    MIN_SCOPES,
+    FUNCTION_ENCAPSULATION, MAIN_FUNCTION, MAX_DEPTH_RECURSION, MIN_SCOPES,
 };
 use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
 use crate::native_registry::native_registry::NativeRegistry;
 use crate::native_registry::native_types::NativeTypes;
 
-use super::tail_stack::TailStack;
-use super::var_info::VarInfo;
-use super::variable_stack::VariableStack;
 use super::call_stack::CallStack;
 use super::environment::Environment;
-use super::variable::Variable;
+use super::tail_stack::TailStack;
 use super::value::Value;
+use super::var_info::VarInfo;
+use super::variable::Variable;
+use super::variable_stack::VariableStack;
 
 pub struct VirtualMachine {
     environment: Environment,
@@ -35,9 +32,7 @@ impl VirtualMachine {
         VirtualMachine {
             environment: Environment::new(),
             variable_stack: Vec::new(),
-            call_stack: vec![
-                CallStack::new(Vec::new()),
-            ],
+            call_stack: vec![CallStack::new(Vec::new())],
             compilation,
             tail_stack: None,
         }
@@ -132,7 +127,7 @@ impl VirtualMachine {
                 } else {
                     Value::Function(name.clone())
                 }
-            },
+            }
             Constant::Null => Value::Null,
         };
 
@@ -145,7 +140,8 @@ impl VirtualMachine {
             self.tail_stack = Some(TailStack::Variable(name));
         }
 
-        self.variable_stack.push(VariableStack::Reference(reference));
+        self.variable_stack
+            .push(VariableStack::Reference(reference));
         self.step()?;
 
         Ok(())
@@ -157,16 +153,13 @@ impl VirtualMachine {
         match variable_stack {
             Some(VariableStack::Variable(variable)) => {
                 self.environment.define_variable(name, variable)?;
-            },
+            }
             Some(VariableStack::Reference(reference)) => {
                 self.environment.define_name_reference(name, &reference)?;
-            },
+            }
             _ => {
-                self.environment.define_variable(
-                    name,
-                    Variable::null(),
-                )?;
-            },
+                self.environment.define_variable(name, Variable::null())?;
+            }
         }
 
         self.step()?;
@@ -179,26 +172,18 @@ impl VirtualMachine {
 
         match variable_stack {
             Some(VariableStack::Variable(variable)) => {
-                self.environment.define_variable_at_depth(
-                    name,
-                    variable,
-                    0
-                )?;
-            },
+                self.environment
+                    .define_variable_at_depth(name, variable, 0)?;
+            }
 
             Some(VariableStack::Reference(reference)) => {
-                self.environment.define_name_reference_at_depth(
-                    name,
-                    &reference,
-                    0
-                )?;
-            },
+                self.environment
+                    .define_name_reference_at_depth(name, &reference, 0)?;
+            }
 
-            _ => self.environment.define_variable_at_depth(
-                name,
-                Variable::null(),
-                0
-            )?
+            _ => self
+                .environment
+                .define_variable_at_depth(name, Variable::null(), 0)?,
         }
 
         self.step()?;
@@ -239,10 +224,10 @@ impl VirtualMachine {
                     let reference = self.environment.define_variable(&arg_name, variable)?;
                     self.environment.set_depth(&reference, self.depth())?;
                 }
-                Some(VariableStack::Reference(reference)) =>
-                    self.environment.define_name_reference(&arg_name, &reference)?,
-                _ =>
-                    return Err(KsError::runtime("Cannot find argument"))
+                Some(VariableStack::Reference(reference)) => self
+                    .environment
+                    .define_name_reference(&arg_name, &reference)?,
+                _ => return Err(KsError::runtime("Cannot find argument")),
             }
         }
 
@@ -254,17 +239,13 @@ impl VirtualMachine {
         let stack = self.variable_stack.remove(stack_len - args - 1);
 
         match stack {
-            VariableStack::Variable(function) => {
-                match function.value() {
-                    Value::Function(name) =>
-                        self.call_function(name)?,
-                    Value::NativeFunction(name) => {
-                        self.call_native_function(name, args)?;
-                        self.step()?;
-                    },
-                    _ =>
-                        return Err(KsError::runtime("It's not a function!"))
+            VariableStack::Variable(function) => match function.value() {
+                Value::Function(name) => self.call_function(name)?,
+                Value::NativeFunction(name) => {
+                    self.call_native_function(name, args)?;
+                    self.step()?;
                 }
+                _ => return Err(KsError::runtime("It's not a function!")),
             },
             VariableStack::Reference(reference) => {
                 let function = {
@@ -273,14 +254,12 @@ impl VirtualMachine {
                 };
 
                 match function.value() {
-                    Value::Function(name) =>
-                        self.call_function(name)?,
+                    Value::Function(name) => self.call_function(name)?,
                     Value::NativeFunction(name) => {
                         self.call_native_function(name, args)?;
                         self.step()?;
-                    },
-                    _ =>
-                        return Err(KsError::runtime("It's not a function!"))
+                    }
+                    _ => return Err(KsError::runtime("It's not a function!")),
                 }
             }
         }
@@ -292,67 +271,56 @@ impl VirtualMachine {
         let last_stack = self.variable_stack.pop();
 
         match last_stack {
-            Some(VariableStack::Variable(variable)) => {
-                Ok(variable)
-            },
+            Some(VariableStack::Variable(variable)) => Ok(variable),
             Some(VariableStack::Reference(reference)) => {
                 let variable = self.environment.variable(&reference)?;
 
                 Ok(variable.clone())
-            },
-            _ => Err(KsError::runtime("No variable were provided!"))
+            }
+            _ => Err(KsError::runtime("No variable were provided!")),
         }
     }
 
     fn add(&self, left: &Value, right: &Value) -> KsResult<Value> {
         match (left, right) {
-            (Value::Integer(left), Value::Integer(right)) =>
-                Ok(Value::Integer(*left + *right)),
+            (Value::Integer(left), Value::Integer(right)) => Ok(Value::Integer(*left + *right)),
 
-            (Value::Integer(left), Value::Float(right)) =>
-                Ok(Value::Float(*left as f64 + *right)),
+            (Value::Integer(left), Value::Float(right)) => Ok(Value::Float(*left as f64 + *right)),
 
-            (Value::Float(left), Value::Integer(right)) =>
-                Ok(Value::Float(*left + *right as f64)),
+            (Value::Float(left), Value::Integer(right)) => Ok(Value::Float(*left + *right as f64)),
 
             (Value::String(left), Value::String(right)) => {
                 let mut left = left.clone();
                 left.push_str(&right);
 
                 Ok(Value::String(left))
-            },
+            }
 
-            _ => Err(KsError::runtime("Arithmetic error!"))
+            _ => Err(KsError::runtime("Arithmetic error!")),
         }
     }
 
     fn minus(&self, left: &Value, right: &Value) -> KsResult<Value> {
         match (left, right) {
-            (Value::Integer(left), Value::Integer(right)) =>
-                Ok(Value::Integer(*left - *right)),
+            (Value::Integer(left), Value::Integer(right)) => Ok(Value::Integer(*left - *right)),
 
-            (Value::Integer(left), Value::Float(right)) =>
-                Ok(Value::Float(*left as f64 - *right)),
+            (Value::Integer(left), Value::Float(right)) => Ok(Value::Float(*left as f64 - *right)),
 
-            (Value::Float(left), Value::Integer(right)) =>
-                Ok(Value::Float(*left - *right as f64)),
+            (Value::Float(left), Value::Integer(right)) => Ok(Value::Float(*left - *right as f64)),
 
-            _ => Err(KsError::runtime("Arithmetic error!"))
+            _ => Err(KsError::runtime("Arithmetic error!")),
         }
     }
 
     fn multiply(&self, left: &Value, right: &Value) -> KsResult<Value> {
         match (left, right) {
-            (Value::Integer(left), Value::Integer(right)) =>
-                Ok(Value::Integer(*left * *right)),
+            (Value::Integer(left), Value::Integer(right)) => Ok(Value::Integer(*left * *right)),
 
-            (Value::Integer(left), Value::Float(right)) =>
-                Ok(Value::Float(*left as f64 * *right)),
+            (Value::Integer(left), Value::Float(right)) => Ok(Value::Float(*left as f64 * *right)),
 
-            (Value::Float(left), Value::Integer(right)) =>
-                Ok(Value::Float(*left * *right as f64)),
+            (Value::Float(left), Value::Integer(right)) => Ok(Value::Float(*left * *right as f64)),
 
-            _ => Err(KsError::runtime("Arithmetic error!"))
+            _ => Err(KsError::runtime("Arithmetic error!")),
         }
     }
 
@@ -364,7 +332,7 @@ impl VirtualMachine {
                 }
 
                 Ok(Value::Integer(*left / *right))
-            },
+            }
 
             (Value::Integer(left), Value::Float(right)) => {
                 if *right == 0.0 {
@@ -382,7 +350,7 @@ impl VirtualMachine {
                 Ok(Value::Float(*left / *right as f64))
             }
 
-            _ => Err(KsError::runtime("Arithmetic error!"))
+            _ => Err(KsError::runtime("Arithmetic error!")),
         }
     }
 
@@ -396,61 +364,65 @@ impl VirtualMachine {
 
     fn greater_equal(&self, left: &Value, right: &Value) -> KsResult<Value> {
         match (left, right) {
-            (Value::Integer(left), Value::Integer(right)) =>
-                Ok(Value::Boolean(*left >= *right)),
+            (Value::Integer(left), Value::Integer(right)) => Ok(Value::Boolean(*left >= *right)),
 
-            (Value::Integer(left), Value::Float(right)) =>
-                Ok(Value::Boolean(*left as f64 >= *right)),
+            (Value::Integer(left), Value::Float(right)) => {
+                Ok(Value::Boolean(*left as f64 >= *right))
+            }
 
-            (Value::Float(left), Value::Integer(right)) =>
-                Ok(Value::Boolean(*left >= *right as f64)),
+            (Value::Float(left), Value::Integer(right)) => {
+                Ok(Value::Boolean(*left >= *right as f64))
+            }
 
-            _ => Err(KsError::runtime("Logic error!"))
+            _ => Err(KsError::runtime("Logic error!")),
         }
     }
 
     fn greater(&self, left: &Value, right: &Value) -> KsResult<Value> {
         match (left, right) {
-            (Value::Integer(left), Value::Integer(right)) =>
-                Ok(Value::Boolean(*left > *right)),
+            (Value::Integer(left), Value::Integer(right)) => Ok(Value::Boolean(*left > *right)),
 
-            (Value::Integer(left), Value::Float(right)) =>
-                Ok(Value::Boolean(*left as f64 > *right)),
+            (Value::Integer(left), Value::Float(right)) => {
+                Ok(Value::Boolean(*left as f64 > *right))
+            }
 
-            (Value::Float(left), Value::Integer(right)) =>
-                Ok(Value::Boolean(*left > *right as f64)),
+            (Value::Float(left), Value::Integer(right)) => {
+                Ok(Value::Boolean(*left > *right as f64))
+            }
 
-            _ => Err(KsError::runtime("Logic error!"))
+            _ => Err(KsError::runtime("Logic error!")),
         }
     }
 
     fn less_equal(&self, left: &Value, right: &Value) -> KsResult<Value> {
         match (left, right) {
-            (Value::Integer(left), Value::Integer(right)) =>
-                Ok(Value::Boolean(*left <= *right)),
+            (Value::Integer(left), Value::Integer(right)) => Ok(Value::Boolean(*left <= *right)),
 
-            (Value::Integer(left), Value::Float(right)) =>
-                Ok(Value::Boolean(*left as f64 <= *right)),
+            (Value::Integer(left), Value::Float(right)) => {
+                Ok(Value::Boolean(*left as f64 <= *right))
+            }
 
-            (Value::Float(left), Value::Integer(right)) =>
-                Ok(Value::Boolean(*left <= *right as f64)),
+            (Value::Float(left), Value::Integer(right)) => {
+                Ok(Value::Boolean(*left <= *right as f64))
+            }
 
-            _ => Err(KsError::runtime("Logic error!"))
+            _ => Err(KsError::runtime("Logic error!")),
         }
     }
 
     fn less(&self, left: &Value, right: &Value) -> KsResult<Value> {
         match (left, right) {
-            (Value::Integer(left), Value::Integer(right)) =>
-                Ok(Value::Boolean(*left < *right)),
+            (Value::Integer(left), Value::Integer(right)) => Ok(Value::Boolean(*left < *right)),
 
-            (Value::Integer(left), Value::Float(right)) =>
-                Ok(Value::Boolean((*left as f64) < *right)),
+            (Value::Integer(left), Value::Float(right)) => {
+                Ok(Value::Boolean((*left as f64) < *right))
+            }
 
-            (Value::Float(left), Value::Integer(right)) =>
-                Ok(Value::Boolean(*left < *right as f64)),
+            (Value::Float(left), Value::Integer(right)) => {
+                Ok(Value::Boolean(*left < *right as f64))
+            }
 
-            _ => Err(KsError::runtime("Logic error!"))
+            _ => Err(KsError::runtime("Logic error!")),
         }
     }
 
@@ -464,19 +436,17 @@ impl VirtualMachine {
 
     fn and(&self, left: &Value, right: &Value) -> KsResult<Value> {
         match (left, right) {
-            (Value::Boolean(left), Value::Boolean(right)) =>
-                Ok(Value::Boolean(*left && *right)),
+            (Value::Boolean(left), Value::Boolean(right)) => Ok(Value::Boolean(*left && *right)),
 
-            _ => Err(KsError::runtime("Logic error!"))
+            _ => Err(KsError::runtime("Logic error!")),
         }
     }
 
     fn or(&self, left: &Value, right: &Value) -> KsResult<Value> {
         match (left, right) {
-            (Value::Boolean(left), Value::Boolean(right)) =>
-                Ok(Value::Boolean(*left || *right)),
+            (Value::Boolean(left), Value::Boolean(right)) => Ok(Value::Boolean(*left || *right)),
 
-            _ => Err(KsError::runtime("Logic error!"))
+            _ => Err(KsError::runtime("Logic error!")),
         }
     }
 
@@ -488,11 +458,11 @@ impl VirtualMachine {
                 let variable = self.environment.clone(reference)?;
 
                 self.variable_stack.push(VariableStack::Variable(variable));
-            },
-            Some(VariableStack::Variable(_)) =>
-                return Err(KsError::runtime("You cannot clone the expression!")),
-            _ =>
-                return Err(KsError::runtime("No variable were provided!")),
+            }
+            Some(VariableStack::Variable(_)) => {
+                return Err(KsError::runtime("You cannot clone the expression!"));
+            }
+            _ => return Err(KsError::runtime("No variable were provided!")),
         }
 
         self.step()?;
@@ -515,12 +485,14 @@ impl VirtualMachine {
 
         match stack {
             Some(VariableStack::Variable(variable)) => {
-                let reference = self.environment.define_reference_at_depth(variable, current_depth - 1)?;
-                self.environment.anchor_reference(current_depth - 1, reference)?;
+                let reference = self
+                    .environment
+                    .define_reference_at_depth(variable, current_depth - 1)?;
+                self.environment
+                    .anchor_reference(current_depth - 1, reference)?;
                 let variable = self.environment.variable_remove(&reference)?;
                 self.variable_stack.push(VariableStack::Variable(variable));
-
-            },
+            }
             Some(VariableStack::Reference(reference)) => {
                 let variable_info = self.environment.info(&reference)?;
                 let variable_depth = *variable_info.depth();
@@ -528,18 +500,19 @@ impl VirtualMachine {
                 let variable_inside_function = variable_depth >= depth_to_return;
 
                 if variable_inside_function {
-                    self.environment.anchor_reference(depth_to_return - 1, reference)?;
+                    self.environment
+                        .anchor_reference(depth_to_return - 1, reference)?;
                 }
 
-                self.variable_stack.push(VariableStack::Reference(reference));
-            },
+                self.variable_stack
+                    .push(VariableStack::Reference(reference));
+            }
 
-            _ =>
-                return Err(KsError::runtime("No variable were provided"))
+            _ => return Err(KsError::runtime("No variable were provided")),
         }
 
         if call_stack_depth != 0 {
-            for _ in 0..call_stack_depth  {
+            for _ in 0..call_stack_depth {
                 self.exit_scope()?;
             }
         }
@@ -575,7 +548,7 @@ impl VirtualMachine {
                 } else {
                     self.step()?;
                 }
-            },
+            }
             Some(VariableStack::Reference(reference)) => {
                 let variable = self.environment.variable(&reference)?;
                 let result = self.check_boolean(variable)?;
@@ -586,9 +559,8 @@ impl VirtualMachine {
                 } else {
                     self.step()?;
                 }
-            },
-            _ =>
-                return Err(KsError::runtime("There is no more variable stacks!"))
+            }
+            _ => return Err(KsError::runtime("There is no more variable stacks!")),
         }
 
         Ok(())
@@ -604,11 +576,9 @@ impl VirtualMachine {
                 Some(VariableStack::Variable(variable)) => {
                     let reference = self.environment.define_reference(variable)?;
                     references.push(reference);
-                },
-                Some(VariableStack::Reference(reference)) =>
-                    references.push(reference),
-                _ =>
-                    break
+                }
+                Some(VariableStack::Reference(reference)) => references.push(reference),
+                _ => break,
             }
         }
 
@@ -622,26 +592,21 @@ impl VirtualMachine {
         match stack {
             Some(VariableStack::Variable(variable)) => {
                 if let Value::List(references) = variable.value() {
-                    let variable = Variable::empty(
-                        Value::Integer(references.len() as i32),
-                    );
+                    let variable = Variable::empty(Value::Integer(references.len() as i32));
 
                     self.variable_stack.push(VariableStack::Variable(variable));
                 }
-            },
+            }
             Some(VariableStack::Reference(reference)) => {
                 let variable = self.environment.variable(&reference)?;
 
                 if let Value::List(references) = variable.value() {
-                    let variable = Variable::empty(
-                        Value::Integer(references.len() as i32),
-                    );
+                    let variable = Variable::empty(Value::Integer(references.len() as i32));
 
                     self.variable_stack.push(VariableStack::Variable(variable));
                 }
-            },
-            _ =>
-                return Err(KsError::runtime("There is no more variable stacks!"))
+            }
+            _ => return Err(KsError::runtime("There is no more variable stacks!")),
         }
 
         self.step()?;
@@ -655,17 +620,16 @@ impl VirtualMachine {
         match stack {
             Some(VariableStack::Variable(variable)) => {
                 if let Value::Integer(integer) = variable.value() {
-                    return Ok(*integer)
+                    return Ok(*integer);
                 }
-            },
+            }
             Some(VariableStack::Reference(reference)) => {
                 let variable = self.environment.variable(&reference)?;
                 if let Value::Integer(integer) = variable.value() {
                     return Ok(*integer);
                 }
-            },
-            _ =>
-                return Err(KsError::runtime("There is no more variable stacks!"))
+            }
+            _ => return Err(KsError::runtime("There is no more variable stacks!")),
         }
 
         Err(KsError::runtime("Cannot load integer"))
@@ -688,13 +652,13 @@ impl VirtualMachine {
                             });
                         }
 
-
-                        self.variable_stack.push(VariableStack::Reference(*reference));
+                        self.variable_stack
+                            .push(VariableStack::Reference(*reference));
                     } else {
                         return Err(KsError::runtime("List indexing out of bounces!"));
                     }
                 }
-            },
+            }
             Some(VariableStack::Reference(reference)) => {
                 let variable = self.environment.variable(&reference)?;
                 if let Value::List(list) = variable.value() {
@@ -707,14 +671,14 @@ impl VirtualMachine {
                             });
                         }
 
-                        self.variable_stack.push(VariableStack::Reference(*reference));
+                        self.variable_stack
+                            .push(VariableStack::Reference(*reference));
                     } else {
                         return Err(KsError::runtime("List indexing out of bounces!"));
                     }
                 }
-            },
-            _ =>
-                return Err(KsError::runtime("There is no more variable stacks!"))
+            }
+            _ => return Err(KsError::runtime("There is no more variable stacks!")),
         }
 
         self.step()?;
@@ -736,14 +700,14 @@ impl VirtualMachine {
                                 info: VarInfo::from(&variable)?,
                             });
                         }
-                        
 
-                        self.variable_stack.push(VariableStack::Reference(*reference));
+                        self.variable_stack
+                            .push(VariableStack::Reference(*reference));
                     } else {
                         return Err(KsError::runtime("List indexing out of bounces!"));
                     }
                 }
-            },
+            }
             Some(VariableStack::Reference(reference)) => {
                 let variable = self.environment.variable(&reference)?;
                 if let Value::Tuple(list) = variable.value() {
@@ -756,14 +720,14 @@ impl VirtualMachine {
                             });
                         }
 
-                        self.variable_stack.push(VariableStack::Reference(*reference));
+                        self.variable_stack
+                            .push(VariableStack::Reference(*reference));
                     } else {
                         return Err(KsError::runtime("List indexing out of bounces!"));
                     }
                 }
-            },
-            _ =>
-                return Err(KsError::runtime("There is no more variable stacks!"))
+            }
+            _ => return Err(KsError::runtime("There is no more variable stacks!")),
         }
 
         self.step()?;
@@ -787,10 +751,8 @@ impl VirtualMachine {
         let scope_difference = variable_depth < assign_depth;
 
         if scope_difference {
-            self.environment.anchor_reference(
-                variable_depth,
-                assign_reference,
-            )?;
+            self.environment
+                .anchor_reference(variable_depth, assign_reference)?;
         }
 
         Ok(())
@@ -806,23 +768,26 @@ impl VirtualMachine {
 
     fn change_reference_holder(&mut self, new_reference: u64) -> KsResult<()> {
         match &self.tail_stack {
-            Some(TailStack::Index { index, info: tail_info }) => {
+            Some(TailStack::Index {
+                index,
+                info: tail_info,
+            }) => {
                 let reference = tail_info.reference()?;
                 let list = self.environment.variable_mut(reference)?;
                 if let Value::List(references) | Value::Tuple(references) = list.value_mut() {
                     references[*index] = new_reference;
                 }
-            },
+            }
             Some(TailStack::Module { name, info }) => {
                 let reference = info.reference()?;
                 let module = self.environment.variable_mut(reference)?;
                 if let Value::Module(module) = module.value_mut() {
                     module.insert(name.to_string(), new_reference);
                 }
-            },
+            }
             Some(TailStack::Variable(name)) => {
                 self.environment.assign_to_name(name, &new_reference)?;
-            },
+            }
             _ => {}
         }
 
@@ -835,14 +800,14 @@ impl VirtualMachine {
         let reference = self.extract_reference(assign_to)?;
 
         match assign_value {
-            Some(VariableStack::Variable(variable)) =>
-                self.environment.assign_to_reference(reference, variable)?,
+            Some(VariableStack::Variable(variable)) => {
+                self.environment.assign_to_reference(reference, variable)?
+            }
             Some(VariableStack::Reference(assign_reference)) => {
                 self.assign_with_reference(reference, assign_reference)?;
                 self.change_reference_holder(assign_reference)?;
-            },
-            _ =>
-                return Err(KsError::runtime("There is no more variable stacks!")),
+            }
+            _ => return Err(KsError::runtime("There is no more variable stacks!")),
         }
 
         self.step()?;
@@ -860,7 +825,7 @@ impl VirtualMachine {
                 } else {
                     Err(KsError::runtime("Expected string!"))
                 }
-            },
+            }
             Some(VariableStack::Reference(reference)) => {
                 let variable = self.environment.variable(&reference)?;
                 if let Value::String(string) = variable.value() {
@@ -868,8 +833,8 @@ impl VirtualMachine {
                 } else {
                     Err(KsError::runtime("Expected string!"))
                 }
-            },
-            _ => Err(KsError::runtime("Cannot load string from VariableStack!"))
+            }
+            _ => Err(KsError::runtime("Cannot load string from VariableStack!")),
         }
     }
 
@@ -885,16 +850,17 @@ impl VirtualMachine {
                     let reference = self.environment.define_reference(variable)?;
 
                     module.insert(name, reference);
-                },
+                }
                 Some(VariableStack::Reference(reference)) => {
                     module.insert(name, reference);
-                },
-                _ => return Err(KsError::runtime("Cannot get stack!"))
+                }
+                _ => return Err(KsError::runtime("Cannot get stack!")),
             }
         }
 
         let module_variable = Variable::empty(Value::Module(module));
-        self.variable_stack.push(VariableStack::Variable(module_variable));
+        self.variable_stack
+            .push(VariableStack::Variable(module_variable));
 
         self.step()?;
 
@@ -912,41 +878,44 @@ impl VirtualMachine {
                         if save {
                             self.tail_stack = Some(TailStack::Module {
                                 name,
-                                info: VarInfo::from(&variable)?
+                                info: VarInfo::from(&variable)?,
                             });
                         }
 
-                        self.variable_stack.push(VariableStack::Reference(*reference));
+                        self.variable_stack
+                            .push(VariableStack::Reference(*reference));
                     } else {
-                        return Err(KsError::runtime(
-                            &format!("Module doesn't have field {}", name),
-                        ));
+                        return Err(KsError::runtime(&format!(
+                            "Module doesn't have field {}",
+                            name
+                        )));
                     }
                 }
-            },
+            }
             Some(VariableStack::Reference(reference)) => {
                 let variable = self.environment.variable(&reference)?;
-                
+
                 if let Value::Module(module) = variable.value() {
                     let reference = module.get(&name);
                     if let Some(reference) = reference {
                         if save {
                             self.tail_stack = Some(TailStack::Module {
                                 name,
-                                info: VarInfo::from(&variable)?
+                                info: VarInfo::from(&variable)?,
                             });
                         }
 
-                        self.variable_stack.push(VariableStack::Reference(*reference));
+                        self.variable_stack
+                            .push(VariableStack::Reference(*reference));
                     } else {
-                        return Err(KsError::runtime(
-                            &format!("Module doesn't have field {}", name),
-                        ));
+                        return Err(KsError::runtime(&format!(
+                            "Module doesn't have field {}",
+                            name
+                        )));
                     }
                 }
-            },
-            _ => 
-                return Err(KsError::runtime("There is no more variable stacks!"))
+            }
+            _ => return Err(KsError::runtime("There is no more variable stacks!")),
         }
 
         self.step()?;
@@ -968,7 +937,7 @@ impl VirtualMachine {
                 let variable = self.constant_to_variable(&constant);
                 self.variable_stack.push(VariableStack::Variable(variable));
                 self.step()?;
-            },
+            }
 
             Some(Instruction::Add) => {
                 let right = self.extract_variable_from_stack()?;
@@ -978,7 +947,7 @@ impl VirtualMachine {
                 self.value_to_variable_stack(value);
 
                 self.step()?;
-            },
+            }
 
             Some(Instruction::Minus) => {
                 let right = self.extract_variable_from_stack()?;
@@ -988,7 +957,7 @@ impl VirtualMachine {
                 self.value_to_variable_stack(value);
 
                 self.step()?;
-            },
+            }
 
             Some(Instruction::Mul) => {
                 let right = self.extract_variable_from_stack()?;
@@ -998,7 +967,7 @@ impl VirtualMachine {
                 self.value_to_variable_stack(value);
 
                 self.step()?;
-            },
+            }
 
             Some(Instruction::Div) => {
                 let right = self.extract_variable_from_stack()?;
@@ -1008,7 +977,7 @@ impl VirtualMachine {
                 self.value_to_variable_stack(value);
 
                 self.step()?;
-            },
+            }
 
             Some(Instruction::Eq) => {
                 let right = self.extract_variable_from_stack()?;
@@ -1018,7 +987,7 @@ impl VirtualMachine {
                 self.value_to_variable_stack(value);
 
                 self.step()?;
-            },
+            }
 
             Some(Instruction::GreaterEq) => {
                 let right = self.extract_variable_from_stack()?;
@@ -1028,7 +997,7 @@ impl VirtualMachine {
                 self.value_to_variable_stack(value);
 
                 self.step()?;
-            },
+            }
 
             Some(Instruction::Greater) => {
                 let right = self.extract_variable_from_stack()?;
@@ -1038,7 +1007,7 @@ impl VirtualMachine {
                 self.value_to_variable_stack(value);
 
                 self.step()?;
-            },
+            }
 
             Some(Instruction::LessEq) => {
                 let right = self.extract_variable_from_stack()?;
@@ -1048,7 +1017,7 @@ impl VirtualMachine {
                 self.value_to_variable_stack(value);
 
                 self.step()?;
-            },
+            }
 
             Some(Instruction::Less) => {
                 let right = self.extract_variable_from_stack()?;
@@ -1058,7 +1027,7 @@ impl VirtualMachine {
                 self.value_to_variable_stack(value);
 
                 self.step()?;
-            },
+            }
 
             Some(Instruction::NotEq) => {
                 let right = self.extract_variable_from_stack()?;
@@ -1068,7 +1037,7 @@ impl VirtualMachine {
                 self.value_to_variable_stack(value);
 
                 self.step()?;
-            },
+            }
 
             Some(Instruction::And) => {
                 let right = self.extract_variable_from_stack()?;
@@ -1078,7 +1047,7 @@ impl VirtualMachine {
                 self.value_to_variable_stack(value);
 
                 self.step()?;
-            },
+            }
 
             Some(Instruction::Or) => {
                 let right = self.extract_variable_from_stack()?;
@@ -1088,7 +1057,7 @@ impl VirtualMachine {
                 self.value_to_variable_stack(value);
 
                 self.step()?;
-            },
+            }
 
             Some(Instruction::Not) => {
                 let variable = self.extract_variable_from_stack()?;
@@ -1097,32 +1066,32 @@ impl VirtualMachine {
                 self.value_to_variable_stack(value);
 
                 self.step()?;
-            },
+            }
 
             Some(Instruction::Store(name)) => {
                 let name = name.clone();
                 self.define_variable(&name)?;
-            },
+            }
 
             Some(Instruction::PubStore(name)) => {
                 let name = name.clone();
                 self.public_define_variable(&name)?;
-            },
+            }
 
             Some(Instruction::Enter) => {
                 self.enter_scope()?;
                 self.step()?;
-            },
+            }
 
             Some(Instruction::Exit) => {
                 self.exit_scope()?;
                 self.step()?;
-            },
+            }
 
             Some(Instruction::End) => {
                 self.variable_stack.clear();
                 self.step()?;
-            },
+            }
 
             Some(Instruction::LoadList(size)) => {
                 let referneces = self.load_references_collection(*size)?;
@@ -1130,7 +1099,7 @@ impl VirtualMachine {
                 self.variable_stack.push(VariableStack::Variable(variable));
 
                 self.step()?;
-            },
+            }
 
             Some(Instruction::LoadTuple(size)) => {
                 let referneces = self.load_references_collection(*size)?;
@@ -1138,7 +1107,7 @@ impl VirtualMachine {
                 self.variable_stack.push(VariableStack::Variable(variable));
 
                 self.step()?;
-            },
+            }
 
             Some(Instruction::Assign) => self.assign()?,
             Some(Instruction::LoadVar(name)) => self.load_var(name.clone(), false)?,
@@ -1150,8 +1119,12 @@ impl VirtualMachine {
             Some(Instruction::LoadFromTupleSave(index)) => self.load_from_tuple(*index, true)?,
             Some(Instruction::ListLen) => self.list_len()?,
             Some(Instruction::LoadModule(size)) => self.load_module(*size)?,
-            Some(Instruction::LoadFromModule(name)) => self.load_from_module(name.clone(), false)?,
-            Some(Instruction::LoadFromModuleSave(name)) => self.load_from_module(name.clone(), true)?,
+            Some(Instruction::LoadFromModule(name)) => {
+                self.load_from_module(name.clone(), false)?
+            }
+            Some(Instruction::LoadFromModuleSave(name)) => {
+                self.load_from_module(name.clone(), true)?
+            }
             Some(Instruction::Return) => self.on_return()?,
             Some(Instruction::Call(args)) => self.extract_function(args.clone())?,
             Some(Instruction::Jump(distance)) => self.jump(*distance)?,
@@ -1159,7 +1132,8 @@ impl VirtualMachine {
 
             _ => {
                 self.exit_function()?;
-                self.variable_stack.push(VariableStack::Variable(Variable::null()));
+                self.variable_stack
+                    .push(VariableStack::Variable(Variable::null()));
             }
         }
 
@@ -1172,31 +1146,21 @@ impl VirtualMachine {
 
         for (name, native) in native.get_natives() {
             let _ = match native {
-                NativeTypes::Function(_) =>
-                    self.environment.define_variable(
-                        name, 
-                        Variable::empty(Value::NativeFunction(name.clone()))
-                    )?,
-                NativeTypes::Int(_, int) =>
-                    self.environment.define_variable(
-                        name, 
-                        Variable::empty(Value::Integer(*int))
-                    )?,
-                NativeTypes::Float(_, float) =>
-                    self.environment.define_variable(
-                        name, 
-                        Variable::empty(Value::Float(*float))
-                    )?,
-                NativeTypes::Boolean(_, boolean) =>
-                    self.environment.define_variable(
-                        name, 
-                        Variable::empty(Value::Boolean(*boolean))
-                    )?,
-                NativeTypes::String(_, string) =>
-                    self.environment.define_variable(
-                        name, 
-                        Variable::empty(Value::String(string.clone()))
-                    )?,
+                NativeTypes::Function(_) => self
+                    .environment
+                    .define_variable(name, Variable::empty(Value::NativeFunction(name.clone())))?,
+                NativeTypes::Int(_, int) => self
+                    .environment
+                    .define_variable(name, Variable::empty(Value::Integer(*int)))?,
+                NativeTypes::Float(_, float) => self
+                    .environment
+                    .define_variable(name, Variable::empty(Value::Float(*float)))?,
+                NativeTypes::Boolean(_, boolean) => self
+                    .environment
+                    .define_variable(name, Variable::empty(Value::Boolean(*boolean)))?,
+                NativeTypes::String(_, string) => self
+                    .environment
+                    .define_variable(name, Variable::empty(Value::String(string.clone())))?,
             };
         }
 
@@ -1216,11 +1180,7 @@ impl VirtualMachine {
     }
 
     pub fn call(&mut self, name: &str) -> KsResult<()> {
-        let function_name = &format!(
-            "{}{}",
-            FUNCTION_ENCAPSULATION,
-            name
-        );
+        let function_name = &format!("{}{}", FUNCTION_ENCAPSULATION, name);
 
         self.enter_function(function_name)?;
 

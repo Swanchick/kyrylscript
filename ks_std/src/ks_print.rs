@@ -1,4 +1,3 @@
-
 use core::global::utils::ks_result::KsResult;
 
 use core::vm::environment::Environment;
@@ -6,7 +5,11 @@ use core::vm::value::Value;
 use core::vm::variable::Variable;
 use std::collections::HashMap;
 
-fn collection_to_string(environment: &mut Environment, references: &Vec<u64>, mut buffer: String) -> KsResult<String> {
+fn collection_to_string(
+    environment: &mut Environment,
+    references: &Vec<u64>,
+    mut buffer: String,
+) -> KsResult<String> {
     let references_len = references.len();
 
     for (i, reference) in references.iter().enumerate() {
@@ -22,7 +25,11 @@ fn collection_to_string(environment: &mut Environment, references: &Vec<u64>, mu
     Ok(buffer)
 }
 
-fn module_to_string(environment: &mut Environment, module: &HashMap<String, u64>, mut buffer: String)-> KsResult<String> {
+fn module_to_string(
+    environment: &mut Environment,
+    module: &HashMap<String, u64>,
+    mut buffer: String,
+) -> KsResult<String> {
     let module_len = module.len();
 
     for (i, (name, reference)) in module.iter().enumerate() {
@@ -54,21 +61,21 @@ fn value_to_string(environment: &mut Environment, variable: Variable) -> KsResul
             buffer = collection_to_string(environment, references, buffer)?;
             buffer.push(']');
             Ok(buffer)
-        },
+        }
         Value::Tuple(references) => {
             let mut buffer = String::new();
             buffer.push('(');
             buffer = collection_to_string(environment, references, buffer)?;
             buffer.push(')');
             Ok(buffer)
-        },
+        }
         Value::Module(module) => {
             let mut buffer = String::new();
             buffer.push('{');
             buffer = module_to_string(environment, module, buffer)?;
             buffer.push('}');
             Ok(buffer)
-        },
+        }
         Value::Null => Ok(String::from("null")),
     }
 }

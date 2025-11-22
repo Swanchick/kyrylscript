@@ -1,7 +1,7 @@
 pub struct ReferenceFrame {
     pub reference: u64,
     pub index: usize,
-    pub new_references: Vec<u64>
+    pub new_references: Vec<u64>,
 }
 
 impl ReferenceFrame {
@@ -9,7 +9,7 @@ impl ReferenceFrame {
         ReferenceFrame {
             reference,
             index,
-            new_references: Vec::new()
+            new_references: Vec::new(),
         }
     }
 

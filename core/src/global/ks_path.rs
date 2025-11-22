@@ -1,13 +1,12 @@
 use std::io;
-use std::path::{absolute, Path, PathBuf};
+use std::path::{Path, PathBuf, absolute};
 
 pub const KS_MODULE_FILE: &str = "mod.ks";
 const KS_FILE_FORMAT: &str = ".ks";
 
-
 #[derive(Debug, Clone)]
 pub struct KsPath {
-    path: PathBuf
+    path: PathBuf,
 }
 
 impl KsPath {
@@ -16,8 +15,8 @@ impl KsPath {
     }
 
     pub fn new() -> KsPath {
-        KsPath { 
-            path: PathBuf::new() 
+        KsPath {
+            path: PathBuf::new(),
         }
     }
 
@@ -25,19 +24,19 @@ impl KsPath {
         let absolute_path = absolute(path)?;
 
         Ok(KsPath {
-            path: absolute_path
+            path: absolute_path,
         })
     }
 
     pub fn from_path(path: &Path) -> KsPath {
         KsPath {
-            path: path.to_path_buf()
+            path: path.to_path_buf(),
         }
     }
 
     pub fn from_path_buf(path: PathBuf) -> KsPath {
         KsPath {
-            path: path.to_path_buf()
+            path: path.to_path_buf(),
         }
     }
 
@@ -56,10 +55,10 @@ impl KsPath {
 
             if filename.ends_with(KS_FILE_FORMAT) {
                 self.path.is_file()
-            }  else {
+            } else {
                 filename.push_str(KS_FILE_FORMAT);
                 let mut parent_path = self.parent();
-                
+
                 parent_path.push(filename);
 
                 parent_path.is_file()

@@ -1,28 +1,28 @@
 use std::cell::RefCell;
-use std::rc::Rc;
 use std::collections::HashMap;
 use std::io;
+use std::rc::Rc;
 
 use crate::global::data_type::DataType;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnalyzerEnviroment {
     parent: Option<Rc<RefCell<AnalyzerEnviroment>>>,
-    variables: HashMap<String, DataType>
+    variables: HashMap<String, DataType>,
 }
 
 impl AnalyzerEnviroment {
     pub fn new() -> AnalyzerEnviroment {
-        AnalyzerEnviroment { 
-            parent: None, 
-            variables: HashMap::new() 
+        AnalyzerEnviroment {
+            parent: None,
+            variables: HashMap::new(),
         }
     }
 
     pub fn with_parent(parent: Rc<RefCell<AnalyzerEnviroment>>) -> AnalyzerEnviroment {
         AnalyzerEnviroment {
             parent: Some(parent),
-            variables: HashMap::new()
+            variables: HashMap::new(),
         }
     }
 
@@ -33,7 +33,7 @@ impl AnalyzerEnviroment {
     pub fn get_parent(&self) -> Option<Rc<RefCell<AnalyzerEnviroment>>> {
         match &self.parent {
             Some(parent) => Some(parent.clone()),
-            None => None
+            None => None,
         }
     }
 
@@ -45,7 +45,7 @@ impl AnalyzerEnviroment {
         } else {
             Err(io::Error::new(
                 io::ErrorKind::InvalidData,
-                format!("Variable {} not found", name)
+                format!("Variable {} not found", name),
             ))
         }
     }

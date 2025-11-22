@@ -1,20 +1,19 @@
 use std::fs::read_to_string;
 use std::io;
 
-use super::token::Token;
 use super::token::COMMENT;
+use super::token::Token;
 use super::token::{get_token, is_symbol};
 
 use super::lexer_state::LexerState;
 use super::token_pos::TokenPos;
-
 
 pub struct Lexer {
     tokens: Vec<Token>,
     token_pos: Vec<TokenPos>,
     source_lines: Vec<String>,
     source_path: Option<String>,
-    current_line_pos: i32
+    current_line_pos: i32,
 }
 
 impl Lexer {
@@ -26,10 +25,10 @@ impl Lexer {
             token_pos: Vec::new(),
             source_lines: source_lines,
             source_path: None,
-            current_line_pos: 0
+            current_line_pos: 0,
         }
     }
-    
+
     pub fn load(source_path: &str) -> io::Result<Lexer> {
         let result = read_to_string(source_path);
 
@@ -42,13 +41,13 @@ impl Lexer {
                     token_pos: Vec::new(),
                     source_lines: source_lines,
                     source_path: Some(source_path.to_string()),
-                    current_line_pos: 0
+                    current_line_pos: 0,
                 })
             }
             Err(_) => Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
-                format!("Cannot find file with that path: {source_path}!")
-            ))
+                format!("Cannot find file with that path: {source_path}!"),
+            )),
         }
     }
 
@@ -75,7 +74,7 @@ impl Lexer {
         }
     }
 
-    pub fn lex_line(&mut self, mut line: String) -> io::Result<()> { 
+    pub fn lex_line(&mut self, mut line: String) -> io::Result<()> {
         line.push(' ');
         let mut cur: usize = 0;
         let mut state = LexerState::None;
@@ -125,7 +124,10 @@ impl Lexer {
                             buffer.clear();
                             state = LexerState::None;
                         } else {
-                            return Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid float literal"));
+                            return Err(io::Error::new(
+                                io::ErrorKind::InvalidData,
+                                "Invalid float literal",
+                            ));
                         }
                     } else {
                         if let Ok(num) = buffer.parse::<i32>() {
@@ -135,13 +137,19 @@ impl Lexer {
 
                             continue;
                         } else {
-                            return Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid integer literal"));
+                            return Err(io::Error::new(
+                                io::ErrorKind::InvalidData,
+                                "Invalid integer literal",
+                            ));
                         }
                     }
                 }
 
                 LexerState::Identifier => {
-                    if current_char.is_alphabetic() || current_char.is_numeric() || current_char == '_' {
+                    if current_char.is_alphabetic()
+                        || current_char.is_numeric()
+                        || current_char == '_'
+                    {
                         buffer.push(current_char);
                     } else {
                         self.add_token_text(buffer.as_str());
@@ -157,7 +165,7 @@ impl Lexer {
                         buffer.push(current_char);
                     } else {
                         // Checking if the symbol is a comment and if it is indeed then break the loop to proceed to the next line
-                        // easy 
+                        // easy
                         if buffer.contains(COMMENT) {
                             break;
                         }
@@ -165,7 +173,7 @@ impl Lexer {
                         self.get_symbols(&buffer);
                         buffer.clear();
                         state = LexerState::None;
-                        
+
                         continue;
                     }
                 }
@@ -180,13 +188,13 @@ impl Lexer {
     fn get_symbols(&mut self, buffer: &str) {
         let chars: Vec<char> = buffer.chars().collect();
         let mut i = 0;
-    
+
         while i < chars.len() {
             let mut matched = false;
 
             for j in (i + 1..=chars.len()).rev() {
                 let slice: String = chars[i..j].iter().collect();
-    
+
                 if let Some(token) = get_token(&slice) {
                     self.add_token(token);
                     i = j;
@@ -200,7 +208,7 @@ impl Lexer {
                 if let Some(token) = get_token(&single) {
                     self.add_token(token);
                 }
-    
+
                 i += 1;
             }
         }
@@ -209,7 +217,7 @@ impl Lexer {
     pub fn lexer(&mut self) -> io::Result<()> {
         for line in self.source_lines.clone() {
             let line = line.clone();
-            
+
             self.lex_line(line)?;
 
             self.current_line_pos += 1;

@@ -1,13 +1,12 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::rc::Rc;
 use std::io;
+use std::rc::Rc;
 
+use crate::global::data_type::DataType;
 use crate::native_registry::native_function::NativeFunction;
 use crate::parser::identifier_tail::IdentifierTail;
 use crate::parser::operator::Operator;
-use crate::global::data_type::DataType;
-
 
 use super::analyzer_enviroment::AnalyzerEnviroment;
 use super::expression::Expression;
@@ -15,36 +14,41 @@ use super::expression::Expression;
 #[derive(Debug, Clone)]
 pub struct SemanticAnalyzer {
     global: Rc<RefCell<AnalyzerEnviroment>>,
-    local: Rc<RefCell<AnalyzerEnviroment>>
+    local: Rc<RefCell<AnalyzerEnviroment>>,
 }
-
 
 impl SemanticAnalyzer {
     pub fn new() -> SemanticAnalyzer {
         let global = Rc::new(RefCell::new(AnalyzerEnviroment::new()));
-        let local = Rc::new(RefCell::new(AnalyzerEnviroment::with_parent(global.clone())));
+        let local = Rc::new(RefCell::new(AnalyzerEnviroment::with_parent(
+            global.clone(),
+        )));
 
-        SemanticAnalyzer {
-            global,
-            local
-        }
+        SemanticAnalyzer { global, local }
     }
 
     pub fn with_global(global: Rc<RefCell<AnalyzerEnviroment>>) -> SemanticAnalyzer {
-        let local = Rc::new(RefCell::new(AnalyzerEnviroment::with_parent(global.clone())));
-        
-        SemanticAnalyzer { 
-            global: global.clone(), 
-            local: local
+        let local = Rc::new(RefCell::new(AnalyzerEnviroment::with_parent(
+            global.clone(),
+        )));
+
+        SemanticAnalyzer {
+            global: global.clone(),
+            local: local,
         }
     }
 
     pub fn get_global(&self) -> Rc<RefCell<AnalyzerEnviroment>> {
         self.global.clone()
-    } 
+    }
 
     pub fn register_rust_function(&mut self, name: String, function: &NativeFunction) {
-        self.local.borrow_mut().add(name, DataType::RustFunction { return_type: Box::new(function.return_type.clone()) });
+        self.local.borrow_mut().add(
+            name,
+            DataType::RustFunction {
+                return_type: Box::new(function.return_type.clone()),
+            },
+        );
     }
 
     pub fn get_variable(&self, name: &str) -> io::Result<DataType> {
@@ -54,14 +58,19 @@ impl SemanticAnalyzer {
 
     pub fn check_null(&self, data_type: &DataType) -> io::Result<()> {
         match data_type {
-            DataType::Void(_) => Err(io::Error::new(io::ErrorKind::InvalidData, "Attempt to perform an operation with a null value")),
-            _ => Ok(())
+            DataType::Void(_) => Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Attempt to perform an operation with a null value",
+            )),
+            _ => Ok(()),
         }
     }
 
     pub fn enter_function_enviroment(&mut self) {
         let parent = self.local.clone();
-        self.local = Rc::new(RefCell::new(AnalyzerEnviroment::with_parent(parent.clone())));
+        self.local = Rc::new(RefCell::new(AnalyzerEnviroment::with_parent(
+            parent.clone(),
+        )));
     }
 
     pub fn exit_function_enviroment(&mut self) -> io::Result<()> {
@@ -80,23 +89,29 @@ impl SemanticAnalyzer {
             self.local = env;
             Ok(())
         } else {
-            Err(io::Error::new(io::ErrorKind::InvalidData, "No parent enviroment!"))
+            Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "No parent enviroment!",
+            ))
         }
     }
 
     fn plus(&self, left: DataType, right: DataType) -> io::Result<DataType> {
         self.check_null(&left)?;
         self.check_null(&right)?;
-        
+
         match (left, right) {
             (DataType::Int, DataType::Int) => Ok(DataType::Int),
-            
+
             (DataType::Float, DataType::Int)
             | (DataType::Int, DataType::Float)
             | (DataType::Float, DataType::Float) => Ok(DataType::Float),
-            
+
             (DataType::String, DataType::String) => Ok(DataType::String),
-            _ => Err(io::Error::new(io::ErrorKind::InvalidData, "Arithmetic type error!"))
+            _ => Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Arithmetic type error!",
+            )),
         }
     }
 
@@ -106,12 +121,15 @@ impl SemanticAnalyzer {
 
         match (left, right) {
             (DataType::Int, DataType::Int) => Ok(DataType::Int),
-            
+
             (DataType::Float, DataType::Int)
             | (DataType::Int, DataType::Float)
             | (DataType::Float, DataType::Float) => Ok(DataType::Float),
-            
-            _ => Err(io::Error::new(io::ErrorKind::InvalidData, "Arithmetic type error!"))
+
+            _ => Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Arithmetic type error!",
+            )),
         }
     }
 
@@ -124,8 +142,11 @@ impl SemanticAnalyzer {
             | (DataType::Float, DataType::Int)
             | (DataType::Int, DataType::Float)
             | (DataType::Float, DataType::Float) => Ok(DataType::Float),
-            
-            _ => Err(io::Error::new(io::ErrorKind::InvalidData, "Division type error!"))
+
+            _ => Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Division type error!",
+            )),
         }
     }
 
@@ -135,7 +156,10 @@ impl SemanticAnalyzer {
 
         match (left, right) {
             (DataType::Bool, DataType::Bool) => Ok(DataType::Bool),
-            _ => Err(io::Error::new(io::ErrorKind::InvalidData, "Logic type error!"))
+            _ => Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Logic type error!",
+            )),
         }
     }
 
@@ -143,7 +167,10 @@ impl SemanticAnalyzer {
         if left == right {
             Ok(DataType::Bool)
         } else {
-            Err(io::Error::new(io::ErrorKind::InvalidData, "Arithmetic type error!"))
+            Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Arithmetic type error!",
+            ))
         }
     }
 
@@ -152,35 +179,39 @@ impl SemanticAnalyzer {
         self.check_null(&right)?;
 
         match (left, right) {
-            (DataType::Int, DataType::Int) 
+            (DataType::Int, DataType::Int)
             | (DataType::Float, DataType::Int)
             | (DataType::Int, DataType::Float)
             | (DataType::Float, DataType::Float) => Ok(DataType::Bool),
-            _ => Err(io::Error::new(io::ErrorKind::InvalidData, "Arithmetic type error!"))
+            _ => Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Arithmetic type error!",
+            )),
         }
     }
-    
-    fn binary_operation(&self, operator: &Operator, left: DataType, right: DataType) -> io::Result<DataType> {
+
+    fn binary_operation(
+        &self,
+        operator: &Operator,
+        left: DataType,
+        right: DataType,
+    ) -> io::Result<DataType> {
         match operator {
             Operator::Plus => self.plus(left, right),
-            
-            Operator::Minus
-            | Operator::Multiply => self.arithmetic(left, right),
-            
+
+            Operator::Minus | Operator::Multiply => self.arithmetic(left, right),
+
             Operator::Divide => self.division(left, right),
-            
-            Operator::And
-            | Operator::Or => self.boolean(left, right),
-            
-            Operator::EqualEqual
-            | Operator::NotEqual => self.comparison(left, right),
-            
-            Operator::GreaterEqual
-            | Operator::Greater
-            | Operator::LessEqual
-            | Operator::Less => self.logic(left, right),
-            
-            _ => unreachable!()
+
+            Operator::And | Operator::Or => self.boolean(left, right),
+
+            Operator::EqualEqual | Operator::NotEqual => self.comparison(left, right),
+
+            Operator::GreaterEqual | Operator::Greater | Operator::LessEqual | Operator::Less => {
+                self.logic(left, right)
+            }
+
+            _ => unreachable!(),
         }
     }
 
@@ -189,7 +220,10 @@ impl SemanticAnalyzer {
             (Operator::Minus, DataType::Int) => Ok(DataType::Int),
             (Operator::Minus, DataType::Float) => Ok(DataType::Float),
             (Operator::Not, DataType::Bool) => Ok(DataType::Bool),
-            _ => Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid operator in unary operation!"))
+            _ => Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Invalid operator in unary operation!",
+            )),
         }
     }
 
@@ -200,14 +234,20 @@ impl SemanticAnalyzer {
             (Operator::MinusMinus, DataType::Int) => Ok(DataType::Int),
             (Operator::MinusMinus, DataType::Float) => Ok(DataType::Float),
             (Operator::Clone, data_type) => Ok(data_type),
-            _ => Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid operator in front unary operation!"))
+            _ => Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Invalid operator in front unary operation!",
+            )),
         }
     }
 
     fn identefier_index(&self, left: DataType, index: DataType) -> io::Result<DataType> {
         match (left, index) {
             (DataType::List(children_type), DataType::Int) => Ok(*children_type),
-            _ => Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid data in list indexing operation!"))
+            _ => Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Invalid data in list indexing operation!",
+            )),
         }
     }
 
@@ -217,21 +257,30 @@ impl SemanticAnalyzer {
 
             if let DataType::Tuple(children) = &left {
                 if index > children.len() {
-                    return Err(io::Error::new(io::ErrorKind::InvalidData, "Tuple out of index!"))
+                    return Err(io::Error::new(
+                        io::ErrorKind::InvalidData,
+                        "Tuple out of index!",
+                    ));
                 }
-                
+
                 left = children[index].clone();
             } else {
-                return Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid data in tuple indexing operation!"));
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "Invalid data in tuple indexing operation!",
+                ));
             }
         }
 
         Ok(left)
     }
 
-    pub fn get_data_type_from_segments(&self, segments: &Vec<IdentifierTail>) -> io::Result<DataType> {
+    pub fn get_data_type_from_segments(
+        &self,
+        segments: &Vec<IdentifierTail>,
+    ) -> io::Result<DataType> {
         let mut last_segment: Option<DataType> = None;
-        
+
         for identifier in segments {
             match identifier {
                 IdentifierTail::Name(name) => {
@@ -242,91 +291,115 @@ impl SemanticAnalyzer {
                                 last_segment = Some(data_type.clone());
                             } else {
                                 return Err(io::Error::new(
-                                    io::ErrorKind::InvalidData, 
-                                    format!("Cannot find {} in module!", name)
+                                    io::ErrorKind::InvalidData,
+                                    format!("Cannot find {} in module!", name),
                                 ));
                             }
                         } else {
                             return Err(io::Error::new(
-                                io::ErrorKind::InvalidData, 
-                                "This is not a module!"
-                            ))
+                                io::ErrorKind::InvalidData,
+                                "This is not a module!",
+                            ));
                         }
-
                     } else {
                         let data_type = self.get_variable(&name)?;
                         last_segment = Some(data_type);
                     }
-                },
+                }
                 IdentifierTail::Index(index) => {
                     let index_data_type = self.get_data_type(&index)?;
                     if index_data_type != DataType::Int {
-                        return Err(io::Error::new(io::ErrorKind::InvalidData, "Invalid data type for list indexing"))
+                        return Err(io::Error::new(
+                            io::ErrorKind::InvalidData,
+                            "Invalid data type for list indexing",
+                        ));
                     }
-                    
+
                     if let Some(DataType::List(data_type)) = last_segment {
                         last_segment = Some(*data_type);
-                    } 
-                },
+                    }
+                }
                 IdentifierTail::TupleIndex(index) => {
                     if let Some(DataType::Tuple(data_types)) = &last_segment {
                         if let Some(data_type) = data_types.get(*index as usize) {
                             last_segment = Some(data_type.clone());
                         } else {
                             return Err(io::Error::new(
-                                io::ErrorKind::InvalidData, 
-                                format!("Cannot access the type by tuple index {}", index)))
+                                io::ErrorKind::InvalidData,
+                                format!("Cannot access the type by tuple index {}", index),
+                            ));
                         }
-                    }
-                },
-                IdentifierTail::Call(call_parameters) => {
-                    match last_segment {
-                        Some(DataType::Function { parameters, return_type }) => {
-                            for (call_parameter, parameter) in call_parameters.iter().zip(parameters) {
-                                let call_parameter = self.get_data_type(call_parameter)?;
-
-                                if call_parameter != parameter && !DataType::is_void(&call_parameter) {
-                                    return Err(io::Error::new(io::ErrorKind::InvalidData, "Function signature mismatch"));
-                                }
-                            }
-
-                            last_segment = Some(*return_type);
-                        }
-                        Some(DataType::RustFunction { return_type }) => {
-                            last_segment = Some(*return_type);
-                        }
-                        _ => 
-                            return Err(io::Error::new(io::ErrorKind::InvalidData, "It's not a function!")),
                     }
                 }
+                IdentifierTail::Call(call_parameters) => match last_segment {
+                    Some(DataType::Function {
+                        parameters,
+                        return_type,
+                    }) => {
+                        for (call_parameter, parameter) in call_parameters.iter().zip(parameters) {
+                            let call_parameter = self.get_data_type(call_parameter)?;
+
+                            if call_parameter != parameter && !DataType::is_void(&call_parameter) {
+                                return Err(io::Error::new(
+                                    io::ErrorKind::InvalidData,
+                                    "Function signature mismatch",
+                                ));
+                            }
+                        }
+
+                        last_segment = Some(*return_type);
+                    }
+                    Some(DataType::RustFunction { return_type }) => {
+                        last_segment = Some(*return_type);
+                    }
+                    _ => {
+                        return Err(io::Error::new(
+                            io::ErrorKind::InvalidData,
+                            "It's not a function!",
+                        ));
+                    }
+                },
             }
         }
-        
+
         if let Some(data_type) = last_segment {
             Ok(data_type)
         } else {
-            Err(io::Error::new(io::ErrorKind::InvalidData, "Cannot get type from identifier segment!"))
+            Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Cannot get type from identifier segment!",
+            ))
         }
     }
 
     pub fn get_data_type(&self, expression: &Expression) -> io::Result<DataType> {
         match expression {
-            Expression::BinaryOp { left, operator, right } => {
+            Expression::BinaryOp {
+                left,
+                operator,
+                right,
+            } => {
                 let left = self.get_data_type(left)?;
                 let right = self.get_data_type(right)?;
 
                 self.binary_operation(operator, left, right)
-            },
+            }
 
-            Expression::UnaryOp { expression, operator } => {
+            Expression::UnaryOp {
+                expression,
+                operator,
+            } => {
                 let right = self.get_data_type(expression)?;
                 self.unary_operation(operator, right)
-            },
+            }
 
-            Expression::FrontUnaryOp { expression, operator } => {
+            Expression::FrontUnaryOp {
+                expression,
+                operator,
+            } => {
                 let left = self.get_data_type(expression)?;
                 self.front_unary_operation(operator, left)
-            },
+            }
 
             Expression::ListLiteral(children) => {
                 if children.len() == 0 {
@@ -342,49 +415,61 @@ impl SemanticAnalyzer {
                         continue;
                     }
 
-                    return Err(io::Error::new(io::ErrorKind::InvalidData, "Children has different types in list!"));
+                    return Err(io::Error::new(
+                        io::ErrorKind::InvalidData,
+                        "Children has different types in list!",
+                    ));
                 }
 
                 Ok(DataType::List(Box::new(first)))
-            },
+            }
 
             Expression::TupleIndex { left, indeces } => {
                 let left = self.get_data_type(&left)?;
 
                 self.tuple_index(left, indeces)
-            },
+            }
 
             Expression::FunctionCall(name, call_parameters) => {
                 let function = self.get_variable(name)?;
 
                 match function {
-                    DataType::RustFunction { return_type } => {
-                        Ok(*return_type)
-                    }
+                    DataType::RustFunction { return_type } => Ok(*return_type),
 
-                    DataType::Function { parameters, return_type } => {
+                    DataType::Function {
+                        parameters,
+                        return_type,
+                    } => {
                         for (call_parameter, parameter) in call_parameters.iter().zip(parameters) {
                             let call_parameter = self.get_data_type(call_parameter)?;
 
                             if call_parameter != parameter && !DataType::is_void(&call_parameter) {
-                                return Err(io::Error::new(io::ErrorKind::InvalidData, "Function signature mismatch"));
+                                return Err(io::Error::new(
+                                    io::ErrorKind::InvalidData,
+                                    "Function signature mismatch",
+                                ));
                             }
                         }
 
                         Ok(*return_type)
                     }
 
-                    DataType::Void(_) => Err(io::Error::new(io::ErrorKind::InvalidData, "Ти далбайоб?")),
-                    _ => Err(io::Error::new(io::ErrorKind::InvalidData, format!("Function {} not found!", name)))
+                    DataType::Void(_) => {
+                        Err(io::Error::new(io::ErrorKind::InvalidData, "Ти далбайоб?"))
+                    }
+                    _ => Err(io::Error::new(
+                        io::ErrorKind::InvalidData,
+                        format!("Function {} not found!", name),
+                    )),
                 }
-            },
+            }
 
             Expression::ListIndex { left, index } => {
                 let left = self.get_data_type(left)?;
                 let index_type = self.get_data_type(index)?;
 
                 self.identefier_index(left, index_type)
-            },
+            }
 
             Expression::TupleLiteral(expressions) => {
                 let mut data_types: Vec<DataType> = Vec::new();
@@ -395,18 +480,25 @@ impl SemanticAnalyzer {
                 }
 
                 Ok(DataType::Tuple(data_types))
-            },
-            Expression::FunctionLiteral { parameters, return_type, block: _ } => {
+            }
+            Expression::FunctionLiteral {
+                parameters,
+                return_type,
+                block: _,
+            } => {
                 let mut data_types: Vec<DataType> = Vec::new();
 
                 for parameter in parameters {
                     data_types.push(parameter.data_type.clone());
                 }
-                
-                Ok(DataType::Function { parameters: data_types, return_type: Box::new(return_type.clone()) })
-            },
+
+                Ok(DataType::Function {
+                    parameters: data_types,
+                    return_type: Box::new(return_type.clone()),
+                })
+            }
             Expression::Module(module) => {
-                let mut module_type: HashMap<String, DataType> = HashMap::new(); 
+                let mut module_type: HashMap<String, DataType> = HashMap::new();
 
                 for (field_name, expression) in module {
                     let data_type = self.get_data_type(expression)?;
@@ -414,13 +506,13 @@ impl SemanticAnalyzer {
                 }
 
                 Ok(DataType::Module(module_type))
-            },
+            }
             Expression::Identifier(segments) => self.get_data_type_from_segments(segments),
             Expression::IntegerLiteral(_) => Ok(DataType::Int),
             Expression::FloatLiteral(_) => Ok(DataType::Float),
             Expression::StringLiteral(_) => Ok(DataType::String),
             Expression::BooleanLiteral(_) => Ok(DataType::Bool),
-            Expression::NullLiteral => Ok(DataType::void())
+            Expression::NullLiteral => Ok(DataType::void()),
         }
     }
 
