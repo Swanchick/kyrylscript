@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
 
+use super::anchor::collection_type::CollectionType;
 use super::anchor::variable_frame::VariableFrame;
 use super::anchor::variable_iter::VariableIter;
 use super::anchor::reference_frame::ReferenceFrame;
@@ -483,6 +484,37 @@ impl Environment {
     }
 
     fn clone_collection(&mut self, mut parent_reference: u64) -> KsResult<Variable> {
+        let collection = {
+            let variable = self.variable(&parent_reference)?;
+            match variable.value() {
+                | Value::List(_)
+                | Value::Tuple(_) => 
+                    CollectionType::List(Vec::new()),
+                Value::Module(_) =>
+                    CollectionType::Module(HashMap::new()),
+                _ => unreachable!(),
+            }
+        };
+
+        let mut collection_stack: Vec<CollectionType> = vec![
+            collection,
+        ];
+
+
+        self.variable_iter(
+            parent_reference,
+            |this, frame| {
+                Ok(())
+            },
+            |this, frame| {
+                Ok(())
+            },
+            |this, frame| {
+                Ok(())
+            }
+        )?;
+        
+        
         let mut frames = vec![
             ReferenceFrame::new(parent_reference, 0),
         ];
