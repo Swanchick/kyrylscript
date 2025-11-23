@@ -478,26 +478,6 @@ impl Environment {
     }
 
     fn clone_collection(&mut self, mut parent_reference: u64) -> KsResult<Variable> {
-        let collection = {
-            let variable = self.variable(&parent_reference)?;
-            match variable.value() {
-                Value::List(_) | Value::Tuple(_) => CollectionType::List(Vec::new()),
-
-                Value::Module(_) => CollectionType::Module(HashMap::new()),
-
-                _ => unreachable!(),
-            }
-        };
-
-        let mut collection_stack: Vec<CollectionType> = vec![collection];
-
-        self.variable_iter(
-            parent_reference,
-            |this, frame| Ok(()),
-            |this, frame| Ok(()),
-            |this, frame| Ok(()),
-        )?;
-
         let mut frames = vec![ReferenceFrame::new(parent_reference, 0)];
 
         while let Some(mut frame) = frames.pop() {
@@ -522,12 +502,13 @@ impl Environment {
                         frames.push(frame);
                         frames.push(ReferenceFrame::new(*reference, 0));
                     } else {
-                        let mut variable = self.variable(&reference)?.clone();
+                        let variable = self.variable(&reference)?;
+                        let mut variable = variable.clone();
                         match variable.value_mut() {
                             Value::List(child_references) | Value::Tuple(child_references) => {
-                                *child_references = frame.new_references;
+                                *child_references = frame.new_references
                             }
-                            _ => {}
+                            _ => unreachable!(),
                         }
 
                         if parent_reference == reference {
@@ -542,10 +523,42 @@ impl Environment {
                     }
                 }
                 TreeReference::ModuleBranch(module, index) => {
-                    todo!()
+                    let reference = frame.reference;
+                    let references: Vec<&u64> = module.values().collect();
+                    if let Some(reference) = references.get(index) {
+                        frame.step();
+                        frames.push(frame);
+                        frames.push(ReferenceFrame::new(**reference, 0));
+                    } else {
+                        let variable = self.variable(&frame.reference)?;
+                        let mut variable = variable.clone();
+
+                        match variable.value_mut() {
+                            Value::Module(module) => {
+                                let mut new_module: HashMap<String, u64> = HashMap::new();
+                                let keys: Vec<&String> = module.keys().collect();
+
+                                for (key, value) in keys.iter().zip(frame.new_references) {
+                                    new_module.insert(key.to_string(), value);
+                                }
+
+                                *module = new_module;
+                            }
+                            _ => unreachable!(),
+                        }
+
+                        if parent_reference == reference {
+                            parent_reference = self.define_reference(variable)?;
+                            continue;
+                        }
+
+                        let child_reference = self.define_reference(variable)?;
+                        if let Some(last_frame) = frames.last_mut() {
+                            last_frame.new_references.push(child_reference);
+                        }
+                    }
                 }
                 TreeReference::Leaf => {
-                    println!("here");
                     let reference = frame.reference;
                     let mut variable = self.variable(&reference)?.clone();
                     variable.clear();
