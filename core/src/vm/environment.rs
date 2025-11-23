@@ -112,6 +112,7 @@ impl Environment {
         if let Some(variable) = scope.get(reference) {
             Ok(variable)
         } else {
+            println!("There");
             Err(KsError::runtime(&format!(
                 "Cannot find variable with reference {}",
                 reference
@@ -134,16 +135,21 @@ impl Environment {
     }
 
     pub fn variable_remove(&mut self, reference: &u64) -> KsResult<Variable> {
-        for scope in self.references.iter_mut().rev() {
-            if let Some(variable) = scope.remove(reference) {
-                return Ok(variable);
-            }
-        }
+        let depth = {
+            let info = self.info(reference)?;
+            *info.depth()
+        };
 
-        Err(KsError::runtime(&format!(
-            "Cannot find variable with reference {}",
-            reference
-        )))
+        let scope = self.references_depth_mut(depth)?;
+
+        if let Some(variable) = scope.remove(reference) {
+            Ok(variable)
+        } else {
+            Err(KsError::runtime(&format!(
+                "Cannot find variable with reference {}",
+                reference
+            )))
+        }
     }
 
     pub fn reference(&self, name: &str) -> KsResult<u64> {
@@ -189,10 +195,24 @@ impl Environment {
     }
 
     pub fn add_owner(&mut self, reference: &u64) -> KsResult<()> {
-        let info = self.info_mut(reference)?;
-        info.add_owner();
-
-        Ok(())
+        self.variable_iter(
+            *reference,
+            |this, frame| {
+                let info = this.info_mut(&frame.reference)?;
+                info.add_owner();
+                Ok(())
+            },
+            |this, frame| {
+                let info = this.info_mut(&frame.reference)?;
+                info.add_owner();
+                Ok(())
+            },
+            |this, frame| {
+                let info = this.info_mut(&frame.reference)?;
+                info.add_owner();
+                Ok(())
+            },
+        )
     }
 
     pub fn remove_owner(&mut self, reference: &u64) -> KsResult<()> {
@@ -590,34 +610,22 @@ impl Environment {
         }
     }
 
-    pub fn free(&mut self, reference: &u64) -> KsResult<()> {
-        let depth = {
-            let info = self.info(reference)?;
-            info.depth()
-        };
-
-        let scope = &mut self.references_depth_mut(*depth)?;
-        if let Some(variable) = scope.remove(reference) {
-            self.tree_reference(variable, |this, frame| {
-                let mut variable = frame.variable;
-                let reference = variable.reference()?;
-                this.remove_owner(&reference)?;
-                if !this.owned(&reference)? {
-                    variable.clear();
-                }
-                Ok(())
-            })?;
-
-            Ok(())
-        } else {
-            Err(KsError::runtime(&format!(
-                "No variable is found with reference {}!",
-                reference
-            )))
+    fn remove_reference(&mut self, reference: u64) -> KsResult<()> {
+        self.remove_owner(&reference)?;
+        if !self.owned(&reference)? {
+            self.variable_remove(&reference)?;
         }
+        Ok(())
     }
 
-    // create a new function here called free_name
+    pub fn free(&mut self, reference: &u64) -> KsResult<()> {
+        self.variable_iter(
+            *reference,
+            |this, frame| this.remove_reference(frame.reference),
+            |this, frame| this.remove_reference(frame.reference),
+            |this, frame| this.remove_reference(frame.reference),
+        )
+    }
 
     pub fn debug(&self) {
         println!("Variables =================");
@@ -657,7 +665,7 @@ impl Environment {
         let variables = self.variables.pop();
         if let Some(variables) = variables {
             for reference in variables.values() {
-                self.remove_owner(&reference)?;
+                self.free(reference)?;
             }
         }
 
