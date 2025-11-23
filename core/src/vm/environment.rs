@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use crate::global::utils::ks_error::KsError;
 use crate::global::utils::ks_result::KsResult;
 
-use super::anchor::collection_type::CollectionType;
 use super::anchor::frame::Frame;
 use super::anchor::reference_frame::ReferenceFrame;
 use super::anchor::tree_reference::TreeReference;
