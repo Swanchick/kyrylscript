@@ -1,11 +1,10 @@
+pub mod compiler;
+pub mod global;
 pub mod kyryl_script;
 pub mod lexer;
-pub mod parser;
-pub mod compiler;
-pub mod vm;
 pub mod native_registry;
-pub mod global;
-
+pub mod parser;
+pub mod vm;
 
 #[cfg(test)]
 mod tests;

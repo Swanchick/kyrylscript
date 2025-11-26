@@ -6,12 +6,11 @@ use crate::parser::parser::Parser;
 
 use crate::vm::virtual_machine::VirtualMachine;
 
-pub struct KyrylScript {
-}
+pub struct KyrylScript {}
 
 impl KyrylScript {
     pub fn new() -> KyrylScript {
-        KyrylScript { }
+        KyrylScript {}
     }
 
     pub fn run_from_file(&self, path: &str) -> io::Result<()> {
@@ -26,10 +25,10 @@ impl KyrylScript {
 
         if let Err(e) = block {
             println!("{}", e);
-            
+
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
-                format!("KyrylScript Parser Layer: \n{}", e.to_string())
+                format!("KyrylScript Parser Layer: \n{}", e.to_string()),
             ));
         }
 

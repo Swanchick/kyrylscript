@@ -202,7 +202,6 @@
 //         Token::IntegerLiteral(123)
 //     ];
 
-
 //     let mut parser = Parser::new(tokens, Vec::new());
 //     let expression = parser.parse_expression().unwrap();
 
@@ -231,7 +230,6 @@
 //     assert_eq!(expression, test_expression);
 // }
 
-
 // #[test]
 // fn test_assigment_statement() {
 //     let source = concat!(
@@ -251,7 +249,7 @@
 
 //     let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new());
 //     let _ = parser.parse_statement().unwrap(); // Parsing first line
-//     let statement = parser.parse_statement().unwrap().unwrap(); // Then second, to ensure that value type is actually type-correct 
+//     let statement = parser.parse_statement().unwrap().unwrap(); // Then second, to ensure that value type is actually type-correct
 
 //     assert_eq!(statement, test_statement);
 // }
@@ -273,7 +271,6 @@
 
 //     assert_eq!(expression, test_expression);
 // }
-
 
 // #[test]
 // fn test_parser_front_unary_op() {
@@ -311,7 +308,6 @@
 
 //     assert_eq!(expression, test_expression);
 // }
-
 
 // #[test]
 // fn test_parser_list_index_1() {
@@ -410,17 +406,16 @@
 //     assert_eq!(expression, test_expression)
 // }
 
-
 // #[test]
 // fn test_parser_callback() {
 //     let source = concat!(
 //         "let test = function() {};\n",
 //     );
 
-//     let test_statement = Statement::VariableDeclaration { 
+//     let test_statement = Statement::VariableDeclaration {
 //         name: String::from("test"),
 //         public: false,
-//         data_type: None, 
+//         data_type: None,
 //         value:  Some(Expression::FunctionLiteral { parameters: Vec::new(), return_type: DataType::void(), block: Vec::new() })
 //     };
 
@@ -430,7 +425,7 @@
 //     let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new());
 //     let statement = parser.parse_statement().unwrap().unwrap();
 
-//     assert_eq!(statement, test_statement); 
+//     assert_eq!(statement, test_statement);
 // }
 
 // #[test]
@@ -441,10 +436,10 @@
 //         "};\n",
 //     );
 
-//     let test_statement = Statement::VariableDeclaration { 
-//         name: String::from("number_32"), 
+//     let test_statement = Statement::VariableDeclaration {
+//         name: String::from("number_32"),
 //         public: false,
-//         data_type: None, 
+//         data_type: None,
 //         value:  Some(Expression::FunctionLiteral { parameters: Vec::new(), return_type: DataType::Int, block: vec![
 //             Statement::ReturnStatement { value: Some(Expression::IntegerLiteral(32)) }
 //         ] })
@@ -456,9 +451,8 @@
 //     let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new());
 //     let statement = parser.parse_statement().unwrap().unwrap();
 
-//     assert_eq!(statement, test_statement); 
+//     assert_eq!(statement, test_statement);
 // }
-
 
 // #[test]
 // fn test_parser_callback_with_parameters_and_type() {
@@ -468,17 +462,17 @@
 //         "};\n",
 //     );
 
-//     let test_statement = Statement::VariableDeclaration { 
-//         name: String::from("sum"), 
+//     let test_statement = Statement::VariableDeclaration {
+//         name: String::from("sum"),
 //         public: false,
-//         data_type: None, 
+//         data_type: None,
 //         value:  Some(Expression::FunctionLiteral { parameters: vec![Parameter {name: String::from("a"), data_type: DataType::Int}, Parameter {name: String::from("b"), data_type: DataType::Int}], return_type: DataType::Int, block: vec![
-//             Statement::ReturnStatement { 
-//                 value: Some(Expression::BinaryOp { 
-//                     left: Box::new(Expression::Identifier(String::from("a"))), 
-//                     operator: Operator::Plus, 
-//                     right: Box::new(Expression::Identifier(String::from("b"))) 
-//                 }) 
+//             Statement::ReturnStatement {
+//                 value: Some(Expression::BinaryOp {
+//                     left: Box::new(Expression::Identifier(String::from("a"))),
+//                     operator: Operator::Plus,
+//                     right: Box::new(Expression::Identifier(String::from("b")))
+//                 })
 //             }
 //         ]})
 //     };
@@ -489,5 +483,5 @@
 //     let mut parser = Parser::new(lexer.get_tokens().clone(), Vec::new());
 //     let statement = parser.parse_statement().unwrap().unwrap();
 
-//     assert_eq!(statement, test_statement); 
+//     assert_eq!(statement, test_statement);
 // }

@@ -4,10 +4,7 @@ use lexer::token::Token;
 
 #[test]
 fn test_lexer_easy() {
-    let source = concat!(
-        "function main() {\n",
-        "}\n"
-    );
+    let source = concat!("function main() {\n", "}\n");
 
     let mut lexer = Lexer::new(source.to_string());
     lexer.lexer().unwrap();
@@ -18,14 +15,13 @@ fn test_lexer_easy() {
         Token::LeftParenthesis,
         Token::RightParenthesis,
         Token::LeftBrace,
-        Token::RightBrace
+        Token::RightBrace,
     ];
 
     let tokens = lexer.get_tokens();
 
     assert_eq!(tokens, &expected_tokens);
 }
-
 
 #[test]
 fn test_lexer_from_file() {
@@ -65,7 +61,7 @@ fn test_lexer_from_file() {
         Token::StringLiteral(String::from("Hello World")),
         Token::RightParenthesis,
         Token::Semicolon,
-        Token::RightBrace
+        Token::RightBrace,
     ];
 
     let tokens = lexer.get_tokens();
@@ -73,13 +69,9 @@ fn test_lexer_from_file() {
     assert_eq!(tokens, &expected_tokens);
 }
 
-
 #[test]
 fn test_lexer_identefier_underscore() {
-    let source = concat!(
-        "function test_function() {\n",
-        "}\n"
-    );
+    let source = concat!("function test_function() {\n", "}\n");
 
     let mut lexer = Lexer::new(source.to_string());
     lexer.lexer().unwrap();
@@ -90,7 +82,7 @@ fn test_lexer_identefier_underscore() {
         Token::LeftParenthesis,
         Token::RightParenthesis,
         Token::LeftBrace,
-        Token::RightBrace
+        Token::RightBrace,
     ];
 
     let tokens = lexer.get_tokens();
