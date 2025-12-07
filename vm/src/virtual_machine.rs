@@ -1,15 +1,15 @@
 use std::collections::HashMap;
 
-use crate::compiler::constant::Constant;
-use crate::compiler::function::Function;
-use crate::compiler::instruction::Instruction;
-use crate::global::constants::{
+use core::compiler::constant::Constant;
+use core::compiler::function::Function;
+use core::compiler::instruction::Instruction;
+use core::global::constants::{
     FUNCTION_ENCAPSULATION, MAIN_FUNCTION, MAX_DEPTH_RECURSION, MIN_SCOPES,
 };
-use crate::global::utils::ks_error::KsError;
-use crate::global::utils::ks_result::KsResult;
-use crate::native_registry::native_registry::NativeRegistry;
-use crate::native_registry::native_types::NativeTypes;
+use core::global::utils::ks_error::KsError;
+use core::global::utils::ks_result::KsResult;
+use core::native_registry::native_registry::NativeRegistry;
+use core::native_registry::native_types::NativeTypes;
 
 use super::call_stack::CallStack;
 use super::environment::Environment;

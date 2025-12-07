@@ -1,5 +1,5 @@
-use crate::compiler::instruction::Instruction;
-use crate::global::constants::Instructions;
+use core::compiler::instruction::Instruction;
+use core::global::constants::Instructions;
 
 #[derive(Debug)]
 pub struct CallStack {

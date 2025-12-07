@@ -1,4 +1,4 @@
-use crate::vm::var_info::VarInfo;
+use super::var_info::VarInfo;
 
 #[derive(Debug)]
 pub enum TailStack {

@@ -1,8 +1,9 @@
 [workspace]
 members = [
-    "core", 
-    "cli", 
-    "ks_std"
+    "core",
+    "cli",
+    "ks_std",
+    "vm",
 ]
 
 resolver = "3"
