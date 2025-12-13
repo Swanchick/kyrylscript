@@ -8,5 +8,5 @@ edition = "2024"
 path = "src/lib.rs"
 
 [dependencies]
-core = { path = "../core" }
-ks_std = { path = "../ks_std" }
+global = { path = "../global" }
+native = { path = "../native" }

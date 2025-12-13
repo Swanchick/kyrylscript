@@ -1,4 +1,3 @@
 pub mod compiler;
-pub mod constant;
+pub mod constants;
 pub mod function;
-pub mod instruction;

@@ -1,4 +1,4 @@
-use crate::vm::variable::Variable;
+use crate::variable::variable::Variable;
 
 pub struct Frame {
     pub variable: Variable,

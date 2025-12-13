@@ -1,5 +1,5 @@
-use crate::global::utils::ks_error::KsError;
-use crate::global::utils::ks_result::KsResult;
+use global::utils::ks_error::KsError;
+use global::utils::ks_result::KsResult;
 
 use super::variable::Variable;
 

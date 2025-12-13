@@ -4,6 +4,8 @@ members = [
     "cli",
     "ks_std",
     "vm",
+    "global",
+    "native",
 ]
 
 resolver = "3"
@@ -11,6 +13,7 @@ default-members = ["cli"]
 
 [workspace.dependencies]
 core = { path = "core" }
+vm = { path = "vm" }
 
 [workspace.package]
 version = "0.5.0"

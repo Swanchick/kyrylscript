@@ -21,7 +21,7 @@ pub enum DataType {
     },
 }
 
-impl DataType {    
+impl DataType {
     pub fn from_parameters(parameters: &Vec<Parameter>) -> Vec<DataType> {
         let mut out: Vec<DataType> = Vec::new();
 

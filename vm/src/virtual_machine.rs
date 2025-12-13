@@ -1,23 +1,21 @@
 use std::collections::HashMap;
 
-use core::compiler::constant::Constant;
-use core::compiler::function::Function;
-use core::compiler::instruction::Instruction;
-use core::global::constants::{
-    FUNCTION_ENCAPSULATION, MAIN_FUNCTION, MAX_DEPTH_RECURSION, MIN_SCOPES,
-};
-use core::global::utils::ks_error::KsError;
-use core::global::utils::ks_result::KsResult;
-use core::native_registry::native_registry::NativeRegistry;
-use core::native_registry::native_types::NativeTypes;
+use crate::constant::Constant;
+use crate::constants::{FUNCTION_ENCAPSULATION, MAIN_FUNCTION, MAX_DEPTH_RECURSION, MIN_SCOPES};
+use crate::function::Function;
+use crate::instruction::Instruction;
+use global::utils::ks_error::KsError;
+use global::utils::ks_result::KsResult;
+use native::native_registry::NativeRegistry;
+use native::native_types::NativeTypes;
 
-use super::call_stack::CallStack;
-use super::environment::Environment;
-use super::tail_stack::TailStack;
-use super::value::Value;
-use super::var_info::VarInfo;
-use super::variable::Variable;
-use super::variable_stack::VariableStack;
+use crate::call_stack::CallStack;
+use crate::environment::Environment;
+use crate::tail_stack::TailStack;
+use crate::variable::value::Value;
+use crate::variable::var_info::VarInfo;
+use crate::variable::variable::Variable;
+use crate::variable::variable_stack::VariableStack;
 
 pub struct VirtualMachine {
     environment: Environment,

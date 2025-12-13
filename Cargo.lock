@@ -13,6 +13,13 @@ dependencies = [
 [[package]]
 name = "core"
 version = "0.5.0"
+dependencies = [
+ "vm",
+]
+
+[[package]]
+name = "global"
+version = "0.5.0"
 
 [[package]]
 name = "ks_std"
@@ -22,9 +29,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "native"
+version = "0.5.0"
+
+[[package]]
 name = "vm"
 version = "0.5.0"
 dependencies = [
- "core",
- "ks_std",
+ "global",
+ "native",
 ]

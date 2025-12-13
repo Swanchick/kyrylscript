@@ -1,24 +1,21 @@
-use crate::global::constants::Instructions;
+use crate::constants::Instructions;
 
 #[derive(Debug, Clone)]
 pub struct Function {
     instructions: Instructions,
-    args: Vec<String>
+    args: Vec<String>,
 }
 
 impl Function {
     pub fn method(instructions: Instructions) -> Function {
-        Function { 
-            instructions, 
-            args: Vec::new()
+        Function {
+            instructions,
+            args: Vec::new(),
         }
     }
 
     pub fn new(instructions: Instructions, args: Vec<String>) -> Function {
-        Function { 
-            instructions, 
-            args 
-        }
+        Function {instructions,args }
     }
 
     pub fn get_args(&self) -> &Vec<String> {
@@ -29,3 +26,4 @@ impl Function {
         &self.instructions
     }
 }
+

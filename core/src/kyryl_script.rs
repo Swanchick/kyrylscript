@@ -4,7 +4,7 @@ use crate::compiler::compiler::Compiler;
 use crate::lexer::lexer::Lexer;
 use crate::parser::parser::Parser;
 
-use crate::vm::virtual_machine::VirtualMachine;
+// use crate::vm::virtual_machine::VirtualMachine;
 
 pub struct KyrylScript {}
 
@@ -38,12 +38,12 @@ impl KyrylScript {
         compiler.start_compile(&block);
         compiler.display();
         println!("====================");
-        let mut vm = VirtualMachine::from(compiler.functions());
-        let result = vm.initialize();
+        // let mut vm = VirtualMachine::from(compiler.functions());
+        // let result = vm.initialize();
 
-        if let Err(e) = result {
-            e.display();
-        }
+        // if let Err(e) = result {
+        //     e.display();
+        // }
 
         Ok(())
     }

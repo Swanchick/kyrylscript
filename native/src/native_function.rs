@@ -1,7 +1,7 @@
-use crate::global::data_type::DataType;
-use crate::global::utils::ks_result::KsResult;
-use crate::vm::environment::Environment;
-use crate::vm::variable::Variable;
+use global::data_type::DataType;
+use global::utils::ks_result::KsResult;
+use vm::environment::Environment;
+use vm::variable::Variable;
 
 #[derive(Debug, Clone)]
 pub struct NativeFunction {

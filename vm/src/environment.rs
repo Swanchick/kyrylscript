@@ -1,16 +1,17 @@
 use std::collections::HashMap;
 
-use crate::global::utils::ks_error::KsError;
-use crate::global::utils::ks_result::KsResult;
+use global::utils::ks_error::KsError;
+use global::utils::ks_result::KsResult;
+
+use crate::variable::value::Value;
+use crate::variable::var_info::VarInfo;
+use crate::variable::variable::Variable;
+use crate::variable::variable_frame::VariableFrame;
+use crate::variable::variable_iter::VariableIter;
 
 use super::anchor::frame::Frame;
 use super::anchor::reference_frame::ReferenceFrame;
 use super::anchor::tree_reference::TreeReference;
-use super::anchor::variable_frame::VariableFrame;
-use super::anchor::variable_iter::VariableIter;
-use super::value::Value;
-use super::var_info::VarInfo;
-use super::variable::Variable;
 
 type Scope = HashMap<String, u64>;
 type ScopeReference = HashMap<u64, Variable>;

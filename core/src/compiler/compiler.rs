@@ -1,33 +1,31 @@
 use std::collections::HashMap;
+use vm::instruction::Instruction;
 
-use super::instruction::Instruction;
 use super::constant::Constant;
 
 use crate::global::constants::{
-    Instructions,
-    ANONYNOUS_FUNCTION_ENCAPSULATION,
-    FUNCTION_ENCAPSULATION,
-    ITERATOR_LIST_NAME,
-    ITERATOR_NAME,
-    MAIN_FUNCTION
+    ANONYNOUS_FUNCTION_ENCAPSULATION, FUNCTION_ENCAPSULATION, ITERATOR_LIST_NAME, ITERATOR_NAME,
+    Instructions, MAIN_FUNCTION,
 };
 
 use crate::compiler::function::Function;
+use crate::parser::expression::Expression;
 use crate::parser::identifier_tail::IdentifierTail;
 use crate::parser::operator::Operator;
-use crate::parser::expression::Expression;
 use crate::parser::statement::Statement;
+
+type Instructions = Vec<Instruction>;
 
 pub struct Compiler {
     functions: HashMap<String, Function>,
-    last_anonymous_function: usize
+    last_anonymous_function: usize,
 }
 
 impl Compiler {
     pub fn new() -> Compiler {
         Compiler {
             functions: HashMap::new(),
-            last_anonymous_function: 0
+            last_anonymous_function: 0,
         }
     }
 
@@ -48,7 +46,7 @@ impl Compiler {
         self.functions.clone()
     }
 
-    pub fn get_instructions(&self, name: &str) -> Option<&Function>{
+    pub fn get_instructions(&self, name: &str) -> Option<&Function> {
         self.functions.get(name)
     }
 
@@ -57,7 +55,8 @@ impl Compiler {
 
         instructions = self.compile_statments(statements, instructions);
 
-        self.functions.insert(String::from(MAIN_FUNCTION), Function::method(instructions));
+        self.functions
+            .insert(String::from(MAIN_FUNCTION), Function::method(instructions));
     }
 
     fn has_return(&self, instructions: &Instructions) -> bool {
@@ -68,7 +67,11 @@ impl Compiler {
         }
     }
 
-    pub fn compile_statments(&mut self, statements: &Vec<Statement>, mut instructions: Instructions) -> Instructions {
+    pub fn compile_statments(
+        &mut self,
+        statements: &Vec<Statement>,
+        mut instructions: Instructions,
+    ) -> Instructions {
         for statement in statements {
             let mut statement_instructions = self.compile_statment(statement);
 
@@ -84,7 +87,12 @@ impl Compiler {
         instructions
     }
 
-    fn compile_identity(&mut self, segments: &Vec<IdentifierTail>, mut instructions: Instructions, save: bool) -> Instructions {
+    fn compile_identity(
+        &mut self,
+        segments: &Vec<IdentifierTail>,
+        mut instructions: Instructions,
+        save: bool,
+    ) -> Instructions {
         for (i, segment) in segments.iter().enumerate() {
             let is_first = i == 0;
 
@@ -104,7 +112,7 @@ impl Compiler {
                             instructions.push(Instruction::LoadFromModule(name));
                         }
                     }
-                },
+                }
                 IdentifierTail::Index(index) => {
                     instructions = self.compile_expression(&index, instructions);
                     if save {
@@ -112,7 +120,7 @@ impl Compiler {
                     } else {
                         instructions.push(Instruction::LoadFromList);
                     }
-                },
+                }
                 IdentifierTail::TupleIndex(index) => {
                     if save {
                         instructions.push(Instruction::LoadFromTupleSave(*index as usize));
@@ -160,17 +168,16 @@ impl Compiler {
                 };
 
                 instructions.push(store);
-            },
+            }
             Statement::Assignment { segments, value } => {
                 instructions = self.compile_identity(segments, instructions, true);
                 instructions = self.compile_expression(value, instructions);
 
                 instructions.push(Instruction::Assign);
-            },
+            }
 
             Statement::AddValue { segments, value } => {
                 instructions = self.compile_identity(segments, instructions, true);
-
 
                 // instructions.push(Instruction::LoadVar(name.clone()));
                 // instructions = self.compile_expression(value, instructions);
@@ -178,7 +185,7 @@ impl Compiler {
                 // instructions.push(Instruction::Add);
 
                 // instructions.push(Instruction::Store(name.clone()));
-            },
+            }
 
             Statement::RemoveValue { segments, value } => {
                 // instructions.push(Instruction::LoadVar(name.clone()));
@@ -186,7 +193,7 @@ impl Compiler {
 
                 // instructions.push(Instruction::Minus);
                 // instructions.push(Instruction::Store(name.clone()));
-            },
+            }
 
             Statement::ReturnStatement { value } => {
                 if let Some(value) = value {
@@ -196,7 +203,7 @@ impl Compiler {
                 }
 
                 instructions.push(Instruction::Return);
-            },
+            }
 
             Statement::IfStatement {
                 condition,
@@ -212,7 +219,6 @@ impl Compiler {
 
                 let mut jump_distance = body_len + 1;
 
-
                 let mut else_body = if let Some(else_body) = else_body {
                     jump_distance += 1;
 
@@ -226,12 +232,9 @@ impl Compiler {
                 instructions.push(Instruction::Jump(else_body.len() as i32 + 1));
                 instructions.append(&mut else_body);
                 instructions.push(Instruction::Exit);
-            },
+            }
 
-            Statement::WhileStatement {
-                condition,
-                body
-            } => {
+            Statement::WhileStatement { condition, body } => {
                 let mut body = self.compile_statments(body, Vec::new());
                 let body_len = body.len() as i32;
 
@@ -245,13 +248,9 @@ impl Compiler {
                 instructions.append(&mut body);
                 instructions.push(Instruction::Exit);
                 instructions.push(Instruction::Jump(-body_len - condition_len - 3));
-            },
+            }
 
-            Statement::ForLoopStatement {
-                name,
-                list,
-                body
-            } => {
+            Statement::ForLoopStatement { name, list, body } => {
                 let name = name.clone();
                 let iter_name = format!("{}{}", ITERATOR_NAME, name);
                 let iter_list_name = format!("{}{}", ITERATOR_LIST_NAME, name);
@@ -296,16 +295,15 @@ impl Compiler {
                 let for_body_len = for_body.len() as i32;
                 condition_body.push(Instruction::JumpIfFalse(for_body_len + 1));
 
-
                 instructions.append(&mut condition_body);
                 instructions.append(&mut for_body);
                 instructions.push(Instruction::Exit);
-            },
+            }
 
             Statement::Expression { value } => {
                 instructions = self.compile_expression(value, instructions);
                 instructions.push(Instruction::End);
-            },
+            }
 
             Statement::Function {
                 name,
@@ -320,18 +318,19 @@ impl Compiler {
                 let mut function_instructions: Instructions = Vec::new();
                 function_instructions = self.compile_statments(body, function_instructions);
 
-                let args: Vec<String> =
-                    parameters
-                        .iter()
-                        .map(|parameter| parameter.name.clone())
-                        .collect();
+                let args: Vec<String> = parameters
+                    .iter()
+                    .map(|parameter| parameter.name.clone())
+                    .collect();
 
                 self.functions.insert(
                     final_function_name.clone(),
-                    Function::new(function_instructions, args)
+                    Function::new(function_instructions, args),
                 );
 
-                instructions.push(Instruction::LoadConst(Constant::Function(final_function_name)));
+                instructions.push(Instruction::LoadConst(Constant::Function(
+                    final_function_name,
+                )));
 
                 let store = if *public {
                     Instruction::PubStore(name)
@@ -342,10 +341,7 @@ impl Compiler {
                 instructions.push(store);
             }
 
-            Statement::EarlyReturn {
-                name,
-                body
-            } => {
+            Statement::EarlyReturn { name, body } => {
                 let name = name.clone();
 
                 instructions.push(Instruction::LoadVar(name));
@@ -375,16 +371,14 @@ impl Compiler {
 
                 instructions.push(Instruction::JumpIfFalse(early_body.len() as i32 + 1));
                 instructions.append(&mut early_body);
-
-            },
+            }
 
             Statement::Use {
                 file_name: _,
                 body: _,
                 global: _,
-            } => todo!()
+            } => todo!(),
         }
-
 
         instructions
     }
@@ -393,17 +387,29 @@ impl Compiler {
         self.compile_expression(expression, Vec::new())
     }
 
-    fn compile_expression(&mut self, expression: &Expression, mut instructions: Instructions) -> Instructions {
+    fn compile_expression(
+        &mut self,
+        expression: &Expression,
+        mut instructions: Instructions,
+    ) -> Instructions {
         match expression {
             Expression::NullLiteral => instructions.push(Instruction::LoadConst(Constant::Null)),
-            Expression::IntegerLiteral(integer) => instructions.push(Instruction::LoadConst(Constant::Integer(*integer))),
-            Expression::FloatLiteral(float) => instructions.push(Instruction::LoadConst(Constant::Float(*float))),
-            Expression::StringLiteral(string) => instructions.push(Instruction::LoadConst(Constant::String(string.clone()))),
-            Expression::BooleanLiteral(boolean) => instructions.push(Instruction::LoadConst(Constant::Boolean(*boolean))),
-            
+            Expression::IntegerLiteral(integer) => {
+                instructions.push(Instruction::LoadConst(Constant::Integer(*integer)))
+            }
+            Expression::FloatLiteral(float) => {
+                instructions.push(Instruction::LoadConst(Constant::Float(*float)))
+            }
+            Expression::StringLiteral(string) => {
+                instructions.push(Instruction::LoadConst(Constant::String(string.clone())))
+            }
+            Expression::BooleanLiteral(boolean) => {
+                instructions.push(Instruction::LoadConst(Constant::Boolean(*boolean)))
+            }
+
             Expression::Identifier(segments) => {
                 instructions = self.compile_identity(segments, instructions, false);
-            },
+            }
 
             Expression::FunctionCall(name, arguments) => {
                 for argument in arguments {
@@ -412,7 +418,7 @@ impl Compiler {
 
                 instructions.push(Instruction::LoadVar(name.clone()));
                 instructions.push(Instruction::Call(arguments.len()));
-            },
+            }
 
             Expression::ListLiteral(elements) => {
                 for element in elements {
@@ -420,7 +426,7 @@ impl Compiler {
                 }
 
                 instructions.push(Instruction::LoadList(elements.len()));
-            },
+            }
 
             Expression::TupleLiteral(elements) => {
                 for element in elements {
@@ -428,7 +434,7 @@ impl Compiler {
                 }
 
                 instructions.push(Instruction::LoadTuple(elements.len()));
-            },
+            }
 
             Expression::BinaryOp {
                 left,
@@ -436,7 +442,7 @@ impl Compiler {
                 right,
             } => {
                 instructions = self.compile_binary_op(left, right, operator, instructions);
-            },
+            }
 
             Expression::FunctionLiteral {
                 parameters,
@@ -445,29 +451,25 @@ impl Compiler {
             } => {
                 let function_name = format!(
                     "{}{}",
-                    ANONYNOUS_FUNCTION_ENCAPSULATION,
-                    self.last_anonymous_function
+                    ANONYNOUS_FUNCTION_ENCAPSULATION, self.last_anonymous_function
                 );
 
                 self.last_anonymous_function += 1;
                 let mut function_instructions: Instructions = Vec::new();
                 function_instructions = self.compile_statments(block, function_instructions);
 
-                let args: Vec<String> =
-                    parameters
-                        .iter()
-                        .map(|parameter| parameter.name.clone())
-                        .collect();
+                let args: Vec<String> = parameters
+                    .iter()
+                    .map(|parameter| parameter.name.clone())
+                    .collect();
 
                 self.functions.insert(
                     function_name.clone(),
-                    Function::new(function_instructions, args)
+                    Function::new(function_instructions, args),
                 );
 
-                instructions.push(Instruction::LoadConst(
-                    Constant::Function(function_name)
-                ));
-            },
+                instructions.push(Instruction::LoadConst(Constant::Function(function_name)));
+            }
 
             Expression::UnaryOp {
                 expression,
@@ -484,7 +486,7 @@ impl Compiler {
                 instructions = self.compile_expression(&index, instructions);
 
                 instructions.push(Instruction::LoadFromList);
-            },
+            }
 
             Expression::TupleIndex { left, indeces } => {
                 instructions = self.compile_expression(&left, instructions);
@@ -501,7 +503,7 @@ impl Compiler {
                 }
 
                 instructions.push(Instruction::LoadModule(module.len()));
-            },
+            }
         }
 
         instructions
@@ -512,7 +514,7 @@ impl Compiler {
         left: &Box<Expression>,
         right: &Box<Expression>,
         operator: &Operator,
-        mut instructions: Instructions
+        mut instructions: Instructions,
     ) -> Instructions {
         instructions = self.compile_expression(&left, instructions);
         instructions = self.compile_expression(&right, instructions);
@@ -528,7 +530,7 @@ impl Compiler {
             Operator::LessEqual => instructions.push(Instruction::LessEq),
             Operator::Less => instructions.push(Instruction::Less),
             Operator::NotEqual => instructions.push(Instruction::NotEq),
-            _ => unreachable!()
+            _ => unreachable!(),
         }
 
         instructions
@@ -538,14 +540,14 @@ impl Compiler {
         &mut self,
         expression: &Box<Expression>,
         operator: &Operator,
-        mut instructions: Instructions
+        mut instructions: Instructions,
     ) -> Instructions {
         instructions = self.compile_expression(&expression, instructions);
 
         match operator {
             Operator::Not => instructions.push(Instruction::Not),
             Operator::Minus => instructions.push(Instruction::Minus),
-            _ => unreachable!()
+            _ => unreachable!(),
         }
 
         instructions
@@ -563,15 +565,15 @@ impl Compiler {
             Operator::PlusPlus => {
                 instructions.push(Instruction::LoadConst(Constant::Integer(1)));
                 instructions.push(Instruction::Add);
-            },
+            }
             Operator::MinusMinus => {
                 instructions.push(Instruction::LoadConst(Constant::Integer(1)));
                 instructions.push(Instruction::Minus);
-            },
+            }
             Operator::Clone => {
                 instructions.push(Instruction::Clone);
-            },
-            _ => unreachable!()
+            }
+            _ => unreachable!(),
         }
 
         instructions
