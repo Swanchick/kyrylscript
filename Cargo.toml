@@ -1,19 +1,19 @@
 [workspace]
 members = [
-    "core",
-    "cli",
-    "ks_std",
-    "vm",
-    "global",
-    "native",
+    "workspace/core",
+    "workspace/cli",
+    "workspace/ks_std",
+    "workspace/vm",
+    "workspace/global",
+    "workspace/native",
 ]
 
-resolver = "3"
-default-members = ["cli"]
+resolver = "2"
+default-members = ["workspace/cli"]
 
 [workspace.dependencies]
-core = { path = "core" }
-vm = { path = "vm" }
+core = { path = "workspace/core" }
+vm = { path = "workspace/vm" }
 
 [workspace.package]
 version = "0.5.0"

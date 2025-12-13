@@ -15,7 +15,7 @@ impl Function {
     }
 
     pub fn new(instructions: Instructions, args: Vec<String>) -> Function {
-        Function {instructions,args }
+        Function { instructions, args }
     }
 
     pub fn get_args(&self) -> &Vec<String> {
@@ -26,4 +26,3 @@ impl Function {
         &self.instructions
     }
 }
-
