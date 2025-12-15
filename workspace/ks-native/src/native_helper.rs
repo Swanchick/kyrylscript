@@ -1,17 +1,20 @@
-use crate::vm::environment::Environment;
-use crate::vm::variable::Variable;
-use global::utils::ks_result::KsResult;
+use ks_global::utils::ks_result::KsResult;
 
-pub struct NativeHelper<'a> {
-    environment: &'a mut Environment,
+use crate::{native_environment::NativeEnvironment, native_types::NativeType};
+
+pub struct NativeHelper<'a, T>
+where
+    T: NativeEnvironment,
+{
+    environment: &'a mut T,
 }
 
-impl<'a> NativeHelper<'a> {
-    pub fn from(environment: &'a mut Environment) -> NativeHelper<'a> {
+impl<'a, T: NativeEnvironment> NativeHelper<'a, T> {
+    pub fn from(environment: &'a mut T) -> NativeHelper<'a, T> {
         NativeHelper { environment }
     }
 
-    pub fn create_collections(&mut self, variables: Vec<Variable>) -> KsResult<Vec<u64>> {
+    pub fn create_collections(&mut self, variables: Vec<NativeType>) -> KsResult<Vec<u64>> {
         let mut references: Vec<u64> = Vec::new();
 
         for variable in variables {

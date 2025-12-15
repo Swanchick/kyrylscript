@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
 use super::native_function::NativeFunction;
-use super::native_types::NativeTypes;
+use super::native_types::NativeType;
 
 pub struct NativeBuffer {
-    natives: HashMap<String, NativeTypes>,
+    natives: HashMap<String, NativeType>,
 }
 
 impl NativeBuffer {
@@ -14,15 +14,15 @@ impl NativeBuffer {
         }
     }
 
-    pub fn add(&mut self, name: &str, native: NativeTypes) {
+    pub fn add(&mut self, name: &str, native: NativeType) {
         self.natives.insert(name.to_string(), native);
     }
 
     pub fn add_function(&mut self, name: &str, native_function: NativeFunction) {
-        self.add(name, NativeTypes::Function(native_function));
+        self.add(name, NativeType::Function(native_function));
     }
 
-    pub fn get_table(&self) -> &HashMap<String, NativeTypes> {
+    pub fn get_table(&self) -> &HashMap<String, NativeType> {
         &self.natives
     }
 }
