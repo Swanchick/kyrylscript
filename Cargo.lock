@@ -3,39 +3,42 @@
 version = 4
 
 [[package]]
-name = "cli"
+name = "ks-cli"
 version = "0.5.0"
 dependencies = [
- "core",
- "ks_std",
+ "ks-core",
+ "ks-std",
 ]
 
 [[package]]
-name = "core"
+name = "ks-core"
 version = "0.5.0"
 dependencies = [
- "vm",
+ "ks-vm",
 ]
 
 [[package]]
-name = "global"
+name = "ks-global"
 version = "0.5.0"
 
 [[package]]
-name = "ks_std"
+name = "ks-native"
 version = "0.5.0"
 dependencies = [
- "core",
+ "ks-global",
 ]
 
 [[package]]
-name = "native"
-version = "0.5.0"
-
-[[package]]
-name = "vm"
+name = "ks-std"
 version = "0.5.0"
 dependencies = [
- "global",
- "native",
+ "ks-core",
+]
+
+[[package]]
+name = "ks-vm"
+version = "0.5.0"
+dependencies = [
+ "ks-global",
+ "ks-native",
 ]

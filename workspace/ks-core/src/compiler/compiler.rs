@@ -1,5 +1,5 @@
+use ks_vm::instruction::Instruction;
 use std::collections::HashMap;
-use vm::instruction::Instruction;
 
 use super::constant::Constant;
 

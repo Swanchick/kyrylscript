@@ -4,8 +4,8 @@ use crate::constant::Constant;
 use crate::constants::{FUNCTION_ENCAPSULATION, MAIN_FUNCTION, MAX_DEPTH_RECURSION, MIN_SCOPES};
 use crate::function::Function;
 use crate::instruction::Instruction;
-use global::utils::ks_error::KsError;
-use global::utils::ks_result::KsResult;
+use ks_global::utils::ks_error::KsError;
+use ks_global::utils::ks_result::KsResult;
 use native::native_registry::NativeRegistry;
 use native::native_types::NativeTypes;
 

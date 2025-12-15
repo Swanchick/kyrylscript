@@ -1,6 +1,6 @@
-use crate::global::utils::ks_result::KsResult;
 use crate::vm::environment::Environment;
 use crate::vm::variable::Variable;
+use global::utils::ks_result::KsResult;
 
 pub struct NativeHelper<'a> {
     environment: &'a mut Environment,

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use global::utils::ks_error::KsError;
-use global::utils::ks_result::KsResult;
+use ks_global::utils::ks_error::KsError;
+use ks_global::utils::ks_result::KsResult;
 
 use crate::variable::value::Value;
 use crate::variable::var_info::VarInfo;

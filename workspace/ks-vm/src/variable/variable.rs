@@ -1,4 +1,4 @@
-use global::utils::{ks_error::KsError, ks_result::KsResult};
+use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
 
 use super::value::Value;
 

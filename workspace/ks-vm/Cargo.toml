@@ -1,5 +1,5 @@
 [package]
-name = "core"
+name = "ks-vm"
 authors.workspace = true
 version.workspace = true
 edition = "2024"
@@ -8,4 +8,5 @@ edition = "2024"
 path = "src/lib.rs"
 
 [dependencies]
-vm = { path = "../vm" }
+ks-global = { path = "../ks-global" }
+ks-native = { path = "../ks-native" }
