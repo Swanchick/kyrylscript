@@ -8,10 +8,10 @@ use super::constants::{
     ANONYNOUS_FUNCTION_ENCAPSULATION, FUNCTION_ENCAPSULATION, ITERATOR_LIST_NAME, ITERATOR_NAME,
     MAIN_FUNCTION,
 };
-use crate::parser::expression::Expression;
-use crate::parser::identifier_tail::IdentifierTail;
-use crate::parser::operator::Operator;
-use crate::parser::statement::Statement;
+use crate::old_parser::expression::Expression;
+use crate::old_parser::identifier_tail::IdentifierTail;
+use crate::old_parser::operator::Operator;
+use crate::old_parser::statement::Statement;
 
 type Instructions = Vec<Instruction>;
 

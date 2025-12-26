@@ -5,7 +5,7 @@ use ks_vm::function::Function;
 
 use crate::compiler::compiler::Compiler;
 use crate::lexer::lexer::Lexer;
-use crate::parser::parser::Parser;
+use crate::old_parser::parser::Parser;
 
 pub struct KyrylScript {}
 

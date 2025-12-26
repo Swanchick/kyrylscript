@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::parser::parameter::Parameter;
+use crate::old_parser::parameter::Parameter;
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum DataType {

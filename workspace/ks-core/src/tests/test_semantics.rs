@@ -1,5 +1,5 @@
 use crate::lexer::lexer::Lexer;
-use crate::parser::parser::Parser;
+use crate::old_parser::parser::Parser;
 
 #[test]
 fn test_variable_declatarion_with_type() {

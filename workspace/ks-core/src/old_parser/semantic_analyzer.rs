@@ -4,8 +4,8 @@ use std::io;
 use std::rc::Rc;
 
 use super::data_type::DataType;
-use crate::parser::identifier_tail::IdentifierTail;
-use crate::parser::operator::Operator;
+use crate::old_parser::identifier_tail::IdentifierTail;
+use crate::old_parser::operator::Operator;
 
 use super::analyzer_enviroment::AnalyzerEnviroment;
 use super::expression::Expression;
