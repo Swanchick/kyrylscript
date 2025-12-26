@@ -8,3 +8,4 @@ pub mod instruction;
 mod tail_stack;
 mod variable;
 pub mod virtual_machine;
+pub mod native;

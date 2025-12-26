@@ -3,15 +3,14 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use super::native_buffer::NativeBuffer;
-
-use super::native_types::NativeTypes;
+use super::native_types::NativeType;
 
 thread_local! {
     static NATIVE_REGISTRY: Rc<RefCell<NativeRegistry>> = NativeRegistry::new();
 }
 
 pub struct NativeRegistry {
-    natives: HashMap<String, NativeTypes>,
+    natives: HashMap<String, NativeType>,
 }
 
 impl NativeRegistry {
@@ -31,11 +30,11 @@ impl NativeRegistry {
         }
     }
 
-    pub fn get_natives(&self) -> &HashMap<String, NativeTypes> {
+    pub fn get_natives(&self) -> &HashMap<String, NativeType> {
         &self.natives
     }
 
-    pub fn get_native(&self, name: &str) -> Option<&NativeTypes> {
+    pub fn get_native(&self, name: &str) -> Option<&NativeType> {
         self.natives.get(name)
     }
 }

@@ -8,4 +8,5 @@ edition = "2024"
 path = "src/lib.rs"
 
 [dependencies]
+ks-global = { path = "../ks-global" }
 ks-vm = { path = "../ks-vm" }

@@ -4,10 +4,10 @@ use crate::constant::Constant;
 use crate::constants::{FUNCTION_ENCAPSULATION, MAIN_FUNCTION, MAX_DEPTH_RECURSION, MIN_SCOPES};
 use crate::function::Function;
 use crate::instruction::Instruction;
+use crate::native::native_registry::NativeRegistry;
+use crate::native::native_types::NativeType;
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
-use native::native_registry::NativeRegistry;
-use native::native_types::NativeTypes;
 
 use crate::call_stack::CallStack;
 use crate::environment::Environment;
@@ -120,7 +120,7 @@ impl VirtualMachine {
                 let native = NativeRegistry::get();
                 let native = native.borrow();
 
-                if let Some(NativeTypes::Function(_)) = native.get_native(name) {
+                if let Some(NativeType::Function(_)) = native.get_native(name) {
                     Value::NativeFunction(name.clone())
                 } else {
                     Value::Function(name.clone())
@@ -202,7 +202,7 @@ impl VirtualMachine {
 
         args.reverse();
 
-        if let Some(NativeTypes::Function(native_function)) = native_function {
+        if let Some(NativeType::Function(native_function)) = native_function {
             let variable = (native_function.function)(&mut self.environment, args)?;
             self.variable_stack.push(VariableStack::Variable(variable));
         }
@@ -1144,21 +1144,22 @@ impl VirtualMachine {
 
         for (name, native) in native.get_natives() {
             let _ = match native {
-                NativeTypes::Function(_) => self
+                NativeType::Function(_) => self
                     .environment
                     .define_variable(name, Variable::empty(Value::NativeFunction(name.clone())))?,
-                NativeTypes::Int(_, int) => self
+                NativeType::Int(int) => self
                     .environment
                     .define_variable(name, Variable::empty(Value::Integer(*int)))?,
-                NativeTypes::Float(_, float) => self
+                NativeType::Float(float) => self
                     .environment
                     .define_variable(name, Variable::empty(Value::Float(*float)))?,
-                NativeTypes::Boolean(_, boolean) => self
+                NativeType::Boolean(boolean) => self
                     .environment
                     .define_variable(name, Variable::empty(Value::Boolean(*boolean)))?,
-                NativeTypes::String(_, string) => self
+                NativeType::String(string) => self
                     .environment
                     .define_variable(name, Variable::empty(Value::String(string.clone())))?,
+                _ => todo!(),
             };
         }
 

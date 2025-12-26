@@ -5,7 +5,6 @@ members = [
     "workspace/ks-std",
     "workspace/ks-vm",
     "workspace/ks-global",
-    "workspace/ks-native",
 ]
 
 resolver = "2"

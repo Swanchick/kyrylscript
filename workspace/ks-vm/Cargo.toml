@@ -9,4 +9,3 @@ path = "src/lib.rs"
 
 [dependencies]
 ks-global = { path = "../ks-global" }
-ks-native = { path = "../ks-native" }

@@ -14,19 +14,13 @@ dependencies = [
 name = "ks-core"
 version = "0.5.0"
 dependencies = [
+ "ks-global",
  "ks-vm",
 ]
 
 [[package]]
 name = "ks-global"
 version = "0.5.0"
-
-[[package]]
-name = "ks-native"
-version = "0.5.0"
-dependencies = [
- "ks-global",
-]
 
 [[package]]
 name = "ks-std"
@@ -40,5 +34,4 @@ name = "ks-vm"
 version = "0.5.0"
 dependencies = [
  "ks-global",
- "ks-native",
 ]
