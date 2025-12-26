@@ -1,19 +1,16 @@
+use std::collections::HashMap;
 use std::io;
+
+use ks_vm::function::Function;
 
 use crate::compiler::compiler::Compiler;
 use crate::lexer::lexer::Lexer;
 use crate::parser::parser::Parser;
 
-// use crate::vm::virtual_machine::VirtualMachine;
-
 pub struct KyrylScript {}
 
 impl KyrylScript {
-    pub fn new() -> KyrylScript {
-        KyrylScript {}
-    }
-
-    pub fn run_from_file(&self, path: &str) -> io::Result<()> {
+    pub fn compile_from_file(&self, path: &str) -> io::Result<HashMap<String, Function>> {
         let mut lexer = Lexer::load(path)?;
         lexer.lexer()?;
 
@@ -37,14 +34,7 @@ impl KyrylScript {
         let mut compiler = Compiler::new();
         compiler.start_compile(&block);
         compiler.display();
-        println!("====================");
-        // let mut vm = VirtualMachine::from(compiler.functions());
-        // let result = vm.initialize();
 
-        // if let Err(e) = result {
-        //     e.display();
-        // }
-
-        Ok(())
+        Ok(compiler.to_functions())
     }
 }

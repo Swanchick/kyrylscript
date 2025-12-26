@@ -8,3 +8,4 @@ publish = false
 [dependencies]
 ks-core = { path = "../ks-core" }
 ks-std = { path = "../ks-std" }
+ks-vm = { path = "../ks-vm" }
