@@ -71,7 +71,7 @@ fn test_expression_boolean_literal_false() {
 }
 
 #[test]
-fn test_expression_identifier() {
+fn test_expression_identifier_simple() {
     let test_expression =
         Expression::Identifier(vec![IdentifierTail::Name(String::from("variable_name"))]);
 
