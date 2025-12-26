@@ -46,6 +46,13 @@ impl Ast {
         loop {
             match self.advance() {
                 Ok(Token::Identifier(name)) => segments.push(IdentifierTail::Name(name.to_owned())),
+                Ok(Token::Dot) => {}
+                Ok(Token::LeftSquareBracket) => {
+                    let expression = self.expression()?;
+                    self.consume_token(Token::RightSquareBracket)?;
+
+                    segments.push(IdentifierTail::Index(expression));
+                }
                 _ => break,
             }
         }
@@ -75,13 +82,16 @@ impl Ast {
         }
     }
 
-    fn match_token(&mut self, token: Token) -> bool {
-        let token_to_compare = self.peek();
+    fn consume_token(&mut self, expected_token: Token) -> KsResult<()> {
+        let token_to_compare = self.peek()?;
 
-        if let Ok(token_to_compare) = token_to_compare {
-            *token_to_compare == token
+        if *token_to_compare == expected_token {
+            Ok(())
         } else {
-            false
+            Err(KsError::parse(&format!(
+                "Expected token: {:?} got {:?}!",
+                expected_token, token_to_compare
+            )))
         }
     }
 }
