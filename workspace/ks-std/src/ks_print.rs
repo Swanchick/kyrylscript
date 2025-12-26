@@ -1,9 +1,9 @@
-use core::global::utils::ks_result::KsResult;
-
-use core::vm::environment::Environment;
-use core::vm::value::Value;
-use core::vm::variable::Variable;
 use std::collections::HashMap;
+
+use ks_global::utils::ks_result::KsResult;
+use ks_vm::environment::Environment;
+use ks_vm::variable::Variable;
+use ks_vm::variable::value::Value;
 
 fn collection_to_string(
     environment: &mut Environment,

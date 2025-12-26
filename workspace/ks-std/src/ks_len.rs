@@ -1,9 +1,9 @@
-use core::global::utils::ks_error::KsError;
+use ks_global::utils::ks_error::KsError;
+use ks_global::utils::ks_result::KsResult;
 
-use core::global::utils::ks_result::KsResult;
-use core::vm::environment::Environment;
-use core::vm::value::Value;
-use core::vm::variable::Variable;
+use ks_vm::environment::Environment;
+use ks_vm::variable::Variable;
+use ks_vm::variable::value::Value;
 
 pub fn ks_len(_: &mut Environment, args: Vec<Variable>) -> KsResult<Variable> {
     if args.len() > 1 {

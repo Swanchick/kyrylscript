@@ -1,7 +1,6 @@
-use core::global::data_type::DataType;
-use core::native_registry::native_buffer::NativeBuffer;
-use core::native_registry::native_function::NativeFunction;
-use core::native_registry::native_registry::NativeRegistry;
+use ks_vm::native::native_buffer::NativeBuffer;
+use ks_vm::native::native_function::NativeFunction;
+use ks_vm::native::native_registry::NativeRegistry;
 
 mod ks_debug;
 mod ks_len;
@@ -18,20 +17,14 @@ use ks_ref::ks_ref;
 pub fn ks_register_std() {
     let mut buffer = NativeBuffer::new();
 
-    buffer.add_function("print", NativeFunction::process(ks_print));
-    buffer.add_function("println", NativeFunction::process(ks_println));
-    buffer.add_function("len", NativeFunction::from(ks_len, DataType::Int));
-    buffer.add_function(
-        "range",
-        NativeFunction::from(ks_range, DataType::List(Box::new(DataType::Int))),
-    );
-    buffer.add_function("ref", NativeFunction::from(ks_ref, DataType::Int));
-    buffer.add_function("debug", NativeFunction::process(ks_debug));
+    buffer.add_function("print", NativeFunction::from(ks_print));
+    buffer.add_function("println", NativeFunction::from(ks_println));
+    buffer.add_function("len", NativeFunction::from(ks_len));
+    buffer.add_function("range", NativeFunction::from(ks_range));
+    buffer.add_function("ref", NativeFunction::from(ks_ref));
+    buffer.add_function("debug", NativeFunction::from(ks_debug));
 
     let registry = NativeRegistry::get();
-    {
-        let mut registry = registry.borrow_mut();
-
-        registry.add_buffer(buffer);
-    }
+    let mut registry = registry.borrow_mut();
+    registry.add_buffer(buffer);
 }

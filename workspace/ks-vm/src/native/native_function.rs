@@ -14,10 +14,4 @@ impl NativeFunction {
     ) -> NativeFunction {
         NativeFunction { function }
     }
-
-    pub fn process(
-        function: fn(environment: &mut Environment, args: Vec<Variable>) -> KsResult<Variable>,
-    ) -> NativeFunction {
-        NativeFunction { function }
-    }
 }

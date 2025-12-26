@@ -27,6 +27,8 @@ name = "ks-std"
 version = "0.5.0"
 dependencies = [
  "ks-core",
+ "ks-global",
+ "ks-vm",
 ]
 
 [[package]]
