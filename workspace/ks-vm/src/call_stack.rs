@@ -17,10 +17,6 @@ impl CallStack {
         }
     }
 
-    pub fn current_step(&self) -> usize {
-        self.step
-    }
-
     pub fn step(&mut self) {
         self.step += 1;
     }
@@ -37,10 +33,6 @@ impl CallStack {
 
     pub fn peek(&self) -> Option<&Instruction> {
         self.instructions.get(self.step)
-    }
-
-    pub fn peek_mut(&mut self) -> Option<&mut Instruction> {
-        self.instructions.get_mut(self.step)
     }
 
     pub fn scopes(&self) -> usize {
