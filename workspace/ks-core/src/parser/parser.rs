@@ -1,8 +1,6 @@
-use crate::global::data_type::DataType;
+use super::data_type::DataType;
 use crate::lexer::token::Token;
 use crate::lexer::token_pos::TokenPos;
-use crate::native_registry::native_registry::NativeRegistry;
-use crate::native_registry::native_types::NativeTypes;
 
 use super::context::Context;
 use super::expression::Expression;
@@ -25,37 +23,10 @@ pub struct Parser {
 
 impl Parser {
     pub fn new(tokens: Vec<Token>, token_pos: Vec<TokenPos>) -> Parser {
-        let mut semantic_analyzer = SemanticAnalyzer::new();
-
-        let registry = NativeRegistry::get();
-        {
-            let registry = registry.borrow();
-
-            for (name, native) in registry.get_natives() {
-                match native {
-                    NativeTypes::Function(function) => {
-                        semantic_analyzer.register_rust_function(name.clone(), function)
-                    }
-                    NativeTypes::Int(name, _) => {
-                        semantic_analyzer.save_variable(name.clone(), DataType::Int)
-                    }
-                    NativeTypes::Boolean(name, _) => {
-                        semantic_analyzer.save_variable(name.clone(), DataType::Bool)
-                    }
-                    NativeTypes::Float(name, _) => {
-                        semantic_analyzer.save_variable(name.clone(), DataType::Float)
-                    }
-                    NativeTypes::String(name, _) => {
-                        semantic_analyzer.save_variable(name.clone(), DataType::String)
-                    }
-                }
-            }
-        }
-
         Parser {
             tokens,
             token_pos,
-            semantic_analyzer,
+            semantic_analyzer: SemanticAnalyzer::new(),
             current_token: 0,
             function_context: Context::None,
         }
@@ -64,33 +35,8 @@ impl Parser {
     pub fn with_semantic_analyzer(
         tokens: Vec<Token>,
         token_pos: Vec<TokenPos>,
-        mut semantic_analyzer: SemanticAnalyzer,
+        semantic_analyzer: SemanticAnalyzer,
     ) -> Parser {
-        let registry = NativeRegistry::get();
-        {
-            let registry = registry.borrow();
-
-            for (name, native) in registry.get_natives() {
-                match native {
-                    NativeTypes::Function(function) => {
-                        semantic_analyzer.register_rust_function(name.clone(), function)
-                    }
-                    NativeTypes::Int(name, _) => {
-                        semantic_analyzer.save_variable(name.clone(), DataType::Int)
-                    }
-                    NativeTypes::Boolean(name, _) => {
-                        semantic_analyzer.save_variable(name.clone(), DataType::Bool)
-                    }
-                    NativeTypes::Float(name, _) => {
-                        semantic_analyzer.save_variable(name.clone(), DataType::Float)
-                    }
-                    NativeTypes::String(name, _) => {
-                        semantic_analyzer.save_variable(name.clone(), DataType::String)
-                    }
-                }
-            }
-        }
-
         Parser {
             tokens,
             token_pos,
@@ -336,21 +282,6 @@ impl Parser {
             return_type: function_type,
             parameters: parameters,
             body: block,
-        })
-    }
-
-    fn parse_early_return(&mut self, name: String) -> io::Result<Statement> {
-        let body: Option<Vec<Statement>> = if self.match_token(&Token::LeftBrace) {
-            Some(self.parse_block_statement()?)
-        } else {
-            None
-        };
-
-        self.consume_token(Token::Semicolon)?;
-
-        Ok(Statement::EarlyReturn {
-            name: name,
-            body: body,
         })
     }
 

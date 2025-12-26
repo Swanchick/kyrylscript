@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use super::identifier_tail::IdentifierTail;
 use super::statement::Statement;
-use crate::global::data_type::DataType;
+use super::data_type::DataType;
 
 use super::parameter::Parameter;
 

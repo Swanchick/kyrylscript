@@ -1,4 +1,4 @@
-use crate::global::data_type::DataType;
+use super::data_type::DataType;
 
 #[derive(Debug, Clone)]
 pub enum Context {

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::io;
 use std::rc::Rc;
 
-use crate::global::data_type::DataType;
+use super::data_type::DataType;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnalyzerEnviroment {

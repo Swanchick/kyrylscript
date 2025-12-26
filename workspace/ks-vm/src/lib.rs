@@ -1,11 +1,11 @@
 mod anchor;
 mod call_stack;
 pub mod constant;
-mod constants;
+pub mod constants;
 mod environment;
 pub mod function;
 pub mod instruction;
+pub mod native;
 mod tail_stack;
 mod variable;
 pub mod virtual_machine;
-pub mod native;

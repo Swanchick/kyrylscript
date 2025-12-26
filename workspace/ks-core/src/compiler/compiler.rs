@@ -1,14 +1,13 @@
 use ks_vm::instruction::Instruction;
 use std::collections::HashMap;
 
-use super::constant::Constant;
+use ks_vm::constant::Constant;
+use ks_vm::function::Function;
 
-use crate::global::constants::{
+use super::constants::{
     ANONYNOUS_FUNCTION_ENCAPSULATION, FUNCTION_ENCAPSULATION, ITERATOR_LIST_NAME, ITERATOR_NAME,
-    Instructions, MAIN_FUNCTION,
+    MAIN_FUNCTION,
 };
-
-use crate::compiler::function::Function;
 use crate::parser::expression::Expression;
 use crate::parser::identifier_tail::IdentifierTail;
 use crate::parser::operator::Operator;

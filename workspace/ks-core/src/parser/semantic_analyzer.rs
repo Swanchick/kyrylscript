@@ -3,8 +3,7 @@ use std::collections::HashMap;
 use std::io;
 use std::rc::Rc;
 
-use crate::global::data_type::DataType;
-use crate::native_registry::native_function::NativeFunction;
+use super::data_type::DataType;
 use crate::parser::identifier_tail::IdentifierTail;
 use crate::parser::operator::Operator;
 
@@ -42,11 +41,11 @@ impl SemanticAnalyzer {
         self.global.clone()
     }
 
-    pub fn register_rust_function(&mut self, name: String, function: &NativeFunction) {
+    pub fn register_rust_function(&mut self, name: String, return_type: DataType) {
         self.local.borrow_mut().add(
             name,
             DataType::RustFunction {
-                return_type: Box::new(function.return_type.clone()),
+                return_type: Box::new(return_type),
             },
         );
     }

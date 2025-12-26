@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::global::data_type::DataType;
+use super::data_type::DataType;
 use crate::parser::analyzer_enviroment::AnalyzerEnviroment;
 use crate::parser::identifier_tail::IdentifierTail;
 
