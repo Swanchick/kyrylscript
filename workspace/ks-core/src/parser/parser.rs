@@ -193,17 +193,37 @@ impl Parser {
 
     fn parse_identifier_tail(&mut self) -> io::Result<Vec<IdentifierTail>> {
         let mut segments: Vec<IdentifierTail> = Vec::new();
+        let mut segment_data_type: Option<DataType> = None;
 
         loop {
             match self.advance() {
                 Some(Token::Identifier(name)) => {
                     if segments.is_empty() {
+                        let current_data_type = self.semantic_analyzer.get_variable(&name)?;
+                        segment_data_type = Some(current_data_type);
                         segments.push(IdentifierTail::Name(name));
+                        continue;
                     }
                 }
                 Some(Token::Dot) => {
                     let name = self.consume_identifier()?;
-                    segments.push(IdentifierTail::Name(name));
+
+                    if let Some(DataType::Module(module_data_type)) = &segment_data_type {
+                        if let Some(current_data_type) = module_data_type.get(&name) {
+                            segment_data_type = Some(current_data_type.clone());
+                            segments.push(IdentifierTail::Name(name));
+                        } else {
+                            return Err(io::Error::new(
+                                io::ErrorKind::InvalidData,
+                                format!("No field in module with name {}!", name),
+                            ));
+                        }
+                    } else {
+                        return Err(io::Error::new(
+                            io::ErrorKind::InvalidData,
+                            "This is not a module!",
+                        ));
+                    }
                 }
                 Some(Token::LeftSquareBracket) => {
                     let index = self.parse_expression()?;
