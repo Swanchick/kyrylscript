@@ -1,10 +1,7 @@
-let person1 = {
-    name: "Kyryl",
-    age: 19
-};
+function test_recursion(a: int): int {
+    if a >= 10 {
+        return 10;
+    }
 
-if true {
-    let person2 = person1;
+    return test_recursion(a + 1);
 }
-
-println(person1);

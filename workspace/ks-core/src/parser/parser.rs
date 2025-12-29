@@ -242,7 +242,6 @@ impl Parser {
         let function_name = self.consume_identifier()?;
 
         self.consume_token(Token::LeftParenthesis)?;
-
         self.semantic_analyzer.enter_function_enviroment();
 
         let parameters = self.parse_parameters()?;
@@ -263,10 +262,6 @@ impl Parser {
         self.function_context = Context::Function {
             return_data: function_data_type.clone(),
         };
-        let block = self.parse_block_statement()?;
-        self.function_context = Context::None;
-
-        self.semantic_analyzer.exit_function_enviroment()?;
 
         if public {
             self.semantic_analyzer
@@ -275,6 +270,11 @@ impl Parser {
             self.semantic_analyzer
                 .save_variable(function_name.clone(), function_data_type);
         }
+
+        let block = self.parse_block_statement()?;
+
+        self.function_context = Context::None;
+        self.semantic_analyzer.exit_function_enviroment()?;
 
         Ok(Statement::Function {
             name: function_name,
