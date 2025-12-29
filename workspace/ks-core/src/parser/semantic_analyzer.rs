@@ -516,7 +516,8 @@ impl SemanticAnalyzer {
     }
 
     pub fn save_variable(&mut self, name: String, data_type: DataType) {
-        self.local.borrow_mut().add(name, data_type);
+        let mut local = self.local.borrow_mut();
+        local.add(name, data_type);
     }
 
     pub fn global_save_variable(&mut self, name: String, data_type: DataType) {

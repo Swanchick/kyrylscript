@@ -268,11 +268,29 @@ impl Parser {
                 Some(Token::LeftParenthesis) => {
                     if self.match_token(&Token::RightParenthesis) {
                         segments.push(IdentifierTail::Call(Vec::new()));
-                    } else {
-                        let arguments = self.parse_function_call_parameters()?;
-                        self.consume_token(Token::RightParenthesis)?;
-                        segments.push(IdentifierTail::Call(arguments));
+                        continue;
                     }
+
+                    let arguments = self.parse_function_call_parameters()?;
+
+                    match &segment_data_type {
+                        Some(DataType::Function {
+                            parameters,
+                            return_type: _,
+                        }) => {
+                            self.check_function_arguments(&arguments, parameters)?;
+                        }
+                        Some(DataType::RustFunction { return_type: _ }) => {}
+                        data_type => {
+                            return Err(io::Error::new(
+                                io::ErrorKind::InvalidData,
+                                format!("Expected a function to call, got {:?}", data_type),
+                            ));
+                        }
+                    }
+
+                    self.consume_token(Token::RightParenthesis)?;
+                    segments.push(IdentifierTail::Call(arguments));
                 }
                 _ => {
                     self.back();
@@ -286,7 +304,6 @@ impl Parser {
         let function_name = self.consume_identifier()?;
 
         self.consume_token(Token::LeftParenthesis)?;
-        self.semantic_analyzer.enter_function_enviroment();
 
         let parameters = self.parse_parameters()?;
 
@@ -315,17 +332,19 @@ impl Parser {
                 .save_variable(function_name.clone(), function_data_type);
         }
 
-        let block = self.parse_block_statement()?;
+        self.semantic_analyzer.enter_function_enviroment();
+
+        let body = self.parse_block_statement()?;
 
         self.function_context = Context::None;
         self.semantic_analyzer.exit_function_enviroment()?;
 
         Ok(Statement::Function {
             name: function_name,
-            public: public,
+            public,
             return_type: function_type,
-            parameters: parameters,
-            body: block,
+            parameters,
+            body,
         })
     }
 
@@ -545,18 +564,47 @@ impl Parser {
     }
 
     fn parse_function_call_parameters(&mut self) -> io::Result<Vec<Expression>> {
-        let mut parameters: Vec<Expression> = Vec::new();
+        let mut args: Vec<Expression> = Vec::new();
 
         loop {
             let expression = self.parse_expression()?;
-            parameters.push(expression);
+            args.push(expression);
 
             if !self.match_token(&Token::Comma) {
                 break;
             }
         }
 
-        Ok(parameters)
+        Ok(args)
+    }
+
+    fn check_function_arguments(
+        &self,
+        args: &[Expression],
+        parameters: &[DataType],
+    ) -> io::Result<()> {
+        if parameters.len() != args.len() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Argument mismatch!",
+            ));
+        }
+
+        for (function_arg_data_type, arg_expresiion) in parameters.iter().zip(args) {
+            let arg_data_type = self.semantic_analyzer.get_data_type(arg_expresiion)?;
+
+            if function_arg_data_type != &arg_data_type {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    format!(
+                        "Argument mismatch, expected {:?} got {:?}",
+                        function_arg_data_type, arg_data_type
+                    ),
+                ));
+            }
+        }
+
+        Ok(())
     }
 
     fn parse_if_statement(&mut self) -> io::Result<Statement> {

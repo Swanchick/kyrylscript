@@ -1,3 +1,3 @@
-let person = (10, 20, "asd");
+function test() {}
 
-let a = person->1;
+test();
