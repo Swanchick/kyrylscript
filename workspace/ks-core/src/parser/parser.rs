@@ -321,15 +321,6 @@ impl Parser {
         })
     }
 
-    fn parse_expression_statement(&mut self) -> io::Result<Statement> {
-        let expression = self.parse_expression()?;
-        self.semantic_analyzer.get_data_type(&expression)?;
-
-        self.consume_token(Token::Semicolon)?;
-
-        Ok(Statement::Expression { value: expression })
-    }
-
     fn parse_add_value_statment(
         &mut self,
         segments: &Vec<IdentifierTail>,
