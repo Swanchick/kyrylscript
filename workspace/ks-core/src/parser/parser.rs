@@ -227,8 +227,23 @@ impl Parser {
                 }
                 Some(Token::LeftSquareBracket) => {
                     let index = self.parse_expression()?;
-                    self.consume_token(Token::RightSquareBracket)?;
+                    let index_data_type = self.semantic_analyzer.get_data_type(&index)?;
 
+                    if !matches!(segment_data_type, Some(DataType::List(_))) {
+                        return Err(io::Error::new(
+                            io::ErrorKind::InvalidData,
+                            "Cannot access element from non list value!",
+                        ));
+                    }
+
+                    if index_data_type != DataType::Int {
+                        return Err(io::Error::new(
+                            io::ErrorKind::InvalidData,
+                            "Expected type integer in indexing the value in list!",
+                        ));
+                    }
+
+                    self.consume_token(Token::RightSquareBracket)?;
                     segments.push(IdentifierTail::Index(index));
                 }
                 Some(Token::Arrow) => {
