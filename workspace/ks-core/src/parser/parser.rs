@@ -229,7 +229,9 @@ impl Parser {
                     let index = self.parse_expression()?;
                     let index_data_type = self.semantic_analyzer.get_data_type(&index)?;
 
-                    if !matches!(segment_data_type, Some(DataType::List(_))) {
+                    if !(matches!(segment_data_type, Some(DataType::List(_)))
+                        || matches!(segment_data_type, Some(DataType::String)))
+                    {
                         return Err(io::Error::new(
                             io::ErrorKind::InvalidData,
                             "Cannot access element from non list value!",
@@ -247,6 +249,13 @@ impl Parser {
                     segments.push(IdentifierTail::Index(index));
                 }
                 Some(Token::Arrow) => {
+                    if !matches!(segment_data_type, Some(DataType::Tuple(_))) {
+                        return Err(io::Error::new(
+                            io::ErrorKind::InvalidData,
+                            "Cannot access element from non tuple value!",
+                        ));
+                    }
+
                     if let Some(Token::IntegerLiteral(int)) = self.advance() {
                         segments.push(IdentifierTail::TupleIndex(int));
                     } else {
