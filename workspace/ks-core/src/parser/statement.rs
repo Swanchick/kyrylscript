@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use super::data_type::DataType;
-use crate::parser::analyzer_enviroment::AnalyzerEnviroment;
+use crate::parser::analyzer_environment::AnalyzerEnvironment;
 use crate::parser::identifier_tail::IdentifierTail;
 
 use super::expression::Expression;
@@ -62,6 +62,6 @@ pub enum Statement {
     Use {
         file_name: String,
         body: Vec<Statement>,
-        global: Rc<RefCell<AnalyzerEnviroment>>,
+        global: Rc<RefCell<AnalyzerEnvironment>>,
     },
 }

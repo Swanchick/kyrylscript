@@ -1,0 +1,8 @@
+[package]
+name = "ks-mcu"
+authors.workspace = true
+version.workspace = true
+edition = "2024"
+
+[lib]
+path = "src/lib.rs"

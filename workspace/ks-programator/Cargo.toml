@@ -1,0 +1,5 @@
+[package]
+name = "ks-programator"
+authors.workspace = true
+version.workspace = true
+edition = "2024"
