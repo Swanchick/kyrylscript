@@ -1,7 +1,6 @@
 use super::data_type::DataType;
 use crate::lexer::token::Token;
 use crate::lexer::token_pos::TokenPos;
-use crate::parser::semantic_analyzer;
 
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
