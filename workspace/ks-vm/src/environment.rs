@@ -227,7 +227,7 @@ impl Environment {
         Ok(())
     }
 
-    pub fn set_owners(&mut self, reference: &Reference, owners: usize) -> KsResult<()> {
+    pub fn set_owners(&mut self, reference: &Reference, owners: Owners) -> KsResult<()> {
         let info = self.info_mut(reference)?;
         info.set_owners(owners);
 
