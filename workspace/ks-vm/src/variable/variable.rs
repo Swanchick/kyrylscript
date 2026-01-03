@@ -1,15 +1,17 @@
 use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
 
+use crate::environment::Reference;
+
 use super::value::Value;
 
 #[derive(Debug, Clone)]
 pub struct Variable {
     value: Value,
-    reference: Option<u64>,
+    reference: Option<Reference>,
 }
 
 impl Variable {
-    pub fn new(value: Value, reference: u64) -> Variable {
+    pub fn new(value: Value, reference: Reference) -> Variable {
         Variable {
             value,
             reference: Some(reference),
@@ -38,7 +40,7 @@ impl Variable {
         &mut self.value
     }
 
-    pub fn reference(&self) -> KsResult<u64> {
+    pub fn reference(&self) -> KsResult<Reference> {
         if let Some(reference) = self.reference {
             Ok(reference)
         } else {
@@ -46,7 +48,7 @@ impl Variable {
         }
     }
 
-    pub fn set_reference(&mut self, reference: &u64) {
+    pub fn set_reference(&mut self, reference: &Reference) {
         self.reference = Some(*reference);
     }
 

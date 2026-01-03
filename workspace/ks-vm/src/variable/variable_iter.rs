@@ -1,7 +1,9 @@
+use crate::environment::Reference;
+
 use std::collections::HashMap;
 
 pub enum VariableIter<'a> {
-    Collection(&'a [u64], usize),
-    Module(&'a HashMap<String, u64>, usize),
+    Collection(&'a [Reference], usize),
+    Module(&'a HashMap<String, Reference>, usize),
     Leaf,
 }

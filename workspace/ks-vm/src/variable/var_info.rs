@@ -2,16 +2,17 @@ use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
 use super::variable::Variable;
+use crate::environment::{Depth, Owners, Reference};
 
 #[derive(Debug)]
 pub struct VarInfo {
-    reference: Option<u64>,
-    depth: usize,
-    owners: usize,
+    reference: Option<Reference>,
+    depth: Depth,
+    owners: Owners,
 }
 
 impl VarInfo {
-    pub fn new(reference: u64, depth: usize) -> VarInfo {
+    pub fn new(reference: Reference, depth: Depth) -> VarInfo {
         VarInfo {
             reference: Some(reference),
             depth,
@@ -19,7 +20,7 @@ impl VarInfo {
         }
     }
 
-    pub fn create(variable: &Variable, depth: usize) -> KsResult<VarInfo> {
+    pub fn create(variable: &Variable, depth: Depth) -> KsResult<VarInfo> {
         Ok(VarInfo {
             reference: Some(variable.reference()?),
             depth,
@@ -35,7 +36,7 @@ impl VarInfo {
         })
     }
 
-    pub fn reference(&self) -> KsResult<&u64> {
+    pub fn reference(&self) -> KsResult<&Reference> {
         if let Some(reference) = &self.reference {
             Ok(reference)
         } else {
@@ -43,11 +44,11 @@ impl VarInfo {
         }
     }
 
-    pub fn depth(&self) -> &usize {
+    pub fn depth(&self) -> &Depth {
         &self.depth
     }
 
-    pub fn owners(&self) -> &usize {
+    pub fn owners(&self) -> &Owners {
         &self.owners
     }
 
@@ -63,11 +64,11 @@ impl VarInfo {
         self.owners -= 1;
     }
 
-    pub fn set_depth(&mut self, depth: usize) {
+    pub fn set_depth(&mut self, depth: Depth) {
         self.depth = depth;
     }
 
-    pub fn set_owners(&mut self, owners: usize) {
+    pub fn set_owners(&mut self, owners: Owners) {
         self.owners = owners;
     }
 }

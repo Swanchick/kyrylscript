@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
+use crate::environment::Reference;
+
 pub enum TreeReference<'a> {
-    Branch(&'a [u64], usize),
-    ModuleBranch(&'a HashMap<String, u64>, usize),
+    Branch(&'a [Reference], usize),
+    ModuleBranch(&'a HashMap<String, Reference>, usize),
     Leaf,
 }

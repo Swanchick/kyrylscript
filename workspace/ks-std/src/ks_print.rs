@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 
 use ks_global::utils::ks_result::KsResult;
-use ks_vm::environment::Environment;
+use ks_vm::environment::{Environment, Reference};
 use ks_vm::variable::Variable;
 use ks_vm::variable::value::Value;
 
 fn collection_to_string(
     environment: &mut Environment,
-    references: &Vec<u64>,
+    references: &Vec<Reference>,
     mut buffer: String,
 ) -> KsResult<String> {
     let references_len = references.len();
@@ -27,7 +27,7 @@ fn collection_to_string(
 
 fn module_to_string(
     environment: &mut Environment,
-    module: &HashMap<String, u64>,
+    module: &HashMap<String, Reference>,
     mut buffer: String,
 ) -> KsResult<String> {
     let module_len = module.len();

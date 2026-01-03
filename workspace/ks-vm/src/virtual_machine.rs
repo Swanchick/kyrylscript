@@ -1,21 +1,21 @@
 use std::collections::HashMap;
 
-use crate::constant::Constant;
-use crate::constants::{FUNCTION_ENCAPSULATION, MAIN_FUNCTION, MAX_DEPTH_RECURSION, MIN_SCOPES};
-use crate::function::Function;
-use crate::instruction::Instruction;
-use crate::native::native_registry::NativeRegistry;
-use crate::native::native_types::NativeType;
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
-use crate::call_stack::CallStack;
-use crate::environment::Environment;
-use crate::tail_stack::TailStack;
-use crate::variable::value::Value;
-use crate::variable::var_info::VarInfo;
-use crate::variable::variable::Variable;
-use crate::variable::variable_stack::VariableStack;
+use super::call_stack::CallStack;
+use super::constant::Constant;
+use super::constants::{FUNCTION_ENCAPSULATION, MAIN_FUNCTION, MAX_DEPTH_RECURSION, MIN_SCOPES};
+use super::environment::{Depth, Environment, Reference};
+use super::function::Function;
+use super::instruction::Instruction;
+use super::native::native_registry::NativeRegistry;
+use super::native::native_types::NativeType;
+use super::tail_stack::TailStack;
+use super::variable::value::Value;
+use super::variable::var_info::VarInfo;
+use super::variable::variable::Variable;
+use super::variable::variable_stack::VariableStack;
 
 pub struct VirtualMachine {
     environment: Environment,
@@ -83,7 +83,7 @@ impl VirtualMachine {
         Ok(())
     }
 
-    fn depth(&self) -> usize {
+    fn depth(&self) -> Depth {
         self.environment.depth()
     }
 
@@ -564,8 +564,8 @@ impl VirtualMachine {
         Ok(())
     }
 
-    fn load_references_collection(&mut self, size: usize) -> KsResult<Vec<u64>> {
-        let mut references: Vec<u64> = Vec::new();
+    fn load_references_collection(&mut self, size: usize) -> KsResult<Vec<Reference>> {
+        let mut references: Vec<Reference> = Vec::new();
 
         for _ in 0..size {
             let stack = self.variable_stack.pop();
@@ -733,7 +733,11 @@ impl VirtualMachine {
         Ok(())
     }
 
-    fn assign_with_reference(&mut self, reference: u64, assign_reference: u64) -> KsResult<()> {
+    fn assign_with_reference(
+        &mut self,
+        reference: Reference,
+        assign_reference: Reference,
+    ) -> KsResult<()> {
         let assign_depth = {
             let info = self.environment.info(&assign_reference)?;
             *info.depth()
@@ -756,7 +760,7 @@ impl VirtualMachine {
         Ok(())
     }
 
-    fn extract_reference(&self, stack: Option<VariableStack>) -> KsResult<u64> {
+    fn extract_reference(&self, stack: Option<VariableStack>) -> KsResult<Reference> {
         if let Some(VariableStack::Reference(reference)) = stack {
             Ok(reference)
         } else {
@@ -764,7 +768,7 @@ impl VirtualMachine {
         }
     }
 
-    fn change_reference_holder(&mut self, new_reference: u64) -> KsResult<()> {
+    fn change_reference_holder(&mut self, new_reference: Reference) -> KsResult<()> {
         match &self.tail_stack {
             Some(TailStack::Index {
                 index,
@@ -837,7 +841,7 @@ impl VirtualMachine {
     }
 
     fn load_module(&mut self, size: usize) -> KsResult<()> {
-        let mut module: HashMap<String, u64> = HashMap::new();
+        let mut module: HashMap<String, Reference> = HashMap::new();
 
         for _ in 0..size {
             let name = self.load_string()?;

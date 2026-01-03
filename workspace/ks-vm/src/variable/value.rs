@@ -1,3 +1,5 @@
+use crate::environment::Reference;
+
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -7,9 +9,9 @@ pub enum Value {
     Float(f64),
     String(String),
     Boolean(bool),
-    List(Vec<u64>),
-    Tuple(Vec<u64>),
+    List(Vec<Reference>),
+    Tuple(Vec<Reference>),
     Function(String),
     NativeFunction(String),
-    Module(HashMap<String, u64>),
+    Module(HashMap<String, Reference>),
 }
