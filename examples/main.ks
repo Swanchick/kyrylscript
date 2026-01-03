@@ -1,3 +1,1 @@
-function test() {}
-
-test();
+println("Hello World!");

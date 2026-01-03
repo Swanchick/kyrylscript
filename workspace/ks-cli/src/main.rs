@@ -10,10 +10,12 @@ fn main() -> KsResult<()> {
     let path = args.get(1);
 
     if let Some(path) = path {
-        let kyryl_script = KyrylScript {};
-        let compilation = kyryl_script.compile_from_file(path)?;
+        let mut kyryl_script = KyrylScript::new();
+        let parser = kyryl_script.parser_mut();
 
-        ks_register_std();
+        ks_register_std(parser);
+
+        let compilation = kyryl_script.compile_from_file(path)?;
 
         let mut vm = VirtualMachine::from(compilation);
         vm.initialize()?;
