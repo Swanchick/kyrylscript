@@ -1,6 +1,7 @@
 use super::data_type::DataType;
 use crate::lexer::token::Token;
 use crate::lexer::token_pos::TokenPos;
+use crate::parser::semantic_analyzer;
 
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
@@ -74,9 +75,14 @@ impl Parser {
         }
     }
 
-    pub fn register_data_type(&mut self, name: &str, data_type: DataType) {
-        self.semantic_analyzer
-            .save_variable(name.to_string(), data_type);
+    pub fn register_variable(&mut self, name: &str, data_type: DataType, public: bool) {
+        let semantic_analyzer = &mut self.semantic_analyzer;
+
+        if public {
+            semantic_analyzer.global_save_variable(name.to_string(), data_type);
+        } else {
+            semantic_analyzer.save_variable(name.to_string(), data_type);
+        }
     }
 
     pub fn get_semantic_analyzer(&self) -> &SemanticAnalyzer {
