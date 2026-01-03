@@ -500,7 +500,7 @@ impl Environment {
         Ok(())
     }
 
-    pub fn anchor_reference(&mut self, low_depth: usize, reference: Reference) -> KsResult<()> {
+    pub fn anchor_reference(&mut self, low_depth: Depth, reference: Reference) -> KsResult<()> {
         self.anchor(low_depth, reference)?;
         Ok(())
     }
