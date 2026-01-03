@@ -26,6 +26,10 @@ impl KsError {
         println!("{}", self.message);
     }
 
+    pub fn message(&self) -> &str {
+        &self.message
+    }
+
     pub fn runtime(message: &str) -> KsError {
         KsError::new(message, KsErrorType::RunTime)
     }
