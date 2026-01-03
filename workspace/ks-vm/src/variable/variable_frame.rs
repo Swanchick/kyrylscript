@@ -1,10 +1,12 @@
+use crate::environment::Reference;
+
 pub struct VariableFrame {
-    pub reference: u64,
+    pub reference: Reference,
     pub index: usize,
 }
 
 impl VariableFrame {
-    pub fn new(reference: u64, index: usize) -> VariableFrame {
+    pub fn new(reference: Reference, index: usize) -> VariableFrame {
         VariableFrame { reference, index }
     }
 

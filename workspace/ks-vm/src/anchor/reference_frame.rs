@@ -1,11 +1,13 @@
+use crate::environment::Reference;
+
 pub struct ReferenceFrame {
-    pub reference: u64,
+    pub reference: Reference,
     pub index: usize,
-    pub new_references: Vec<u64>,
+    pub new_references: Vec<Reference>,
 }
 
 impl ReferenceFrame {
-    pub fn new(reference: u64, index: usize) -> ReferenceFrame {
+    pub fn new(reference: Reference, index: usize) -> ReferenceFrame {
         ReferenceFrame {
             reference,
             index,
