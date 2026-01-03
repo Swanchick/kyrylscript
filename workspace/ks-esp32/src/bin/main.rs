@@ -9,8 +9,9 @@
 
 use defmt::info;
 use esp_hal::clock::CpuClock;
-use esp_hal::main;
 use esp_hal::time::{Duration, Instant};
+use esp_hal::uart::Uart;
+use esp_hal::{Config, main};
 use esp_println as _;
 
 #[panic_handler]
@@ -26,8 +27,8 @@ esp_bootloader_esp_idf::esp_app_desc!();
 )]
 #[main]
 fn main() -> ! {
-    let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
-    let _peripherals = esp_hal::init(config);
+    let config = Config::default().with_cpu_clock(CpuClock::max());
+    let peripherals = esp_hal::init(config);
 
     loop {
         info!("Hello World!");
