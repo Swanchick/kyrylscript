@@ -176,7 +176,7 @@ impl Parser {
                 Ok(Some(statement))
             }
             Some(Token::PlusEqual) => {
-                let statement = self.parse_add_value_statment(&segments)?;
+                let statement = self.parse_add_value_statement(&segments)?;
                 Ok(Some(statement))
             }
             Some(Token::MinusEqual) => todo!(),
@@ -320,12 +320,12 @@ impl Parser {
                 .save_variable(function_name.clone(), function_data_type);
         }
 
-        self.semantic_analyzer.enter_function_enviroment();
+        self.semantic_analyzer.enter_function_environment();
 
         let body = self.parse_block_statement()?;
 
         self.function_context = Context::None;
-        self.semantic_analyzer.exit_function_enviroment()?;
+        self.semantic_analyzer.exit_function_environment()?;
 
         Ok(Statement::Function {
             name: function_name,
@@ -343,7 +343,7 @@ impl Parser {
         let expression = self.parse_expression()?;
         let data_type = self.semantic_analyzer.get_data_type(&expression)?;
 
-        self.semantic_analyzer.enter_function_enviroment();
+        self.semantic_analyzer.enter_function_environment();
 
         match data_type {
             DataType::List(child_data_type) => self
@@ -360,7 +360,7 @@ impl Parser {
         self.consume_token(Token::LeftBrace)?;
         let body = self.parse_block_statement()?;
 
-        self.semantic_analyzer.exit_function_enviroment()?;
+        self.semantic_analyzer.exit_function_environment()?;
 
         Ok(Statement::ForLoopStatement {
             name: name,
@@ -369,7 +369,7 @@ impl Parser {
         })
     }
 
-    fn parse_add_value_statment(&mut self, segments: &Vec<IdentifierTail>) -> KsResult<Statement> {
+    fn parse_add_value_statement(&mut self, segments: &Vec<IdentifierTail>) -> KsResult<Statement> {
         let identifier_type = self
             .semantic_analyzer
             .get_data_type_from_segments(segments)?;
@@ -561,25 +561,25 @@ impl Parser {
     fn parse_if_statement(&mut self) -> KsResult<Statement> {
         let condition = self.parse_expression()?;
 
-        let statment_data_type = self.semantic_analyzer.get_data_type(&condition)?;
-        if statment_data_type != DataType::Bool {
+        let statement_data_type = self.semantic_analyzer.get_data_type(&condition)?;
+        if statement_data_type != DataType::Bool {
             return Err(KsError::parse(
-                "If statment condition mismatch data_type, expected bool!",
+                "If statement condition mismatch data_type, expected bool!",
             ));
         }
 
         self.consume_token(Token::LeftBrace)?;
 
-        self.semantic_analyzer.enter_function_enviroment();
+        self.semantic_analyzer.enter_function_environment();
         let if_body = self.parse_block_statement()?;
-        self.semantic_analyzer.exit_function_enviroment()?;
+        self.semantic_analyzer.exit_function_environment()?;
 
         let else_block = if self.match_token(&Token::Else) {
             self.consume_token(Token::LeftBrace)?;
 
-            self.semantic_analyzer.enter_function_enviroment();
+            self.semantic_analyzer.enter_function_environment();
             let result = self.parse_block_statement()?;
-            self.semantic_analyzer.exit_function_enviroment()?;
+            self.semantic_analyzer.exit_function_environment()?;
 
             Some(result)
         } else {
@@ -599,15 +599,15 @@ impl Parser {
         let condition_data_type = self.semantic_analyzer.get_data_type(&condition)?;
         if condition_data_type != DataType::Bool {
             return Err(KsError::parse(
-                "While statment condition mismatch data_type, expected bool!",
+                "While statement condition mismatch data_type, expected bool!",
             ));
         }
 
         self.consume_token(Token::LeftBrace)?;
 
-        self.semantic_analyzer.enter_function_enviroment();
+        self.semantic_analyzer.enter_function_environment();
         let block = self.parse_block_statement()?;
-        self.semantic_analyzer.exit_function_enviroment()?;
+        self.semantic_analyzer.exit_function_environment()?;
 
         Ok(Statement::WhileStatement {
             condition: condition,
@@ -871,7 +871,7 @@ impl Parser {
                     module.insert(field_name, expression);
                 }
                 Some(Token::LeftParenthesis) => {
-                    self.semantic_analyzer.enter_function_enviroment();
+                    self.semantic_analyzer.enter_function_environment();
                     let parameters = self.parse_parameters()?;
 
                     let return_type = if self.match_token(&Token::Colon) {
@@ -893,7 +893,7 @@ impl Parser {
                     let block = self.parse_block_statement()?;
                     self.function_context = Context::None;
 
-                    self.semantic_analyzer.exit_function_enviroment()?;
+                    self.semantic_analyzer.exit_function_environment()?;
 
                     module.insert(
                         field_name,
@@ -919,7 +919,7 @@ impl Parser {
 
     fn parse_expression_function(&mut self) -> KsResult<Expression> {
         self.consume_token(Token::LeftParenthesis)?;
-        self.semantic_analyzer.enter_function_enviroment();
+        self.semantic_analyzer.enter_function_environment();
         let parameters = self.parse_parameters()?;
 
         let return_type = if self.match_token(&Token::Colon) {
@@ -943,7 +943,7 @@ impl Parser {
         let block = self.parse_block_statement()?;
         self.function_context = Context::None;
 
-        self.semantic_analyzer.exit_function_enviroment()?;
+        self.semantic_analyzer.exit_function_environment()?;
 
         Ok(Expression::FunctionLiteral {
             parameters,
@@ -1063,7 +1063,7 @@ impl Parser {
         if let Some(Token::Identifier(name)) = token {
             Ok(name.to_string())
         } else {
-            Err(KsError::parse("Expected token identefier!"))
+            Err(KsError::parse("Expected token identifier!"))
         }
     }
 

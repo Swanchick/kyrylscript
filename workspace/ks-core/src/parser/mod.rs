@@ -1,4 +1,4 @@
-pub mod analyzer_enviroment;
+pub mod analyzer_environment;
 mod context;
 pub mod data_type;
 pub mod expression;

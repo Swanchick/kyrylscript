@@ -9,27 +9,27 @@ use super::data_type::DataType;
 use crate::parser::identifier_tail::IdentifierTail;
 use crate::parser::operator::Operator;
 
-use super::analyzer_enviroment::AnalyzerEnviroment;
+use super::analyzer_environment::AnalyzerEnvironment;
 use super::expression::Expression;
 
 #[derive(Debug, Clone)]
 pub struct SemanticAnalyzer {
-    global: Rc<RefCell<AnalyzerEnviroment>>,
-    local: Rc<RefCell<AnalyzerEnviroment>>,
+    global: Rc<RefCell<AnalyzerEnvironment>>,
+    local: Rc<RefCell<AnalyzerEnvironment>>,
 }
 
 impl SemanticAnalyzer {
     pub fn new() -> SemanticAnalyzer {
-        let global = Rc::new(RefCell::new(AnalyzerEnviroment::new()));
-        let local = Rc::new(RefCell::new(AnalyzerEnviroment::with_parent(
+        let global = Rc::new(RefCell::new(AnalyzerEnvironment::new()));
+        let local = Rc::new(RefCell::new(AnalyzerEnvironment::with_parent(
             global.clone(),
         )));
 
         SemanticAnalyzer { global, local }
     }
 
-    pub fn with_global(global: Rc<RefCell<AnalyzerEnviroment>>) -> SemanticAnalyzer {
-        let local = Rc::new(RefCell::new(AnalyzerEnviroment::with_parent(
+    pub fn with_global(global: Rc<RefCell<AnalyzerEnvironment>>) -> SemanticAnalyzer {
+        let local = Rc::new(RefCell::new(AnalyzerEnvironment::with_parent(
             global.clone(),
         )));
 
@@ -39,7 +39,7 @@ impl SemanticAnalyzer {
         }
     }
 
-    pub fn get_global(&self) -> Rc<RefCell<AnalyzerEnviroment>> {
+    pub fn get_global(&self) -> Rc<RefCell<AnalyzerEnvironment>> {
         self.global.clone()
     }
 
@@ -66,14 +66,14 @@ impl SemanticAnalyzer {
         }
     }
 
-    pub fn enter_function_enviroment(&mut self) {
+    pub fn enter_function_environment(&mut self) {
         let parent = self.local.clone();
-        self.local = Rc::new(RefCell::new(AnalyzerEnviroment::with_parent(
+        self.local = Rc::new(RefCell::new(AnalyzerEnvironment::with_parent(
             parent.clone(),
         )));
     }
 
-    pub fn exit_function_enviroment(&mut self) -> KsResult<()> {
+    pub fn exit_function_environment(&mut self) -> KsResult<()> {
         let new_env = {
             let local = self.local.clone();
             let local_borrow = local.borrow();
@@ -89,7 +89,7 @@ impl SemanticAnalyzer {
             self.local = env;
             Ok(())
         } else {
-            Err(KsError::ks_type("No parent enviroment!"))
+            Err(KsError::ks_type("No parent environment!"))
         }
     }
 
@@ -211,7 +211,7 @@ impl SemanticAnalyzer {
         }
     }
 
-    fn identefier_index(&self, left: DataType, index: DataType) -> KsResult<DataType> {
+    fn identifier_index(&self, left: DataType, index: DataType) -> KsResult<DataType> {
         match (left, index) {
             (DataType::List(children_type), DataType::Int) => Ok(*children_type),
             _ => Err(KsError::ks_type("Invalid data in list indexing operation!")),
@@ -404,7 +404,7 @@ impl SemanticAnalyzer {
                 let left = self.get_data_type(left)?;
                 let index_type = self.get_data_type(index)?;
 
-                self.identefier_index(left, index_type)
+                self.identifier_index(left, index_type)
             }
 
             Expression::TupleLiteral(expressions) => {

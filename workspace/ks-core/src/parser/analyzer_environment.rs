@@ -8,21 +8,21 @@ use ks_global::utils::ks_result::KsResult;
 use super::data_type::DataType;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct AnalyzerEnviroment {
-    parent: Option<Rc<RefCell<AnalyzerEnviroment>>>,
+pub struct AnalyzerEnvironment {
+    parent: Option<Rc<RefCell<AnalyzerEnvironment>>>,
     variables: HashMap<String, DataType>,
 }
 
-impl AnalyzerEnviroment {
-    pub fn new() -> AnalyzerEnviroment {
-        AnalyzerEnviroment {
+impl AnalyzerEnvironment {
+    pub fn new() -> AnalyzerEnvironment {
+        AnalyzerEnvironment {
             parent: None,
             variables: HashMap::new(),
         }
     }
 
-    pub fn with_parent(parent: Rc<RefCell<AnalyzerEnviroment>>) -> AnalyzerEnviroment {
-        AnalyzerEnviroment {
+    pub fn with_parent(parent: Rc<RefCell<AnalyzerEnvironment>>) -> AnalyzerEnvironment {
+        AnalyzerEnvironment {
             parent: Some(parent),
             variables: HashMap::new(),
         }
@@ -32,7 +32,7 @@ impl AnalyzerEnviroment {
         &self.variables
     }
 
-    pub fn get_parent(&self) -> Option<Rc<RefCell<AnalyzerEnviroment>>> {
+    pub fn get_parent(&self) -> Option<Rc<RefCell<AnalyzerEnvironment>>> {
         match &self.parent {
             Some(parent) => Some(parent.clone()),
             None => None,

@@ -29,7 +29,7 @@ fn test_variable_declatarion_with_type_error() {
 }
 
 #[test]
-fn test_function_enviroment_parameters() {
+fn test_function_environment_parameters() {
     let source = concat!(
         "function foo(bar: int): int {\n",
         "    let a: int = bar;\n",
@@ -45,7 +45,7 @@ fn test_function_enviroment_parameters() {
 }
 
 #[test]
-fn test_function_enviroment_parameters_error() {
+fn test_function_environment_parameters_error() {
     let source = concat!(
         "function foo(bar: float): int {\n",
         "    let a: int = bar;\n",
@@ -64,7 +64,7 @@ fn test_function_enviroment_parameters_error() {
 }
 
 #[test]
-fn test_function_enviroment_parameters_out_of_function() {
+fn test_function_environment_parameters_out_of_function() {
     let source = concat!(
         "function foo(bar: float): int {\n",
         "}\n",
@@ -83,7 +83,7 @@ fn test_function_enviroment_parameters_out_of_function() {
 }
 
 #[test]
-fn test_function_enviroment_return_mismatch() {
+fn test_function_environment_return_mismatch() {
     let source = concat!("function foo(): float {\n", "    return 100;\n", "}\n",);
 
     let mut lexer = Lexer::new(source.to_string());
@@ -98,7 +98,7 @@ fn test_function_enviroment_return_mismatch() {
 }
 
 #[test]
-fn test_function_enviroment_if_condition_mismatch() {
+fn test_function_environment_if_condition_mismatch() {
     let source = concat!("if 20 + 30 {\n", "}\n",);
 
     let mut lexer = Lexer::new(source.to_string());
@@ -113,7 +113,7 @@ fn test_function_enviroment_if_condition_mismatch() {
 }
 
 #[test]
-fn test_function_enviroment_if_enviroment_error() {
+fn test_function_environment_if_environment_error() {
     let source = concat!(
         "let a = 10;\n",
         "let b = 20;\n",
@@ -135,7 +135,7 @@ fn test_function_enviroment_if_enviroment_error() {
 }
 
 #[test]
-fn test_function_enviroment_for_type_mismatch() {
+fn test_function_environment_for_type_mismatch() {
     let source = concat!("let a = 20;\n", "for i in a {\n", "   let c = i;\n", "}\n",);
 
     let mut lexer = Lexer::new(source.to_string());
@@ -150,7 +150,7 @@ fn test_function_enviroment_for_type_mismatch() {
 }
 
 #[test]
-fn test_function_enviroment_expression_mismatch() {
+fn test_function_environment_expression_mismatch() {
     let source = concat!("let a = \"Hello\";\n", "let b = 20;\n", "let c = a + b;\n");
 
     let mut lexer = Lexer::new(source.to_string());
@@ -165,7 +165,7 @@ fn test_function_enviroment_expression_mismatch() {
 }
 
 #[test]
-fn test_function_enviroment_null_error() {
+fn test_function_environment_null_error() {
     let source = concat!("let a: int = null;\n", "let b = a + 10;");
 
     let mut lexer = Lexer::new(source.to_string());
