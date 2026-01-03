@@ -326,7 +326,7 @@ impl Environment {
     pub fn define_reference_at_depth(
         &mut self,
         mut variable: Variable,
-        depth: usize,
+        depth: Depth,
     ) -> KsResult<Reference> {
         self.current_reference += 1;
         let reference = self.current_reference - 1;
