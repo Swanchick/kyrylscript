@@ -24,10 +24,10 @@ pub struct Parser {
 }
 
 impl Parser {
-    pub fn new(tokens: Vec<Token>, token_pos: Vec<TokenPos>) -> Parser {
+    pub fn new() -> Parser {
         Parser {
-            tokens,
-            token_pos,
+            tokens: Vec::new(),
+            token_pos: Vec::new(),
             semantic_analyzer: SemanticAnalyzer::new(),
             current_token: 0,
             function_context: Context::None,
@@ -46,6 +46,11 @@ impl Parser {
             current_token: 0,
             function_context: Context::None,
         }
+    }
+
+    pub fn set_tokens(&mut self, tokens: Vec<Token>, token_pos: Vec<TokenPos>) {
+        self.tokens = tokens;
+        self.token_pos = token_pos;
     }
 
     pub fn start(&mut self) -> KsResult<Vec<Statement>> {

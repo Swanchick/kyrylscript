@@ -8,21 +8,32 @@ use crate::compiler::compiler::Compiler;
 use crate::lexer::lexer::Lexer;
 use crate::parser::parser::Parser;
 
-pub struct KyrylScript {}
+pub struct KyrylScript {
+    parser: Parser,
+}
 
 impl KyrylScript {
-    pub fn compile_from_file(&self, path: &str) -> KsResult<HashMap<String, Function>> {
+    pub fn new() -> KyrylScript {
+        KyrylScript {
+            parser: Parser::new(),
+        }
+    }
+
+    pub fn parser_mut(&mut self) -> &mut Parser {
+        &mut self.parser
+    }
+
+    pub fn compile_from_file(&mut self, path: &str) -> KsResult<HashMap<String, Function>> {
         let mut lexer = Lexer::load(path)?;
         lexer.lexer()?;
 
         let tokens = lexer.get_tokens().clone();
         let token_pos = lexer.get_token_pos().clone();
 
-        let mut parser = Parser::new(tokens, token_pos);
-        let block = parser.start();
-
+        self.parser.set_tokens(tokens, token_pos);
+        let block = self.parser.start();
         if let Err(e) = block {
-            println!("{}", e.message());
+            e.display();
 
             return Err(KsError::runtime(&format!(
                 "KyrylScript Parser Layer: \n{}",
