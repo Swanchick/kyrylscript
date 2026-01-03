@@ -64,7 +64,7 @@ impl Environment {
         }
     }
 
-    fn references_depth(&self, depth: usize) -> KsResult<&ScopeReference> {
+    fn references_depth(&self, depth: Depth) -> KsResult<&ScopeReference> {
         let references = self.references.get(depth);
         if let Some(references) = references {
             Ok(references)
@@ -76,7 +76,7 @@ impl Environment {
         }
     }
 
-    fn references_depth_mut(&mut self, depth: usize) -> KsResult<&mut ScopeReference> {
+    fn references_depth_mut(&mut self, depth: Depth) -> KsResult<&mut ScopeReference> {
         let references = self.references.get_mut(depth);
         if let Some(references) = references {
             Ok(references)
@@ -470,7 +470,7 @@ impl Environment {
         Ok(())
     }
 
-    fn anchor_insert(&mut self, reference: Reference, low_depth: usize) -> KsResult<()> {
+    fn anchor_insert(&mut self, reference: Reference, low_depth: Depth) -> KsResult<()> {
         self.set_depth(&reference, low_depth)?;
 
         let variable = self.variable_remove(&reference)?;
@@ -480,7 +480,7 @@ impl Environment {
         Ok(())
     }
 
-    pub fn anchor(&mut self, low_depth: usize, reference: Reference) -> KsResult<()> {
+    pub fn anchor(&mut self, low_depth: Depth, reference: Reference) -> KsResult<()> {
         self.variable_iter(
             reference,
             |this, frame| {
@@ -661,8 +661,8 @@ impl Environment {
         println!("===========================");
     }
 
-    pub fn depth(&self) -> usize {
-        (self.references.len() as i32 - 1).max(0) as usize
+    pub fn depth(&self) -> Depth {
+        self.references.len().saturating_sub(1)
     }
 
     pub fn enter(&mut self) {
