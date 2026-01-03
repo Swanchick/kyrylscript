@@ -74,6 +74,13 @@ impl Parser {
         }
     }
 
+    pub fn register_data_type(&mut self, name: &str, data_type: DataType) -> KsResult<()> {
+        self.semantic_analyzer
+            .save_variable(name.to_string(), data_type);
+
+        Ok(())
+    }
+
     pub fn get_semantic_analyzer(&self) -> &SemanticAnalyzer {
         &self.semantic_analyzer
     }
