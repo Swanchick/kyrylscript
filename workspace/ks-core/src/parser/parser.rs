@@ -861,7 +861,7 @@ impl Parser {
         }
     }
 
-    fn parse_module(&mut self) -> io::Result<Expression> {
+    fn parse_module(&mut self) -> KsResult<Expression> {
         let mut module: HashMap<String, Expression> = HashMap::new();
 
         loop {
