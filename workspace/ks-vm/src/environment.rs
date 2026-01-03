@@ -234,7 +234,7 @@ impl Environment {
         Ok(())
     }
 
-    pub fn set_depth(&mut self, reference: &Reference, depth: usize) -> KsResult<()> {
+    pub fn set_depth(&mut self, reference: &Reference, depth: Depth) -> KsResult<()> {
         let info = self.info_mut(reference)?;
         info.set_depth(depth);
 
