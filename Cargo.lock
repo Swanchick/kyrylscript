@@ -745,6 +745,7 @@ name = "ks-cli"
 version = "0.5.0"
 dependencies = [
  "ks-core",
+ "ks-global",
  "ks-std",
  "ks-vm",
 ]
