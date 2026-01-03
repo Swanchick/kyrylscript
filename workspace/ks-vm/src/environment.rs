@@ -298,7 +298,7 @@ impl Environment {
         &mut self,
         name: &str,
         reference: &Reference,
-        depth: usize,
+        depth: Depth,
     ) -> KsResult<()> {
         self.add_owner(reference)?;
 
