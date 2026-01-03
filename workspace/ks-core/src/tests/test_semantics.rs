@@ -23,7 +23,7 @@ fn test_variable_declatarion_with_type_error() {
     let err = parser.parse_block_statement().unwrap_err();
 
     assert_eq!(
-        err.to_string(),
+        err.message(),
         "Different data types in expression and actual data type."
     )
 }
@@ -58,7 +58,7 @@ fn test_function_enviroment_parameters_error() {
 
     let mut parser = Parser::new(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
     assert_eq!(
-        parser.parse_block_statement().unwrap_err().to_string(),
+        parser.parse_block_statement().unwrap_err().message(),
         "Different data types in expression and actual data type."
     );
 }
@@ -77,7 +77,7 @@ fn test_function_enviroment_parameters_out_of_function() {
 
     let mut parser = Parser::new(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
     assert_eq!(
-        parser.parse_block_statement().unwrap_err().to_string(),
+        parser.parse_block_statement().unwrap_err().message(),
         "Variable bar not found!"
     );
 }
@@ -92,7 +92,7 @@ fn test_function_enviroment_return_mismatch() {
 
     let mut parser = Parser::new(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
     assert_eq!(
-        parser.parse_block_statement().unwrap_err().to_string(),
+        parser.parse_block_statement().unwrap_err().message(),
         "Mismatch return and function return types!"
     );
 }
@@ -107,7 +107,7 @@ fn test_function_enviroment_if_condition_mismatch() {
 
     let mut parser = Parser::new(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
     assert_eq!(
-        parser.parse_block_statement().unwrap_err().to_string(),
+        parser.parse_block_statement().unwrap_err().message(),
         "If statment condition mismatch data_type, expected bool!"
     );
 }
@@ -129,7 +129,7 @@ fn test_function_enviroment_if_enviroment_error() {
 
     let mut parser = Parser::new(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
     assert_eq!(
-        parser.parse_block_statement().unwrap_err().to_string(),
+        parser.parse_block_statement().unwrap_err().message(),
         "Variable c not found!"
     );
 }
@@ -144,7 +144,7 @@ fn test_function_enviroment_for_type_mismatch() {
 
     let mut parser = Parser::new(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
     assert_eq!(
-        parser.parse_block_statement().unwrap_err().to_string(),
+        parser.parse_block_statement().unwrap_err().message(),
         "For loop statement mismatch type!"
     );
 }
@@ -159,7 +159,7 @@ fn test_function_enviroment_expression_mismatch() {
 
     let mut parser = Parser::new(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
     assert_eq!(
-        parser.parse_block_statement().unwrap_err().to_string(),
+        parser.parse_block_statement().unwrap_err().message(),
         "Arithmetic type error!"
     );
 }
@@ -174,7 +174,7 @@ fn test_function_enviroment_null_error() {
 
     let mut parser = Parser::new(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
     assert_eq!(
-        parser.parse_block_statement().unwrap_err().to_string(),
+        parser.parse_block_statement().unwrap_err().message(),
         "Attempt to perform an operation with a null value"
     );
 }
@@ -189,7 +189,7 @@ fn test_function_assigment_error() {
 
     let mut parser = Parser::new(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
     assert_eq!(
-        parser.parse_block_statement().unwrap_err().to_string(),
+        parser.parse_block_statement().unwrap_err().message(),
         "Assignment value mismatch!"
     );
 }
@@ -207,7 +207,7 @@ fn test_function_tuple_index() {
     let mut parser = Parser::new(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
 
     assert_eq!(
-        parser.parse_block_statement().unwrap_err().to_string(),
+        parser.parse_block_statement().unwrap_err().message(),
         "Different data types in expression and actual data type."
     )
 }

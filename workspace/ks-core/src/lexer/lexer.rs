@@ -1,6 +1,9 @@
 use std::fs::read_to_string;
 use std::io;
 
+use ks_global::utils::ks_error::KsError;
+use ks_global::utils::ks_result::KsResult;
+
 use super::token::COMMENT;
 use super::token::Token;
 use super::token::{get_token, is_symbol};
@@ -29,7 +32,7 @@ impl Lexer {
         }
     }
 
-    pub fn load(source_path: &str) -> io::Result<Lexer> {
+    pub fn load(source_path: &str) -> KsResult<Lexer> {
         let result = read_to_string(source_path);
 
         match result {
@@ -44,10 +47,9 @@ impl Lexer {
                     current_line_pos: 0,
                 })
             }
-            Err(_) => Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                format!("Cannot find file with that path: {source_path}!"),
-            )),
+            Err(_) => Err(KsError::parse(&format!(
+                "Cannot find file with that path: {source_path}!"
+            ))),
         }
     }
 
@@ -74,7 +76,7 @@ impl Lexer {
         }
     }
 
-    pub fn lex_line(&mut self, mut line: String) -> io::Result<()> {
+    pub fn lex_line(&mut self, mut line: String) -> KsResult<()> {
         line.push(' ');
         let mut cur: usize = 0;
         let mut state = LexerState::None;
@@ -124,10 +126,7 @@ impl Lexer {
                             buffer.clear();
                             state = LexerState::None;
                         } else {
-                            return Err(io::Error::new(
-                                io::ErrorKind::InvalidData,
-                                "Invalid float literal",
-                            ));
+                            return Err(KsError::token("Invalid float literal"));
                         }
                     } else {
                         if let Ok(num) = buffer.parse::<i32>() {
@@ -137,10 +136,7 @@ impl Lexer {
 
                             continue;
                         } else {
-                            return Err(io::Error::new(
-                                io::ErrorKind::InvalidData,
-                                "Invalid integer literal",
-                            ));
+                            return Err(KsError::token("Invalid integer literal"));
                         }
                     }
                 }
@@ -214,7 +210,7 @@ impl Lexer {
         }
     }
 
-    pub fn lexer(&mut self) -> io::Result<()> {
+    pub fn lexer(&mut self) -> KsResult<()> {
         for line in self.source_lines.clone() {
             let line = line.clone();
 

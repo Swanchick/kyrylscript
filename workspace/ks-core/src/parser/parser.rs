@@ -14,7 +14,6 @@ use super::semantic_analyzer::SemanticAnalyzer;
 use super::statement::Statement;
 
 use std::collections::HashMap;
-use std::io;
 
 pub struct Parser {
     tokens: Vec<Token>,
