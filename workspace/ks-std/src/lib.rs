@@ -66,7 +66,7 @@ pub fn ks_register_std(parser: &mut Parser) {
 
     buffer.add_function("debug", NativeFunction::from(ks_debug));
     parser.register_variable(
-        "print",
+        "debug",
         DataType::RustFunction {
             return_type: Box::new(DataType::void()),
         },
