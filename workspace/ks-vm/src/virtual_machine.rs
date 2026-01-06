@@ -1,3 +1,4 @@
+use std::backtrace::Backtrace;
 use std::collections::HashMap;
 
 use ks_global::utils::ks_error::KsError;
@@ -486,6 +487,7 @@ impl VirtualMachine {
                 let reference = self
                     .environment
                     .define_reference_at_depth(variable, current_depth - 1)?;
+
                 self.environment
                     .anchor_reference(current_depth - 1, reference)?;
                 let variable = self.environment.variable_remove(&reference)?;
@@ -498,8 +500,12 @@ impl VirtualMachine {
                 let variable_inside_function = variable_depth >= depth_to_return;
 
                 if variable_inside_function {
+                    // println!("asdnhasdhkashdjkhjaksdh 1231");
+                    // println!("Depth to return: {}", depth_to_return);
                     self.environment
                         .anchor_reference(depth_to_return - 1, reference)?;
+
+                    // println!("asdnhasdhkashdjkhjaksdh 546456");
                 }
 
                 self.variable_stack
@@ -1096,6 +1102,8 @@ impl VirtualMachine {
             }
 
             Some(Instruction::LoadList(size)) => {
+                println!("GOT THERE!");
+
                 let referneces = self.load_references_collection(*size)?;
                 let variable = Variable::empty(Value::List(referneces));
                 self.variable_stack.push(VariableStack::Variable(variable));
