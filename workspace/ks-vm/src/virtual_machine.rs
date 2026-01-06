@@ -486,6 +486,7 @@ impl VirtualMachine {
                 let reference = self
                     .environment
                     .define_reference_at_depth(variable, current_depth - 1)?;
+
                 self.environment
                     .anchor_reference(current_depth - 1, reference)?;
                 let variable = self.environment.variable_remove(&reference)?;
@@ -924,6 +925,22 @@ impl VirtualMachine {
         Ok(())
     }
 
+    fn on_end(&mut self) -> KsResult<()> {
+        while let Some(variable_stack) = self.variable_stack.pop() {
+            match variable_stack {
+                VariableStack::Variable(variable) => {
+                    let reference = self.environment.define_reference(variable)?;
+                    self.environment.free(&reference)?;
+                }
+                VariableStack::Reference(reference) => self.environment.free(&reference)?,
+            }
+        }
+
+        self.step()?;
+
+        Ok(())
+    }
+
     fn interpret(&mut self) -> KsResult<()> {
         let instruction = {
             let call_stack = self.call_stack_last();
@@ -1090,11 +1107,6 @@ impl VirtualMachine {
                 self.step()?;
             }
 
-            Some(Instruction::End) => {
-                self.variable_stack.clear();
-                self.step()?;
-            }
-
             Some(Instruction::LoadList(size)) => {
                 let referneces = self.load_references_collection(*size)?;
                 let variable = Variable::empty(Value::List(referneces));
@@ -1104,13 +1116,14 @@ impl VirtualMachine {
             }
 
             Some(Instruction::LoadTuple(size)) => {
-                let referneces = self.load_references_collection(*size)?;
-                let variable = Variable::empty(Value::Tuple(referneces));
+                let references = self.load_references_collection(*size)?;
+                let variable = Variable::empty(Value::Tuple(references));
                 self.variable_stack.push(VariableStack::Variable(variable));
 
                 self.step()?;
             }
 
+            Some(Instruction::End) => self.on_end()?,
             Some(Instruction::Assign) => self.assign()?,
             Some(Instruction::LoadVar(name)) => self.load_var(name.clone(), false)?,
             Some(Instruction::LoadVarSave(name)) => self.load_var(name.clone(), true)?,
