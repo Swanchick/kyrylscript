@@ -132,7 +132,6 @@ impl Parser {
 
     fn parse_parameter(&mut self) -> KsResult<Parameter> {
         let name = self.consume_identifier()?;
-        self.consume_token(Token::Colon)?;
         let data_type = self.parse_data_type()?;
 
         self.semantic_analyzer
