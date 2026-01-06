@@ -930,6 +930,22 @@ impl VirtualMachine {
         Ok(())
     }
 
+    fn on_end(&mut self) -> KsResult<()> {
+        while let Some(variable_stack) = self.variable_stack.pop() {
+            match variable_stack {
+                VariableStack::Variable(variable) => {
+                    let reference = self.environment.define_reference(variable)?;
+                    self.environment.free(&reference)?;
+                }
+                VariableStack::Reference(reference) => self.environment.free(&reference)?,
+            }
+        }
+
+        self.step()?;
+
+        Ok(())
+    }
+
     fn interpret(&mut self) -> KsResult<()> {
         let instruction = {
             let call_stack = self.call_stack_last();
@@ -1096,11 +1112,6 @@ impl VirtualMachine {
                 self.step()?;
             }
 
-            Some(Instruction::End) => {
-                self.variable_stack.clear();
-                self.step()?;
-            }
-
             Some(Instruction::LoadList(size)) => {
                 println!("GOT THERE!");
 
@@ -1119,6 +1130,7 @@ impl VirtualMachine {
                 self.step()?;
             }
 
+            Some(Instruction::End) => self.on_end()?,
             Some(Instruction::Assign) => self.assign()?,
             Some(Instruction::LoadVar(name)) => self.load_var(name.clone(), false)?,
             Some(Instruction::LoadVarSave(name)) => self.load_var(name.clone(), true)?,
