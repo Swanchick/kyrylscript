@@ -499,12 +499,8 @@ impl VirtualMachine {
                 let variable_inside_function = variable_depth >= depth_to_return;
 
                 if variable_inside_function {
-                    // println!("asdnhasdhkashdjkhjaksdh 1231");
-                    // println!("Depth to return: {}", depth_to_return);
                     self.environment
                         .anchor_reference(depth_to_return - 1, reference)?;
-
-                    // println!("asdnhasdhkashdjkhjaksdh 546456");
                 }
 
                 self.variable_stack
