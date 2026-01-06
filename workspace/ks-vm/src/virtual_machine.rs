@@ -1112,8 +1112,6 @@ impl VirtualMachine {
             }
 
             Some(Instruction::LoadList(size)) => {
-                println!("GOT THERE!");
-
                 let referneces = self.load_references_collection(*size)?;
                 let variable = Variable::empty(Value::List(referneces));
                 self.variable_stack.push(VariableStack::Variable(variable));
