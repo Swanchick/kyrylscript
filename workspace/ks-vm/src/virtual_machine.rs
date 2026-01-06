@@ -1115,16 +1115,16 @@ impl VirtualMachine {
             Some(Instruction::LoadList(size)) => {
                 println!("GOT THERE!");
 
-                let referneces = self.load_references_collection(*size)?;
-                let variable = Variable::empty(Value::List(referneces));
+                let references = self.load_references_collection(*size)?;
+                let variable = Variable::empty(Value::List(references));
                 self.variable_stack.push(VariableStack::Variable(variable));
 
                 self.step()?;
             }
 
             Some(Instruction::LoadTuple(size)) => {
-                let referneces = self.load_references_collection(*size)?;
-                let variable = Variable::empty(Value::Tuple(referneces));
+                let references = self.load_references_collection(*size)?;
+                let variable = Variable::empty(Value::Tuple(references));
                 self.variable_stack.push(VariableStack::Variable(variable));
 
                 self.step()?;
