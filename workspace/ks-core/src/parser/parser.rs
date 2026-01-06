@@ -132,11 +132,7 @@ impl Parser {
 
     fn parse_parameter(&mut self) -> KsResult<Parameter> {
         let name = self.consume_identifier()?;
-        self.consume_token(Token::Colon)?;
         let data_type = self.parse_data_type()?;
-
-        self.semantic_analyzer
-            .save_variable(name.clone(), data_type.clone());
 
         let parameter = Parameter {
             name: name,
@@ -336,6 +332,11 @@ impl Parser {
         }
 
         self.semantic_analyzer.enter_function_environment();
+
+        for parameter in &parameters {
+            self.semantic_analyzer
+                .save_variable(parameter.name.clone(), parameter.data_type.clone());
+        }
 
         let body = self.parse_block_statement()?;
 
@@ -888,6 +889,10 @@ impl Parser {
                 Some(Token::LeftParenthesis) => {
                     self.semantic_analyzer.enter_function_environment();
                     let parameters = self.parse_parameters()?;
+                    for parameter in &parameters {
+                        self.semantic_analyzer
+                            .save_variable(parameter.name.clone(), parameter.data_type.clone());
+                    }
 
                     let return_type = if self.match_token(&Token::Colon) {
                         self.parse_data_type()?
@@ -936,6 +941,10 @@ impl Parser {
         self.consume_token(Token::LeftParenthesis)?;
         self.semantic_analyzer.enter_function_environment();
         let parameters = self.parse_parameters()?;
+        for parameter in &parameters {
+            self.semantic_analyzer
+                .save_variable(parameter.name.clone(), parameter.data_type.clone());
+        }
 
         let return_type = if self.match_token(&Token::Colon) {
             let data_type = self.parse_data_type()?;

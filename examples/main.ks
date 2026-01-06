@@ -1,9 +1,5 @@
-function create_person(name: string, age: int): { name: string, age: int } {
-    return {
-        name: name,
-        age: age
-    };
+function sum(a int, b int): int {
+    return a + b;
 }
 
-create_person("aksjdl", 29);
-debug();
+println("10 + 20 = ", sum(10, 20));
