@@ -4,7 +4,7 @@
 
 let number1: int = 10; // Creating an integer
 
-// also it is possible to not specify the type, so alternetivly we can write:
+// also it is possible to not specify the type, so alternatively we can write:
 // let number1 = 10;
 // kyryl-script will automatically determine the type of a variable
 
