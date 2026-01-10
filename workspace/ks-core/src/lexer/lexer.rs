@@ -52,11 +52,11 @@ impl Lexer {
         }
     }
 
-    pub fn get_tokens(&self) -> &Vec<Token> {
+    pub fn get_tokens(&self) -> &[Token] {
         &self.tokens
     }
 
-    pub fn get_token_pos(&self) -> &Vec<TokenPos> {
+    pub fn get_token_pos(&self) -> &[TokenPos] {
         &self.token_pos
     }
 

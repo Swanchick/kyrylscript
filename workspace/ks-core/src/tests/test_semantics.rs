@@ -9,7 +9,7 @@ fn test_variable_declatarion_with_type() {
     lexer.lexer().unwrap();
 
     let mut parser = Parser::new();
-    parser.set_tokens(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
+    parser.set_tokens(lexer.get_tokens().to_vec(), lexer.get_token_pos().to_vec());
     parser.parse_block_statement().unwrap();
 }
 
@@ -21,7 +21,7 @@ fn test_variable_declatarion_with_type_error() {
     lexer.lexer().unwrap();
 
     let mut parser = Parser::new();
-    parser.set_tokens(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
+    parser.set_tokens(lexer.get_tokens().to_vec(), lexer.get_token_pos().to_vec());
     let err = parser.parse_block_statement().unwrap_err();
 
     assert_eq!(
@@ -43,7 +43,7 @@ fn test_function_environment_parameters() {
     lexer.lexer().unwrap();
 
     let mut parser = Parser::new();
-    parser.set_tokens(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
+    parser.set_tokens(lexer.get_tokens().to_vec(), lexer.get_token_pos().to_vec());
     parser.parse_block_statement().unwrap();
 }
 
@@ -60,7 +60,7 @@ fn test_function_environment_parameters_error() {
     lexer.lexer().unwrap();
 
     let mut parser = Parser::new();
-    parser.set_tokens(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
+    parser.set_tokens(lexer.get_tokens().to_vec(), lexer.get_token_pos().to_vec());
     assert_eq!(
         parser.parse_block_statement().unwrap_err().message(),
         "Different data types in expression and actual data type."
@@ -80,7 +80,7 @@ fn test_function_environment_parameters_out_of_function() {
     lexer.lexer().unwrap();
 
     let mut parser = Parser::new();
-    parser.set_tokens(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
+    parser.set_tokens(lexer.get_tokens().to_vec(), lexer.get_token_pos().to_vec());
     assert_eq!(
         parser.parse_block_statement().unwrap_err().message(),
         "Variable bar not found!"
@@ -96,7 +96,7 @@ fn test_function_environment_return_mismatch() {
     lexer.lexer().unwrap();
 
     let mut parser = Parser::new();
-    parser.set_tokens(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
+    parser.set_tokens(lexer.get_tokens().to_vec(), lexer.get_token_pos().to_vec());
     assert_eq!(
         parser.parse_block_statement().unwrap_err().message(),
         "Mismatch return and function return types!"
@@ -112,7 +112,7 @@ fn test_function_environment_if_condition_mismatch() {
     lexer.lexer().unwrap();
 
     let mut parser = Parser::new();
-    parser.set_tokens(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
+    parser.set_tokens(lexer.get_tokens().to_vec(), lexer.get_token_pos().to_vec());
     assert_eq!(
         parser.parse_block_statement().unwrap_err().message(),
         "If statment condition mismatch data_type, expected bool!"
@@ -135,7 +135,7 @@ fn test_function_environment_if_environment_error() {
     lexer.lexer().unwrap();
 
     let mut parser = Parser::new();
-    parser.set_tokens(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
+    parser.set_tokens(lexer.get_tokens().to_vec(), lexer.get_token_pos().to_vec());
     assert_eq!(
         parser.parse_block_statement().unwrap_err().message(),
         "Variable c not found!"
@@ -151,7 +151,7 @@ fn test_function_environment_for_type_mismatch() {
     lexer.lexer().unwrap();
 
     let mut parser = Parser::new();
-    parser.set_tokens(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
+    parser.set_tokens(lexer.get_tokens().to_vec(), lexer.get_token_pos().to_vec());
     assert_eq!(
         parser.parse_block_statement().unwrap_err().message(),
         "For loop statement mismatch type!"
@@ -167,7 +167,7 @@ fn test_function_environment_expression_mismatch() {
     lexer.lexer().unwrap();
 
     let mut parser = Parser::new();
-    parser.set_tokens(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
+    parser.set_tokens(lexer.get_tokens().to_vec(), lexer.get_token_pos().to_vec());
     assert_eq!(
         parser.parse_block_statement().unwrap_err().message(),
         "Arithmetic type error!"
@@ -183,7 +183,7 @@ fn test_function_environment_null_error() {
     lexer.lexer().unwrap();
 
     let mut parser = Parser::new();
-    parser.set_tokens(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
+    parser.set_tokens(lexer.get_tokens().to_vec(), lexer.get_token_pos().to_vec());
     assert_eq!(
         parser.parse_block_statement().unwrap_err().message(),
         "Attempt to perform an operation with a null value"
@@ -199,7 +199,7 @@ fn test_function_assigment_error() {
     lexer.lexer().unwrap();
 
     let mut parser = Parser::new();
-    parser.set_tokens(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
+    parser.set_tokens(lexer.get_tokens().to_vec(), lexer.get_token_pos().to_vec());
     assert_eq!(
         parser.parse_block_statement().unwrap_err().message(),
         "Assignment value mismatch!"
@@ -217,7 +217,7 @@ fn test_function_tuple_index() {
     lexer.lexer().unwrap();
 
     let mut parser = Parser::new();
-    parser.set_tokens(lexer.get_tokens().clone(), lexer.get_token_pos().clone());
+    parser.set_tokens(lexer.get_tokens().to_vec(), lexer.get_token_pos().to_vec());
 
     assert_eq!(
         parser.parse_block_statement().unwrap_err().message(),

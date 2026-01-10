@@ -1,4 +1,4 @@
-fn main() {}
+mod drivers;
 
 #[cfg(test)]
 mod lexer;
@@ -11,3 +11,5 @@ mod semantic_analyzer;
 
 #[cfg(test)]
 mod vm;
+
+fn main() {}
