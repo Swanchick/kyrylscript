@@ -6,7 +6,6 @@ use ks_core::parser::parser::Parser;
 use ks_core::parser::statement::Statement;
 use ks_global::utils::ks_result::KsResult;
 use ks_vm::function::Function;
-use ks_vm::virtual_machine::VirtualMachine;
 
 pub struct KsDriver {
     path: String,
@@ -14,9 +13,9 @@ pub struct KsDriver {
 
 impl KsDriver {
     pub fn new(path: &str) -> KsDriver {
-        KsDriver {
-            path: path.to_string(),
-        }
+        let path = format!("tests/{}", path);
+
+        KsDriver { path }
     }
 
     pub fn lexer(&self) -> KsResult<Lexer> {
