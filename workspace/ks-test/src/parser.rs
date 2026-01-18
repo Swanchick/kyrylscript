@@ -170,7 +170,7 @@ fn tuple() -> KsResult<()> {
 
 #[test]
 fn callback() -> KsResult<()> {
-    let driver = KsDriver::new("parser/tuple.ks");
+    let driver = KsDriver::new("parser/callback.ks");
     let statements = driver.parser()?;
     let statement = statements.get(0);
 
