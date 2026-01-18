@@ -138,7 +138,7 @@ fn list_index() -> KsResult<()> {
     let test_statements = vec![Statement::VariableDeclaration {
         name: String::from("some_list"),
         public: false,
-        data_type: Some(DataType::String),
+        data_type: Some(DataType::List(Box::new(DataType::Int))),
         value: Some(Expression::ListLiteral(vec![
             Expression::IntegerLiteral(10),
             Expression::IntegerLiteral(20),
