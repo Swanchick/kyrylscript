@@ -474,7 +474,7 @@ impl Parser {
         Ok(Statement::VariableDeclaration {
             name,
             public,
-            data_type,
+            data_type: Some(dt),
             value: Some(expression),
         })
     }
