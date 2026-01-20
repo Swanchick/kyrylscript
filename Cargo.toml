@@ -7,10 +7,11 @@ members = [
     "workspace/ks-global",
     "workspace/ks-programator",
     "workspace/ks-esp32",
+    "workspace/ks-test"
 ]
 
 resolver = "2"
-default-members = ["workspace/ks-cli"]
+default-members = ["workspace/ks-test"]
 
 [workspace.dependencies]
 core = { path = "workspace/ks-core" }

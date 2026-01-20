@@ -787,6 +787,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ks-test"
+version = "0.5.0"
+dependencies = [
+ "ks-core",
+ "ks-global",
+ "ks-std",
+ "ks-vm",
+]
+
+[[package]]
 name = "ks-vm"
 version = "0.5.0"
 dependencies = [

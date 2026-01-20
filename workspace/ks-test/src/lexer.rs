@@ -1,15 +1,15 @@
-use crate::*;
-use lexer::lexer::Lexer;
-use lexer::token::Token;
+use crate::drivers::KsDriver;
+
+use ks_core::lexer::lexer::Lexer;
+use ks_core::lexer::token::Token;
+use ks_global::utils::ks_result::KsResult;
 
 #[test]
-fn test_lexer_easy() {
-    let source = concat!("function main() {\n", "}\n");
+fn lexer_easy() -> KsResult<()> {
+    let driver = KsDriver::new("lexer/easy.ks");
+    let lexer = driver.lexer()?;
 
-    let mut lexer = Lexer::new(source.to_string());
-    lexer.lexer().unwrap();
-
-    let expected_tokens: Vec<Token> = vec![
+    let expected_tokens = vec![
         Token::Function,
         Token::Identifier(String::from("main")),
         Token::LeftParenthesis,
@@ -19,24 +19,16 @@ fn test_lexer_easy() {
     ];
 
     let tokens = lexer.get_tokens();
-
     assert_eq!(tokens, &expected_tokens);
+    Ok(())
 }
 
 #[test]
-fn test_lexer_from_file() {
-    let source = concat!(
-        "function main() {\n",
-        "    let value: float = 10.2f;\n",
-        "    let value2: int = 10;\n",
-        "    print(\"Hello World\");\n",
-        "}\n"
-    );
+fn from_file() -> KsResult<()> {
+    let driver = KsDriver::new("lexer/script.ks");
+    let lexer = driver.lexer()?;
 
-    let mut lexer = Lexer::new(source.to_string());
-    lexer.lexer().unwrap();
-
-    let expected_tokens: Vec<Token> = vec![
+    let expected_tokens = vec![
         Token::Function,
         Token::Identifier(String::from("main")),
         Token::LeftParenthesis,
@@ -56,7 +48,7 @@ fn test_lexer_from_file() {
         Token::Equal,
         Token::IntegerLiteral(10),
         Token::Semicolon,
-        Token::Identifier(String::from("print")),
+        Token::Identifier(String::from("println")),
         Token::LeftParenthesis,
         Token::StringLiteral(String::from("Hello World")),
         Token::RightParenthesis,
@@ -67,16 +59,16 @@ fn test_lexer_from_file() {
     let tokens = lexer.get_tokens();
 
     assert_eq!(tokens, &expected_tokens);
+
+    Ok(())
 }
 
 #[test]
-fn test_lexer_identefier_underscore() {
-    let source = concat!("function test_function() {\n", "}\n");
+fn identefier_underscore() -> KsResult<()> {
+    let driver = KsDriver::new("lexer/identefier_underscore.ks");
+    let lexer = driver.lexer()?;
 
-    let mut lexer = Lexer::new(source.to_string());
-    lexer.lexer().unwrap();
-
-    let expected_tokens: Vec<Token> = vec![
+    let expected_tokens = vec![
         Token::Function,
         Token::Identifier(String::from("test_function")),
         Token::LeftParenthesis,
@@ -86,6 +78,7 @@ fn test_lexer_identefier_underscore() {
     ];
 
     let tokens = lexer.get_tokens();
-
     assert_eq!(tokens, &expected_tokens);
+
+    Ok(())
 }

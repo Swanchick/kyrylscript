@@ -27,8 +27,8 @@ impl KyrylScript {
         let mut lexer = Lexer::load(path)?;
         lexer.lexer()?;
 
-        let tokens = lexer.get_tokens().clone();
-        let token_pos = lexer.get_token_pos().clone();
+        let tokens = lexer.get_tokens().to_vec();
+        let token_pos = lexer.get_token_pos().to_vec();
 
         self.parser.set_tokens(tokens, token_pos);
         let block = self.parser.start();
