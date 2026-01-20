@@ -108,7 +108,7 @@ fn variable_declaration() -> KsResult<()> {
 }
 
 #[test]
-fn assigment_statement() -> KsResult<()> {
+fn assignment_statement() -> KsResult<()> {
     let driver = KsDriver::new("parser/assigment_statement.ks");
     let statements = driver.parser()?;
 
