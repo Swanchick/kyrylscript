@@ -135,15 +135,23 @@ fn list_index() -> KsResult<()> {
     let driver = KsDriver::new("parser/list_index.ks");
     let statements = driver.parser()?;
 
-    let test_statements = vec![Statement::VariableDeclaration {
-        name: String::from("some_list"),
-        public: false,
-        data_type: Some(DataType::List(Box::new(DataType::Int))),
-        value: Some(Expression::ListLiteral(vec![
-            Expression::IntegerLiteral(10),
-            Expression::IntegerLiteral(20),
-        ])),
-    }];
+    let test_statements = vec![
+        Statement::VariableDeclaration {
+            name: String::from("some_list"),
+            public: false,
+            data_type: Some(DataType::List(Box::new(DataType::Int))),
+            value: Some(Expression::ListLiteral(vec![
+                Expression::IntegerLiteral(10),
+                Expression::IntegerLiteral(20),
+            ])),
+        },
+        Statement::Expression {
+            value: Expression::Identifier(vec![
+                IdentifierTail::Name(String::from("some_list")),
+                IdentifierTail::Index(Expression::IntegerLiteral(1)),
+            ]),
+        },
+    ];
 
     assert_eq!(statements, test_statements);
 
