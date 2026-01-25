@@ -37,11 +37,11 @@ impl Environment {
         }
     }
 
-    pub fn variables(&self) -> &Vec<Scope> {
+    pub fn variables(&self) -> &[Scope] {
         &self.variables
     }
 
-    pub fn references(&self) -> &Vec<ScopeReference> {
+    pub fn references(&self) -> &[ScopeReference] {
         &self.references
     }
 

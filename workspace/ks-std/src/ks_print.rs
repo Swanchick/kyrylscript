@@ -7,7 +7,7 @@ use ks_vm::variable::value::Value;
 
 fn collection_to_string(
     environment: &mut Environment,
-    references: &Vec<Reference>,
+    references: &[Reference],
     mut buffer: String,
 ) -> KsResult<String> {
     let references_len = references.len();

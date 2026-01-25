@@ -49,7 +49,7 @@ impl Compiler {
         self.functions.get(name)
     }
 
-    pub fn start_compile(&mut self, statements: &Vec<Statement>) {
+    pub fn start_compile(&mut self, statements: &[Statement]) {
         let mut instructions: Instructions = Vec::new();
 
         instructions = self.compile_statments(statements, instructions);
@@ -68,7 +68,7 @@ impl Compiler {
 
     pub fn compile_statments(
         &mut self,
-        statements: &Vec<Statement>,
+        statements: &[Statement],
         mut instructions: Instructions,
     ) -> Instructions {
         for statement in statements {
@@ -88,7 +88,7 @@ impl Compiler {
 
     fn compile_identity(
         &mut self,
-        segments: &Vec<IdentifierTail>,
+        segments: &[IdentifierTail],
         mut instructions: Instructions,
         save: bool,
     ) -> Instructions {

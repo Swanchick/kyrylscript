@@ -218,7 +218,7 @@ impl SemanticAnalyzer {
         }
     }
 
-    fn tuple_index(&self, mut left: DataType, indeces: &Vec<i32>) -> KsResult<DataType> {
+    fn tuple_index(&self, mut left: DataType, indeces: &[i32]) -> KsResult<DataType> {
         for index in indeces {
             let index = *index as usize;
 
@@ -238,10 +238,7 @@ impl SemanticAnalyzer {
         Ok(left)
     }
 
-    pub fn get_data_type_from_segments(
-        &self,
-        segments: &Vec<IdentifierTail>,
-    ) -> KsResult<DataType> {
+    pub fn get_data_type_from_segments(&self, segments: &[IdentifierTail]) -> KsResult<DataType> {
         let mut last_segment: Option<DataType> = None;
 
         for identifier in segments {

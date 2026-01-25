@@ -18,7 +18,7 @@ impl Function {
         Function { instructions, args }
     }
 
-    pub fn get_args(&self) -> &Vec<String> {
+    pub fn get_args(&self) -> &[String] {
         &self.args
     }
 
