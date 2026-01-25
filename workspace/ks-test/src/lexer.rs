@@ -1,6 +1,5 @@
 use crate::drivers::KsDriver;
 
-use ks_core::lexer::lexer::Lexer;
 use ks_core::lexer::token::Token;
 use ks_global::utils::ks_result::KsResult;
 

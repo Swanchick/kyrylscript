@@ -1,3 +1,4 @@
+#[cfg(test)]
 mod drivers;
 
 #[cfg(test)]
