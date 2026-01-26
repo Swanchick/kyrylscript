@@ -42,10 +42,10 @@ impl KsDriver {
         let mut compiler = Compiler::new();
         compiler.start_compile(&statements);
 
-        Ok(HashMap::new())
+        Ok(compiler.to_functions())
     }
 
-    pub fn compiler_new(&self) -> KsResult<Vec<Function>> {
+    pub fn compiler_new(&self) -> KsResult<HashMap<String, Function>> {
         let statements = self.parser()?;
         let mut compiler = Compiler::new();
         compiler.start_compile(&statements);
