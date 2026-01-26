@@ -4,6 +4,6 @@ pub enum Constant {
     Float(f64),
     String(String),
     Boolean(bool),
-    Function(usize),
+    Function(String),
     Null,
 }

@@ -1,7 +1,5 @@
-use ks_global::utils::ks_result::KsResult;
 use ks_vm::instruction::Instruction;
 use std::collections::HashMap;
-use std::f64::consts::E;
 
 use ks_vm::constant::Constant;
 use ks_vm::function::Function;
@@ -10,7 +8,6 @@ use super::constants::{
     ANONYNOUS_FUNCTION_ENCAPSULATION, FUNCTION_ENCAPSULATION, ITERATOR_LIST_NAME, ITERATOR_NAME,
     MAIN_FUNCTION,
 };
-use crate::compiler::environment::Environment;
 use crate::parser::expression::Expression;
 use crate::parser::identifier_tail::IdentifierTail;
 use crate::parser::operator::Operator;
@@ -19,24 +16,22 @@ use crate::parser::statement::Statement;
 type Instructions = Vec<Instruction>;
 
 pub struct Compiler {
+    functions: HashMap<String, Function>,
     last_anonymous_function: usize,
-    environment: Environment,
 }
 
 impl Compiler {
     pub fn new() -> Compiler {
-        let mut variables = Vec::<HashMap<String, usize>>::new();
-        variables.push(HashMap::new());
-
         Compiler {
+            functions: HashMap::new(),
             last_anonymous_function: 0,
-            environment: Environment::new(),
         }
     }
 
     pub fn display(&self) {
-        for (index, function) in self.environment.functions().iter().enumerate() {
-            print!("{} {:?}", index, function.get_args());
+        for (function_name, function) in &self.functions {
+            print!("{} ", function_name);
+            println!("{:?}:", function.get_args());
 
             for (i, instruction) in function.get_instructions().iter().enumerate() {
                 println!("    {}: {:?}", i, instruction);
@@ -46,19 +41,21 @@ impl Compiler {
         }
     }
 
-    pub fn to_functions(self) -> Vec<Function> {
-        self.environment.functions().to_vec()
+    pub fn to_functions(self) -> HashMap<String, Function> {
+        self.functions
     }
 
-    pub fn start_compile(&mut self, statements: &[Statement]) -> KsResult<()> {
+    pub fn get_instructions(&self, name: &str) -> Option<&Function> {
+        self.functions.get(name)
+    }
+
+    pub fn start_compile(&mut self, statements: &[Statement]) {
         let mut instructions: Instructions = Vec::new();
 
         instructions = self.compile_statments(statements, instructions);
 
-        // self.functions
-        //     .insert(String::from(MAIN_FUNCTION), Function::method(instructions));
-
-        Ok(())
+        self.functions
+            .insert(String::from(MAIN_FUNCTION), Function::method(instructions));
     }
 
     fn has_return(&self, instructions: &Instructions) -> bool {
@@ -76,8 +73,11 @@ impl Compiler {
     ) -> Instructions {
         for statement in statements {
             let mut statement_instructions = self.compile_statment(statement);
+
             let has_return = self.has_return(&statement_instructions);
+
             instructions.append(&mut statement_instructions);
+
             if has_return {
                 break;
             }

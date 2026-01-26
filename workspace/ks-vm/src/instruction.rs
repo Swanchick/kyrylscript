@@ -27,7 +27,7 @@ pub enum Instruction {
     PubStore(String),
     Assign,
     LoadConst(Constant),
-    LoadVar(usize),
+    LoadVar(String),
     LoadVarSave(usize),
     Closure(String),
     Call(usize),
