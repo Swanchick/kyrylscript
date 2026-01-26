@@ -1,4 +1,5 @@
 use super::constant::Constant;
+use super::cosntants::VariableId;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Instruction {
@@ -27,9 +28,9 @@ pub enum Instruction {
     PubStore(String),
     Assign,
     LoadConst(Constant),
-    LoadVar(String),
-    LoadVarSave(String),
-    Closure(String),
+    LoadVar(VariableId),
+    LoadVarSave(VariableId),
+    Closure(VariableId),
     Call(usize),
 
     // List & Tuple & Module
