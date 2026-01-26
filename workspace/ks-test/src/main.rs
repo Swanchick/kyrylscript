@@ -11,6 +11,9 @@ mod parser;
 mod semantic_analyzer;
 
 #[cfg(test)]
+mod compiler;
+
+#[cfg(test)]
 mod vm;
 
 fn main() {}

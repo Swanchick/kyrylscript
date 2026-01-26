@@ -16,7 +16,7 @@ pub enum Instruction {
     And,
     Or,
     Not,
-    
+
     // Statements
     End,
     Return,
@@ -27,11 +27,11 @@ pub enum Instruction {
     PubStore(String),
     Assign,
     LoadConst(Constant),
-    LoadVar(String),
-    LoadVarSave(String),
+    LoadVar(usize),
+    LoadVarSave(usize),
     Closure(String),
     Call(usize),
-    
+
     // List & Tuple & Module
     LoadModule(usize),
     LoadList(usize),
@@ -44,7 +44,7 @@ pub enum Instruction {
     LoadFromModule(String),
     LoadFromModuleSave(String),
     AssignModule(String),
-    
+
     // System
     Enter,
     Exit,
