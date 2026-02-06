@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
 use ks_core::compiler::compiler::Compiler;
+use ks_core::compiler_new::compiler::CompilerNew;
+use ks_core::compiler_new::program::Program;
 use ks_core::lexer::lexer::Lexer;
 use ks_core::parser::parser::Parser;
 use ks_core::parser::statement::Statement;
@@ -45,12 +47,12 @@ impl KsDriver {
         Ok(compiler.to_functions())
     }
 
-    pub fn compiler_new(&self) -> KsResult<HashMap<String, Function>> {
+    pub fn compiler_new(&self) -> KsResult<Program> {
         let statements = self.parser()?;
-        let mut compiler = Compiler::new();
-        compiler.start_compile(&statements);
+        let mut compiler = CompilerNew::new(statements);
+        compiler.compile();
 
-        Ok(compiler.to_functions())
+        Ok(compiler.program())
     }
 
     pub fn run(&self) -> KsResult<()> {

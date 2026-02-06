@@ -1,6 +1,7 @@
 pub mod compiler;
-mod constant;
+pub mod constant;
 mod environment;
 pub mod function;
-mod instructions;
+pub mod instructions;
+pub mod program;
 mod types;
