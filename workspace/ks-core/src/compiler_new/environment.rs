@@ -1,9 +1,9 @@
 use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
-use ks_vm::function::Function;
 use std::collections::HashMap;
 
+use crate::compiler_new::types::VariableId;
+
 pub struct Environment {
-    functions: Vec<Function>,
     variables: Vec<HashMap<String, usize>>,
     counters: Vec<usize>,
     current: usize,
@@ -12,29 +12,20 @@ pub struct Environment {
 impl Environment {
     pub fn new() -> Self {
         Environment {
-            functions: Vec::new(),
             variables: vec![HashMap::new()],
             counters: Vec::new(),
             current: 0,
         }
     }
 
-    pub fn functions(&self) -> &[Function] {
-        &self.functions
-    }
-
-    pub fn create_function(&mut self, function: Function) {
-        self.functions.push(function);
-    }
-
-    pub fn create_variable(&mut self, name: &str) -> KsResult<()> {
+    pub fn define_variable(&mut self, name: &str) -> KsResult<VariableId> {
         let current_count = self.current;
 
         let scope = self.current_scope_mut()?;
         scope.insert(name.to_string(), current_count);
         self.current += 1;
 
-        Ok(())
+        Ok(current_count)
     }
 
     pub fn enter(&mut self) {

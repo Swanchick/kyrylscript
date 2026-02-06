@@ -49,8 +49,8 @@ impl KsDriver {
 
     pub fn compiler_new(&self) -> KsResult<Program> {
         let statements = self.parser()?;
-        let mut compiler = CompilerNew::new(statements);
-        compiler.compile();
+        let mut compiler = CompilerNew::new();
+        compiler.compile(statements)?;
 
         Ok(compiler.program())
     }
