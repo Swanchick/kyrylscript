@@ -1,4 +1,4 @@
-use super::cosntants::VariableId;
+use super::types::VariableId;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Constant {

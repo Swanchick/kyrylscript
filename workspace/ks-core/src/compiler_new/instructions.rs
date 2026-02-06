@@ -1,5 +1,6 @@
 use super::constant::Constant;
-use super::cosntants::VariableId;
+use super::types::VariableId;
+use super::types::{FunctionPointer, Pointer};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Instruction {
@@ -22,8 +23,8 @@ pub enum Instruction {
     End,
     Return,
     Clone,
-    JumpIfFalse(i32),
-    Jump(i32),
+    JumpIfFalse(Pointer),
+    Jump(Pointer),
     Store(String),
     PubStore(String),
     Assign,
@@ -31,10 +32,10 @@ pub enum Instruction {
     LoadVar(VariableId),
     LoadVarSave(VariableId),
     Closure(VariableId),
-    Call(usize),
+    Call(FunctionPointer),
 
     // List & Tuple & Module
-    LoadModule(usize),
+    LoadModule(VariableId),
     LoadList(usize),
     LoadTuple(usize),
     LoadFromList,
