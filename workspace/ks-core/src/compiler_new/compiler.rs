@@ -74,15 +74,52 @@ impl CompilerNew {
         Ok(())
     }
 
+    fn null(&mut self) -> KsResult<()> {
+        self.instuctions
+            .push(Instruction::LoadConst(Constant::Null));
+        Ok(())
+    }
+
+    fn boolean(&mut self, boolean: bool) -> KsResult<()> {
+        self.instuctions
+            .push(Instruction::LoadConst(Constant::Boolean(boolean)));
+        Ok(())
+    }
+
     fn integer(&mut self, integer: i32) -> KsResult<()> {
         self.instuctions
             .push(Instruction::LoadConst(Constant::Integer(integer)));
         Ok(())
     }
 
+    fn float(&mut self, float: f64) -> KsResult<()> {
+        self.instuctions
+            .push(Instruction::LoadConst(Constant::Float(float)));
+        Ok(())
+    }
+
+    fn string(&mut self, string: String) -> KsResult<()> {
+        self.instuctions
+            .push(Instruction::LoadConst(Constant::String(string)));
+        Ok(())
+    }
+
+    fn identifier(&mut self, name: String) -> KsResult<()> {
+        let variable_id = self.environment.variable_id(&name)?;
+
+        self.instuctions.push(Instruction::LoadVar(variable_id));
+
+        Ok(())
+    }
+
     fn compile_expression(&mut self, expression: Expression) -> KsResult<()> {
         match expression {
+            Expression::NullLiteral => self.null(),
+            Expression::BooleanLiteral(boolean) => self.boolean(boolean),
             Expression::IntegerLiteral(integer) => self.integer(integer),
+            Expression::FloatLiteral(float) => self.float(float),
+            Expression::StringLiteral(string) => self.string(string),
+            Expression::Identifier(name) => self.identifier(name),
             _ => todo!(),
         }?;
 

@@ -28,6 +28,19 @@ impl Environment {
         Ok(current_count)
     }
 
+    pub fn variable_id(&self, name: &str) -> KsResult<VariableId> {
+        for scope in &self.variables {
+            if let Some(variable_id) = scope.get(name) {
+                return Ok(*variable_id);
+            }
+        }
+
+        Err(KsError::parse(&format!(
+            "Did not find variable by this name: {}",
+            name
+        )))
+    }
+
     pub fn enter(&mut self) {
         self.variables.push(HashMap::new());
     }
