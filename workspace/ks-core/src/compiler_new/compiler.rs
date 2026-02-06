@@ -4,6 +4,7 @@ use ks_global::utils::ks_result::KsResult;
 
 use crate::compiler_new::constant::Constant;
 use crate::parser::expression::Expression;
+use crate::parser::identifier_tail::IdentifierTail;
 use crate::parser::statement::Statement;
 
 use super::environment::Environment;
@@ -104,12 +105,12 @@ impl CompilerNew {
         Ok(())
     }
 
-    fn identifier(&mut self, name: String) -> KsResult<()> {
-        let variable_id = self.environment.variable_id(&name)?;
+    fn identifier(&mut self, identifier: Vec<IdentifierTail>) -> KsResult<()> {
+        // let variable_id = self.environment.variable_id(&name)?;
+        // self.instuctions.push(Instruction::LoadVar(variable_id));
 
-        self.instuctions.push(Instruction::LoadVar(variable_id));
-
-        Ok(())
+        // Ok(())
+        todo!()
     }
 
     fn compile_expression(&mut self, expression: Expression) -> KsResult<()> {
@@ -119,7 +120,7 @@ impl CompilerNew {
             Expression::IntegerLiteral(integer) => self.integer(integer),
             Expression::FloatLiteral(float) => self.float(float),
             Expression::StringLiteral(string) => self.string(string),
-            Expression::Identifier(name) => self.identifier(name),
+            Expression::Identifier(identifier) => self.identifier(identifier),
             _ => todo!(),
         }?;
 
