@@ -37,6 +37,52 @@ fn simple_variable_declaration() -> KsResult<()> {
 }
 
 #[test]
+fn expression() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::LoadConst(Constant::Integer(20)),
+        Instruction::Add,
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::LoadConst(Constant::Integer(2)),
+        Instruction::Minus,
+        Instruction::Mul,
+        Instruction::Store(0),
+    ];
+
+    let test_program = Program::new(instructions, HashMap::new());
+
+    let driver = KsDriver::new("compiler/expression.ks");
+    let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
+
+#[test]
+fn expression_statement() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::LoadConst(Constant::Integer(20)),
+        Instruction::Add,
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::Add,
+        Instruction::LoadConst(Constant::Integer(2)),
+        Instruction::Minus,
+        Instruction::End,
+    ];
+
+    let test_program = Program::new(instructions, HashMap::new());
+
+    let driver = KsDriver::new("compiler/expression_statement.ks");
+    let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
+
+#[test]
 fn simple_identifier() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(10)),

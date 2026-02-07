@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
 use ks_global::utils::ks_result::KsResult;
-use ks_vm::instruction;
 
 use crate::parser::expression::Expression;
 use crate::parser::identifier_tail::IdentifierTail;
+use crate::parser::operator::Operator;
 use crate::parser::statement::Statement;
 
 use super::constant::Constant;
@@ -40,6 +40,10 @@ impl CompilerNew {
         Ok(())
     }
 
+    fn insert(&mut self, instruction: Instruction) {
+        self.instuctions.push(instruction);
+    }
+
     fn variable_declaration(
         &mut self,
         name: String,
@@ -56,10 +60,17 @@ impl CompilerNew {
 
         // REFACTOR needed in the parser, need to make a separate statement for the PubVariableDeclaration
         if public {
-            self.instuctions.push(Instruction::PubStore(variable_id));
+            self.insert(Instruction::PubStore(variable_id));
         } else {
-            self.instuctions.push(Instruction::Store(variable_id));
+            self.insert(Instruction::Store(variable_id));
         }
+
+        Ok(())
+    }
+
+    fn expression_statement(&mut self, expression: Expression) -> KsResult<()> {
+        self.compile_expression(expression)?;
+        self.insert(Instruction::End);
 
         Ok(())
     }
@@ -72,6 +83,7 @@ impl CompilerNew {
                 data_type: _,
                 value,
             } => self.variable_declaration(name, public, value),
+            Statement::Expression { value } => self.expression_statement(value),
             _ => todo!(),
         }?;
 
@@ -79,7 +91,7 @@ impl CompilerNew {
     }
 
     fn insert_constant(&mut self, constant: Constant) -> KsResult<()> {
-        self.instuctions.push(Instruction::LoadConst(constant));
+        self.insert(Instruction::LoadConst(constant));
         Ok(())
     }
 
@@ -92,7 +104,7 @@ impl CompilerNew {
             Instruction::LoadFromModule(variable_id)
         };
 
-        self.instuctions.push(instruction);
+        self.insert(instruction);
 
         Ok(())
     }
@@ -112,6 +124,42 @@ impl CompilerNew {
         Ok(())
     }
 
+    fn operator(&mut self, operator: Operator) {
+        let instruction = match operator {
+            Operator::Plus => Instruction::Add,
+            Operator::Minus => Instruction::Minus,
+            Operator::Multiply => Instruction::Mul,
+            Operator::Divide => Instruction::Div,
+            Operator::EqualEqual => Instruction::Eq,
+            Operator::GreaterEqual => Instruction::GreaterEq,
+            Operator::Greater => Instruction::Greater,
+            Operator::LessEqual => Instruction::LessEq,
+            Operator::Less => Instruction::Less,
+            Operator::NotEqual => Instruction::NotEq,
+            Operator::And => Instruction::And,
+            Operator::Or => Instruction::Or,
+            Operator::Not => Instruction::Not,
+            Operator::PlusPlus => Instruction::Increment,
+            Operator::MinusMinus => Instruction::Decrement,
+            Operator::Clone => Instruction::Clone,
+            Operator::Power => Instruction::Power,
+        };
+
+        self.insert(instruction);
+    }
+
+    fn binary_operation(
+        &mut self,
+        left: Expression,
+        operator: Operator,
+        right: Expression,
+    ) -> KsResult<()> {
+        self.compile_expression(left)?;
+        self.compile_expression(right)?;
+        self.operator(operator);
+        Ok(())
+    }
+
     fn compile_expression(&mut self, expression: Expression) -> KsResult<()> {
         match expression {
             Expression::NullLiteral => self.insert_constant(Constant::Null),
@@ -120,6 +168,11 @@ impl CompilerNew {
             Expression::FloatLiteral(float) => self.insert_constant(Constant::Float(float)),
             Expression::StringLiteral(string) => self.insert_constant(Constant::String(string)),
             Expression::Identifier(identifier) => self.identifier(identifier),
+            Expression::BinaryOp {
+                left,
+                operator,
+                right,
+            } => self.binary_operation(*left, operator, *right),
             _ => todo!(),
         }?;
 

@@ -17,11 +17,14 @@ pub enum Instruction {
     And,
     Or,
     Not,
+    Increment,
+    Decrement,
+    Clone,
+    Power,
 
     // Statements
     End,
     Return,
-    Clone,
     JumpIfFalse(Pointer),
     Jump(Pointer),
     Store(VariableId),
