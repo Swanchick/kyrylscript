@@ -18,11 +18,11 @@ impl Environment {
         }
     }
 
-    pub fn define_variable(&mut self, name: &str) -> KsResult<VariableId> {
+    pub fn define_variable(&mut self, name: String) -> KsResult<VariableId> {
         let current_count = self.current;
 
         let scope = self.current_scope_mut()?;
-        scope.insert(name.to_string(), current_count);
+        scope.insert(name, current_count);
         self.current += 1;
 
         Ok(current_count)

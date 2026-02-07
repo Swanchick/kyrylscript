@@ -35,3 +35,22 @@ fn simple_variable_declaration() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn simple_identifier() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::Store(0),
+        Instruction::LoadVar(0),
+        Instruction::Store(1),
+    ];
+
+    let test_program = Program::new(instructions, HashMap::new());
+
+    let driver = KsDriver::new("compiler/simple_identifier.ks");
+    let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}

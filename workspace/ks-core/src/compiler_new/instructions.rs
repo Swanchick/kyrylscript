@@ -1,6 +1,5 @@
 use super::constant::Constant;
-use super::types::VariableId;
-use super::types::{FunctionPointer, Pointer};
+use super::types::{FunctionPointer, Pointer, VariableId};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Instruction {

@@ -2,11 +2,11 @@ use std::collections::HashMap;
 
 use ks_global::utils::ks_result::KsResult;
 
-use crate::compiler_new::constant::Constant;
 use crate::parser::expression::Expression;
 use crate::parser::identifier_tail::IdentifierTail;
 use crate::parser::statement::Statement;
 
+use super::constant::Constant;
 use super::environment::Environment;
 use super::instructions::Instruction;
 use super::program::Program;
@@ -31,8 +31,8 @@ impl CompilerNew {
         Program::new(self.instuctions, self.functions)
     }
 
-    pub fn compile(&mut self, mut statements: Vec<Statement>) -> KsResult<()> {
-        while let Some(statement) = statements.pop() {
+    pub fn compile(&mut self, statements: Vec<Statement>) -> KsResult<()> {
+        for statement in statements {
             self.compile_statement(statement)?;
         }
 
@@ -45,11 +45,13 @@ impl CompilerNew {
         public: bool,
         expression: Option<Expression>,
     ) -> KsResult<()> {
-        let variable_id = self.environment.define_variable(&name)?;
+        let variable_id = self.environment.define_variable(name)?;
 
         if let Some(expression) = expression {
-            self.compile_expression(expression)?;
-        }
+            self.compile_expression(expression)
+        } else {
+            self.insert_constant(Constant::Null)
+        }?;
 
         // REFACTOR needed in the parser, need to make a separate statement for the PubVariableDeclaration
         if public {
@@ -75,51 +77,36 @@ impl CompilerNew {
         Ok(())
     }
 
-    fn null(&mut self) -> KsResult<()> {
-        self.instuctions
-            .push(Instruction::LoadConst(Constant::Null));
+    fn insert_constant(&mut self, constant: Constant) -> KsResult<()> {
+        self.instuctions.push(Instruction::LoadConst(constant));
         Ok(())
     }
 
-    fn boolean(&mut self, boolean: bool) -> KsResult<()> {
-        self.instuctions
-            .push(Instruction::LoadConst(Constant::Boolean(boolean)));
-        Ok(())
-    }
+    fn identifier_name(&mut self, name: String) -> KsResult<()> {
+        let variable_id = self.environment.variable_id(&name)?;
+        self.instuctions.push(Instruction::LoadVar(variable_id));
 
-    fn integer(&mut self, integer: i32) -> KsResult<()> {
-        self.instuctions
-            .push(Instruction::LoadConst(Constant::Integer(integer)));
-        Ok(())
-    }
-
-    fn float(&mut self, float: f64) -> KsResult<()> {
-        self.instuctions
-            .push(Instruction::LoadConst(Constant::Float(float)));
-        Ok(())
-    }
-
-    fn string(&mut self, string: String) -> KsResult<()> {
-        self.instuctions
-            .push(Instruction::LoadConst(Constant::String(string)));
         Ok(())
     }
 
     fn identifier(&mut self, identifier: Vec<IdentifierTail>) -> KsResult<()> {
-        // let variable_id = self.environment.variable_id(&name)?;
-        // self.instuctions.push(Instruction::LoadVar(variable_id));
+        for segment in identifier {
+            match segment {
+                IdentifierTail::Name(name) => self.identifier_name(name),
+                _ => todo!(),
+            }?;
+        }
 
-        // Ok(())
-        todo!()
+        Ok(())
     }
 
     fn compile_expression(&mut self, expression: Expression) -> KsResult<()> {
         match expression {
-            Expression::NullLiteral => self.null(),
-            Expression::BooleanLiteral(boolean) => self.boolean(boolean),
-            Expression::IntegerLiteral(integer) => self.integer(integer),
-            Expression::FloatLiteral(float) => self.float(float),
-            Expression::StringLiteral(string) => self.string(string),
+            Expression::NullLiteral => self.insert_constant(Constant::Null),
+            Expression::BooleanLiteral(boolean) => self.insert_constant(Constant::Boolean(boolean)),
+            Expression::IntegerLiteral(integer) => self.insert_constant(Constant::Integer(integer)),
+            Expression::FloatLiteral(float) => self.insert_constant(Constant::Float(float)),
+            Expression::StringLiteral(string) => self.insert_constant(Constant::String(string)),
             Expression::Identifier(identifier) => self.identifier(identifier),
             _ => todo!(),
         }?;

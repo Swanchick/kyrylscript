@@ -1,8 +1,8 @@
-use ks_vm::instruction::Instruction;
 use std::collections::HashMap;
 
 use ks_vm::constant::Constant;
 use ks_vm::function::Function;
+use ks_vm::instruction::Instruction;
 
 use super::constants::{
     ANONYNOUS_FUNCTION_ENCAPSULATION, FUNCTION_ENCAPSULATION, ITERATOR_LIST_NAME, ITERATOR_NAME,
