@@ -42,7 +42,7 @@ pub enum Instruction {
     ListLen,
     LoadFromTuple(usize),
     LoadFromTupleSave(usize),
-    LoadFromModule(String),
+    LoadFromModule(VariableId),
     LoadFromModuleSave(String),
     AssignModule(String),
 

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use ks_global::utils::ks_result::KsResult;
+use ks_vm::instruction;
 
 use crate::parser::expression::Expression;
 use crate::parser::identifier_tail::IdentifierTail;
@@ -82,19 +83,30 @@ impl CompilerNew {
         Ok(())
     }
 
-    fn identifier_name(&mut self, name: String) -> KsResult<()> {
+    fn identifier_name(&mut self, name: String, is_first: bool) -> KsResult<()> {
         let variable_id = self.environment.variable_id(&name)?;
-        self.instuctions.push(Instruction::LoadVar(variable_id));
+
+        let instruction = if is_first {
+            Instruction::LoadVar(variable_id)
+        } else {
+            Instruction::LoadFromModule(variable_id)
+        };
+
+        self.instuctions.push(instruction);
 
         Ok(())
     }
 
     fn identifier(&mut self, identifier: Vec<IdentifierTail>) -> KsResult<()> {
+        let mut index = 0;
+
         for segment in identifier {
             match segment {
-                IdentifierTail::Name(name) => self.identifier_name(name),
+                IdentifierTail::Name(name) => self.identifier_name(name, index == 0),
                 _ => todo!(),
             }?;
+
+            index += 1;
         }
 
         Ok(())
