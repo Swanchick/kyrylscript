@@ -123,3 +123,20 @@ fn function_declaration() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn should_create_return_at_the_end() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![Instruction::Jump(1), Instruction::Return];
+
+    let mut functions = HashMap::<String, usize>::new();
+    functions.insert(String::from("add"), 1);
+
+    let test_program = Program::new(instructions, functions);
+
+    let driver = KsDriver::new("compiler/should_create_return_at_the_end.ks");
+    let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
