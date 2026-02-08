@@ -34,8 +34,8 @@ impl Environment {
         Ok(current_count)
     }
 
-    pub fn declare_function(&mut self, name: String) -> KsResult<()> {
-        Ok(())
+    pub fn define_function(&mut self, name: &str, pointer: Pointer) {
+        self.functions.insert(name.to_string(), pointer);
     }
 
     pub fn variable_id(&self, name: &str) -> KsResult<VariableId> {

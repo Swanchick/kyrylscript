@@ -33,17 +33,26 @@ impl CompilerNew {
     }
 
     pub fn compile(&mut self, statements: Vec<Statement>) -> KsResult<()> {
+        self.scope_enter();
+        self.compile_statements(statements)?;
+        self.scope_exit();
+
+        Ok(())
+    }
+
+    fn compile_statements(&mut self, statements: Vec<Statement>) -> KsResult<()> {
         for statement in statements {
-            self.scope_enter();
             self.compile_statement(statement)?;
-            self.scope_exit();
         }
 
         Ok(())
     }
 
     fn current_pc(&mut self) -> Pointer {
-        self.instructions.len()
+        let saved_insctructions = self.instructions.len();
+        let scope_instructions: usize = self.scopes.iter().map(|scope| scope.len()).sum();
+
+        saved_insctructions + scope_instructions
     }
 
     fn scope_enter(&mut self) {
@@ -64,6 +73,13 @@ impl CompilerNew {
         } else {
             Err(KsError::parse("Cannot get last mutable scope"))
         }
+    }
+
+    fn scope_append(&mut self, scope: &mut Vec<Instruction>) -> KsResult<()> {
+        let last_scope = self.scope_last_mut()?;
+        last_scope.append(scope);
+
+        Ok(())
     }
 
     fn scope_exit(&mut self) {
@@ -116,9 +132,26 @@ impl CompilerNew {
         parameters: Vec<Parameter>,
         body: Vec<Statement>,
     ) -> KsResult<()> {
-        let current_pc = self.current_pc();
+        self.scope_enter();
+        self.compile_statements(body)?;
 
-        // self.environment.define_variable(name)?;
+        let mut scope = self.scope_pop()?;
+        self.insert(Instruction::Jump(scope.len() as i32))?;
+
+        let pointer = self.current_pc();
+        self.environment.define_function(&name, pointer);
+        self.environment.define_variable(name)?;
+        self.scope_append(&mut scope)?;
+
+        Ok(())
+    }
+
+    fn return_statement(&mut self, expression: Option<Expression>) -> KsResult<()> {
+        if let Some(expression) = expression {
+            self.compile_expression(expression)?;
+        }
+
+        self.insert(Instruction::Return)?;
 
         Ok(())
     }
@@ -139,6 +172,7 @@ impl CompilerNew {
                 parameters,
                 body,
             } => self.function_declaration(name, public, parameters, body),
+            Statement::ReturnStatement { value } => self.return_statement(value),
             _ => todo!(),
         }?;
 
