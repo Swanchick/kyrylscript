@@ -1,10 +1,10 @@
 use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
 use std::collections::HashMap;
 
-use crate::compiler_new::types::{FunctionPointer, VariableId};
+use crate::compiler_new::types::{Pointer, VariableId};
 
 pub struct Environment {
-    functions: HashMap<String, FunctionPointer>,
+    functions: HashMap<String, Pointer>,
     variables: Vec<HashMap<String, usize>>,
     current: usize,
 }
@@ -18,6 +18,10 @@ impl Environment {
         }
     }
 
+    pub fn functions(self) -> HashMap<String, Pointer> {
+        self.functions
+    }
+
     pub fn define_variable(&mut self, name: String) -> KsResult<VariableId> {
         let current_count = self.current;
 
@@ -26,6 +30,10 @@ impl Environment {
         self.current += 1;
 
         Ok(current_count)
+    }
+
+    pub fn declare_function(&mut self, name: String) -> KsResult<()> {
+        Ok(())
     }
 
     pub fn variable_id(&self, name: &str) -> KsResult<VariableId> {

@@ -5,31 +5,30 @@ use ks_global::utils::ks_result::KsResult;
 use crate::parser::expression::Expression;
 use crate::parser::identifier_tail::IdentifierTail;
 use crate::parser::operator::Operator;
+use crate::parser::parameter::Parameter;
 use crate::parser::statement::Statement;
 
 use super::constant::Constant;
 use super::environment::Environment;
 use super::instructions::Instruction;
 use super::program::Program;
-use super::types::FunctionPointer;
+use super::types::Pointer;
 
 pub struct CompilerNew {
-    functions: HashMap<String, FunctionPointer>,
-    instuctions: Vec<Instruction>,
+    instructions: Vec<Instruction>,
     environment: Environment,
 }
 
 impl CompilerNew {
     pub fn new() -> Self {
         Self {
-            functions: HashMap::new(),
-            instuctions: Vec::new(),
+            instructions: Vec::new(),
             environment: Environment::new(),
         }
     }
 
     pub fn program(self) -> Program {
-        Program::new(self.instuctions, self.functions)
+        Program::new(self.instructions, self.environment.functions())
     }
 
     pub fn compile(&mut self, statements: Vec<Statement>) -> KsResult<()> {
@@ -41,7 +40,11 @@ impl CompilerNew {
     }
 
     fn insert(&mut self, instruction: Instruction) {
-        self.instuctions.push(instruction);
+        self.instructions.push(instruction);
+    }
+
+    fn current_pc(&mut self) -> Pointer {
+        self.instructions.len()
     }
 
     fn variable_declaration(
@@ -75,6 +78,20 @@ impl CompilerNew {
         Ok(())
     }
 
+    fn function_declaration(
+        &mut self,
+        name: String,
+        public: bool,
+        parameters: Vec<Parameter>,
+        body: Vec<Statement>,
+    ) -> KsResult<()> {
+        let current_pc = self.current_pc();
+
+        // self.environment.define_variable(name)?;
+
+        Ok(())
+    }
+
     fn compile_statement(&mut self, statement: Statement) -> KsResult<()> {
         match statement {
             Statement::VariableDeclaration {
@@ -84,6 +101,13 @@ impl CompilerNew {
                 value,
             } => self.variable_declaration(name, public, value),
             Statement::Expression { value } => self.expression_statement(value),
+            Statement::Function {
+                name,
+                public,
+                return_type: _,
+                parameters,
+                body,
+            } => self.function_declaration(name, public, parameters, body),
             _ => todo!(),
         }?;
 

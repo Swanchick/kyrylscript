@@ -100,3 +100,26 @@ fn simple_identifier() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn function_declaration() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::Jump(4),
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::LoadConst(Constant::Integer(20)),
+        Instruction::Add,
+        Instruction::Return,
+    ];
+
+    let mut functions = HashMap::<String, usize>::new();
+    functions.insert(String::from("add"), 1);
+
+    let test_program = Program::new(instructions, functions);
+
+    let driver = KsDriver::new("compiler/function_declaration.ks");
+    let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}

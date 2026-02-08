@@ -1,5 +1,5 @@
 use super::constant::Constant;
-use super::types::{FunctionPointer, Pointer, VariableId};
+use super::types::{Offset, Pointer, VariableId};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Instruction {
@@ -25,8 +25,8 @@ pub enum Instruction {
     // Statements
     End,
     Return,
-    JumpIfFalse(Pointer),
-    Jump(Pointer),
+    JumpIfFalse(Offset),
+    Jump(Offset),
     Store(VariableId),
     PubStore(VariableId),
     Assign,
@@ -34,7 +34,7 @@ pub enum Instruction {
     LoadVar(VariableId),
     LoadVarSave(VariableId),
     Closure(VariableId),
-    Call(FunctionPointer),
+    Call(Pointer),
 
     // List & Tuple & Module
     LoadModule(VariableId),
