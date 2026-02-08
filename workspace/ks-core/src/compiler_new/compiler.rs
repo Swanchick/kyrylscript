@@ -139,6 +139,10 @@ impl CompilerNew {
         self.scope_enter();
         self.compile_statements(body)?;
         let mut scope = self.scope_pop()?;
+        if !matches!(scope.last(), Some(Instruction::Return)) {
+            scope.push(Instruction::Return);
+        }
+
         self.insert(Instruction::Jump(scope.len() as i32))?;
         self.scope_append(&mut scope)?;
 
