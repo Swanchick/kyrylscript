@@ -1,19 +1,19 @@
 use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
 use std::collections::HashMap;
 
-use crate::compiler_new::types::VariableId;
+use crate::compiler_new::types::{FunctionPointer, VariableId};
 
 pub struct Environment {
+    functions: HashMap<String, FunctionPointer>,
     variables: Vec<HashMap<String, usize>>,
-    counters: Vec<usize>,
     current: usize,
 }
 
 impl Environment {
     pub fn new() -> Self {
         Environment {
+            functions: HashMap::new(),
             variables: vec![HashMap::new()],
-            counters: Vec::new(),
             current: 0,
         }
     }

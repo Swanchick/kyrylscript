@@ -53,10 +53,20 @@ impl Parser {
         self.token_pos = token_pos;
     }
 
+    fn sort_statements(&self, statements: &mut Vec<Statement>) {
+        statements.sort_by_key(|statement| {
+            if let Statement::Function { .. } = statement {
+                0
+            } else {
+                1
+            }
+        })
+    }
+
     pub fn start(&mut self) -> KsResult<Vec<Statement>> {
         let result = self.parse_block_statement();
 
-        match result {
+        let mut statements = match result {
             Ok(statements) => Ok(statements),
 
             Err(e) => {
@@ -76,7 +86,11 @@ impl Parser {
 
                 Err(KsError::parse(&error))
             }
-        }
+        }?;
+
+        self.sort_statements(&mut statements);
+
+        Ok(statements)
     }
 
     pub fn register_variable(&mut self, name: &str, data_type: DataType, public: bool) {
