@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-
+use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
 use crate::parser::expression::Expression;
@@ -15,6 +14,7 @@ use super::program::Program;
 use super::types::Pointer;
 
 pub struct CompilerNew {
+    scopes: Vec<Vec<Instruction>>,
     instructions: Vec<Instruction>,
     environment: Environment,
 }
@@ -22,6 +22,7 @@ pub struct CompilerNew {
 impl CompilerNew {
     pub fn new() -> Self {
         Self {
+            scopes: Vec::new(),
             instructions: Vec::new(),
             environment: Environment::new(),
         }
@@ -33,18 +34,48 @@ impl CompilerNew {
 
     pub fn compile(&mut self, statements: Vec<Statement>) -> KsResult<()> {
         for statement in statements {
+            self.scope_enter();
             self.compile_statement(statement)?;
+            self.scope_exit();
         }
 
         Ok(())
     }
 
-    fn insert(&mut self, instruction: Instruction) {
-        self.instructions.push(instruction);
-    }
-
     fn current_pc(&mut self) -> Pointer {
         self.instructions.len()
+    }
+
+    fn scope_enter(&mut self) {
+        self.scopes.push(Vec::new());
+    }
+
+    fn scope_pop(&mut self) -> KsResult<Vec<Instruction>> {
+        if let Some(scope) = self.scopes.pop() {
+            Ok(scope)
+        } else {
+            Err(KsError::parse("Cannot get ownership of last scope"))
+        }
+    }
+
+    fn scope_last_mut(&mut self) -> KsResult<&mut Vec<Instruction>> {
+        if let Some(scope) = self.scopes.last_mut() {
+            Ok(scope)
+        } else {
+            Err(KsError::parse("Cannot get last mutable scope"))
+        }
+    }
+
+    fn scope_exit(&mut self) {
+        if let Some(mut insctructions) = self.scopes.pop() {
+            self.instructions.append(&mut insctructions);
+        }
+    }
+
+    fn insert(&mut self, instruction: Instruction) -> KsResult<()> {
+        let last_scope = self.scope_last_mut()?;
+        last_scope.push(instruction);
+        Ok(())
     }
 
     fn variable_declaration(
@@ -63,9 +94,9 @@ impl CompilerNew {
 
         // REFACTOR needed in the parser, need to make a separate statement for the PubVariableDeclaration
         if public {
-            self.insert(Instruction::PubStore(variable_id));
+            self.insert(Instruction::PubStore(variable_id))?;
         } else {
-            self.insert(Instruction::Store(variable_id));
+            self.insert(Instruction::Store(variable_id))?;
         }
 
         Ok(())
@@ -73,7 +104,7 @@ impl CompilerNew {
 
     fn expression_statement(&mut self, expression: Expression) -> KsResult<()> {
         self.compile_expression(expression)?;
-        self.insert(Instruction::End);
+        self.insert(Instruction::End)?;
 
         Ok(())
     }
@@ -115,7 +146,7 @@ impl CompilerNew {
     }
 
     fn insert_constant(&mut self, constant: Constant) -> KsResult<()> {
-        self.insert(Instruction::LoadConst(constant));
+        self.insert(Instruction::LoadConst(constant))?;
         Ok(())
     }
 
@@ -128,7 +159,7 @@ impl CompilerNew {
             Instruction::LoadFromModule(variable_id)
         };
 
-        self.insert(instruction);
+        self.insert(instruction)?;
 
         Ok(())
     }
@@ -148,7 +179,7 @@ impl CompilerNew {
         Ok(())
     }
 
-    fn operator(&mut self, operator: Operator) {
+    fn operator(&mut self, operator: Operator) -> KsResult<()> {
         let instruction = match operator {
             Operator::Plus => Instruction::Add,
             Operator::Minus => Instruction::Minus,
@@ -169,7 +200,9 @@ impl CompilerNew {
             Operator::Power => Instruction::Power,
         };
 
-        self.insert(instruction);
+        self.insert(instruction)?;
+
+        Ok(())
     }
 
     fn binary_operation(
@@ -180,7 +213,7 @@ impl CompilerNew {
     ) -> KsResult<()> {
         self.compile_expression(left)?;
         self.compile_expression(right)?;
-        self.operator(operator);
+        self.operator(operator)?;
         Ok(())
     }
 

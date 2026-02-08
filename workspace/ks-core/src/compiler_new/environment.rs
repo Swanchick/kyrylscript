@@ -18,6 +18,8 @@ impl Environment {
         }
     }
 
+    pub fn add_context(&mut self, other: Self) {}
+
     pub fn functions(self) -> HashMap<String, Pointer> {
         self.functions
     }
