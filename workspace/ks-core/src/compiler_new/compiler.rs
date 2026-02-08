@@ -132,15 +132,14 @@ impl CompilerNew {
         parameters: Vec<Parameter>,
         body: Vec<Statement>,
     ) -> KsResult<()> {
-        self.scope_enter();
-        self.compile_statements(body)?;
-
-        let mut scope = self.scope_pop()?;
-        self.insert(Instruction::Jump(scope.len() as i32))?;
-
-        let pointer = self.current_pc();
+        let pointer = self.current_pc() + 1;
         self.environment.define_function(&name, pointer);
         self.environment.define_variable(name)?;
+
+        self.scope_enter();
+        self.compile_statements(body)?;
+        let mut scope = self.scope_pop()?;
+        self.insert(Instruction::Jump(scope.len() as i32))?;
         self.scope_append(&mut scope)?;
 
         Ok(())
