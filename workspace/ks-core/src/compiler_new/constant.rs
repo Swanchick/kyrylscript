@@ -1,4 +1,4 @@
-use super::types::VariableId;
+use super::types::Pointer;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Constant {
@@ -6,6 +6,6 @@ pub enum Constant {
     Float(f64),
     String(String),
     Boolean(bool),
-    Function(VariableId),
+    Function(Pointer),
     Null,
 }

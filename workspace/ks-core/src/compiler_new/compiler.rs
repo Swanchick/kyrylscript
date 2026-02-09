@@ -142,18 +142,28 @@ impl CompilerNew {
         self.environment.define_function(&name, pointer);
         let variable_id = self.environment.define_variable(name)?;
 
-        self.scope_enter();
-        self.compile_statements(body)?;
-        let mut scope = self.scope_pop()?;
-        if !matches!(scope.last(), Some(Instruction::Return)) {
-            scope.push(Instruction::Return);
+        let mut final_scope = Vec::<Instruction>::new();
+        for parameter in parameters {
+            let parameter_id = self.environment.define_variable(parameter.name)?;
+            final_scope.push(Instruction::Store(parameter_id));
         }
 
-        self.insert(Instruction::Jump(scope.len() as i32))?;
-        self.scope_append(&mut scope)?;
+        final_scope.reverse();
 
-        self.insert_constant(Constant::Function(variable_id))?;
+        self.scope_enter();
+        self.compile_statements(body)?;
 
+        let mut body_scope = self.scope_pop()?;
+        final_scope.append(&mut body_scope);
+
+        if !matches!(final_scope.last(), Some(Instruction::Return)) {
+            final_scope.push(Instruction::Return);
+        }
+
+        self.insert(Instruction::Jump(final_scope.len() as i32))?;
+        self.scope_append(&mut final_scope)?;
+
+        self.insert_constant(Constant::Function(pointer))?;
         self.insert_store(variable_id, public)?;
 
         Ok(())

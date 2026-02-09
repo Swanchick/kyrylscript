@@ -109,7 +109,7 @@ fn function_declaration() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Add,
         Instruction::Return,
-        Instruction::LoadConst(Constant::Function(0)),
+        Instruction::LoadConst(Constant::Function(1)),
         Instruction::Store(0),
     ];
 
@@ -136,6 +136,33 @@ fn should_create_return_at_the_end() -> KsResult<()> {
     let test_program = Program::new(instructions, functions);
 
     let driver = KsDriver::new("compiler/should_create_return_at_the_end.ks");
+    let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
+
+#[test]
+fn function_with_parameters() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::Jump(6),                          // Skiping function to store it
+        Instruction::Store(2),                         // Storing parameter b
+        Instruction::Store(1),                         // Storing parameter a
+        Instruction::LoadVar(1),                       // Loading var a to variable stack
+        Instruction::LoadVar(2),                       // Loading var b to variable stack
+        Instruction::Add,                              // Sum them
+        Instruction::Return,                           // And return
+        Instruction::LoadConst(Constant::Function(1)), // Defining function pointer as variable and save to variable stack
+        Instruction::Store(0),                         // Saving function from variable stack
+    ];
+
+    let mut functions = HashMap::<String, usize>::new();
+    functions.insert(String::from("sum"), 1);
+
+    let test_program = Program::new(instructions, functions);
+
+    let driver = KsDriver::new("compiler/function_with_parameters.ks");
     let program = driver.compiler_new()?;
 
     assert_eq!(test_program, program);

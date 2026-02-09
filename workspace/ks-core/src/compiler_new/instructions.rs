@@ -1,5 +1,5 @@
 use super::constant::Constant;
-use super::types::{Offset, Pointer, VariableId};
+use super::types::{ArgumentSize, Offset, VariableId};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Instruction {
@@ -34,7 +34,7 @@ pub enum Instruction {
     LoadVar(VariableId),
     LoadVarSave(VariableId),
     Closure(VariableId),
-    Call(Pointer),
+    Call(ArgumentSize),
 
     // List & Tuple & Module
     LoadModule(VariableId),
