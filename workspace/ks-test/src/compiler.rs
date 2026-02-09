@@ -169,3 +169,63 @@ fn function_with_parameters() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn function_call() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::Jump(4),
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::LoadConst(Constant::Integer(20)),
+        Instruction::Add,
+        Instruction::Return,
+        Instruction::LoadConst(Constant::Function(1)),
+        Instruction::Store(0),
+        Instruction::LoadVar(0),
+        Instruction::Call(0),
+        Instruction::End,
+    ];
+
+    let mut functions = HashMap::<String, usize>::new();
+    functions.insert(String::from("add"), 1);
+
+    let test_program = Program::new(instructions, functions);
+
+    let driver = KsDriver::new("compiler/function_call.ks");
+    let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
+
+#[test]
+fn function_call_with_parameters() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::Jump(6),                          // Skiping function to store it
+        Instruction::Store(2),                         // Storing parameter b
+        Instruction::Store(1),                         // Storing parameter a
+        Instruction::LoadVar(1),                       // Loading var a to variable stack
+        Instruction::LoadVar(2),                       // Loading var b to variable stack
+        Instruction::Add,                              // Sum them
+        Instruction::Return,                           // And return
+        Instruction::LoadConst(Constant::Function(1)), // Defining function pointer as variable and save to variable stack
+        Instruction::Store(0),                         // Saving function from variable stack
+        Instruction::LoadVar(0), // Loading variable stored on variable_id. It's a function
+        Instruction::LoadConst(Constant::Integer(10)), // Loading constant 10
+        Instruction::LoadConst(Constant::Integer(20)), // Loading constant 20
+        Instruction::Call(2),    // Calling function with 2 arguments stored in variable stack
+        Instruction::End,        // Ending an expression
+    ];
+
+    let mut functions = HashMap::<String, usize>::new();
+    functions.insert(String::from("add"), 1);
+
+    let test_program = Program::new(instructions, functions);
+
+    let driver = KsDriver::new("compiler/function_call_with_parameters.ks");
+    let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}

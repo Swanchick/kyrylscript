@@ -1,7 +1,6 @@
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
-use crate::compiler_new::types::VariableId;
 use crate::parser::expression::Expression;
 use crate::parser::identifier_tail::IdentifierTail;
 use crate::parser::operator::Operator;
@@ -12,7 +11,7 @@ use super::constant::Constant;
 use super::environment::Environment;
 use super::instructions::Instruction;
 use super::program::Program;
-use super::types::Pointer;
+use super::types::{Pointer, VariableId};
 
 pub struct CompilerNew {
     scopes: Vec<Vec<Instruction>>,
@@ -221,12 +220,25 @@ impl CompilerNew {
         Ok(())
     }
 
+    fn identifier_call(&mut self, expressions: Vec<Expression>) -> KsResult<()> {
+        let arguments = expressions.len();
+
+        for expression in expressions {
+            self.compile_expression(expression)?;
+        }
+
+        self.insert(Instruction::Call(arguments))?;
+
+        Ok(())
+    }
+
     fn identifier(&mut self, identifier: Vec<IdentifierTail>) -> KsResult<()> {
         let mut index = 0;
 
         for segment in identifier {
             match segment {
                 IdentifierTail::Name(name) => self.identifier_name(name, index == 0),
+                IdentifierTail::Call(expressions) => self.identifier_call(expressions),
                 _ => todo!(),
             }?;
 
