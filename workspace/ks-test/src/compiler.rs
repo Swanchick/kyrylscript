@@ -109,6 +109,8 @@ fn function_declaration() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Add,
         Instruction::Return,
+        Instruction::LoadConst(Constant::Function(0)),
+        Instruction::Store(0),
     ];
 
     let mut functions = HashMap::<String, usize>::new();

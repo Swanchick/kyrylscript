@@ -1,6 +1,7 @@
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
+use crate::compiler_new::types::VariableId;
 use crate::parser::expression::Expression;
 use crate::parser::identifier_tail::IdentifierTail;
 use crate::parser::operator::Operator;
@@ -94,6 +95,16 @@ impl CompilerNew {
         Ok(())
     }
 
+    fn insert_store(&mut self, variable_id: VariableId, public: bool) -> KsResult<()> {
+        if public {
+            self.insert(Instruction::PubStore(variable_id))?;
+        } else {
+            self.insert(Instruction::Store(variable_id))?;
+        }
+
+        Ok(())
+    }
+
     fn variable_declaration(
         &mut self,
         name: String,
@@ -108,12 +119,7 @@ impl CompilerNew {
             self.insert_constant(Constant::Null)
         }?;
 
-        // REFACTOR needed in the parser, need to make a separate statement for the PubVariableDeclaration
-        if public {
-            self.insert(Instruction::PubStore(variable_id))?;
-        } else {
-            self.insert(Instruction::Store(variable_id))?;
-        }
+        self.insert_store(variable_id, public)?;
 
         Ok(())
     }
@@ -134,7 +140,7 @@ impl CompilerNew {
     ) -> KsResult<()> {
         let pointer = self.current_pc() + 1;
         self.environment.define_function(&name, pointer);
-        self.environment.define_variable(name)?;
+        let variable_id = self.environment.define_variable(name)?;
 
         self.scope_enter();
         self.compile_statements(body)?;
@@ -145,6 +151,10 @@ impl CompilerNew {
 
         self.insert(Instruction::Jump(scope.len() as i32))?;
         self.scope_append(&mut scope)?;
+
+        self.insert_constant(Constant::Function(variable_id))?;
+
+        self.insert_store(variable_id, public)?;
 
         Ok(())
     }
