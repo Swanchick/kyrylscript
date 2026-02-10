@@ -4,6 +4,7 @@ use ks_core::compiler_new::constant::Constant;
 use ks_core::compiler_new::instructions::Instruction;
 use ks_core::compiler_new::program::Program;
 use ks_global::utils::ks_result::KsResult;
+use ks_vm::function::Function;
 
 use crate::drivers::KsDriver;
 
@@ -128,7 +129,12 @@ fn function_declaration() -> KsResult<()> {
 
 #[test]
 fn should_create_return_at_the_end() -> KsResult<()> {
-    let instructions: Vec<Instruction> = vec![Instruction::Jump(1), Instruction::Return];
+    let instructions: Vec<Instruction> = vec![
+        Instruction::Jump(1),
+        Instruction::Return,
+        Instruction::LoadConst(Constant::Function(1)),
+        Instruction::Store(0),
+    ];
 
     let mut functions = HashMap::<String, usize>::new();
     functions.insert(String::from("add"), 1);

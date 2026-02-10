@@ -28,63 +28,6 @@ impl CompilerNew {
         }
     }
 
-    pub fn display(&self) {
-        for (index, instruction) in self.instructions.iter().enumerate() {
-            print!("{:#08x}: ", index);
-
-            match instruction {
-                Instruction::Add => println!("add"),
-                Instruction::Minus => println!("minus"),
-                Instruction::Mul => println!("mul"),
-                Instruction::Div => println!("div"),
-                Instruction::Eq => println!("eq"),
-                Instruction::GreaterEq => println!("greater_eq"),
-                Instruction::Greater => println!("greater"),
-                Instruction::LessEq => println!("less_eq"),
-                Instruction::Less => println!("less"),
-                Instruction::NotEq => println!("not_eq"),
-                Instruction::And => println!("and"),
-                Instruction::Or => println!("or"),
-                Instruction::Not => println!("not"),
-                Instruction::Increment => println!("inc"),
-                Instruction::Decrement => println!("dec"),
-                Instruction::Clone => println!("clone"),
-                Instruction::Power => println!("pow"),
-                Instruction::End => println!("end"),
-                Instruction::Return => println!("return"),
-                Instruction::JumpIfFalse(offset) => println!("jmp_if_false {}", offset),
-                Instruction::Jump(offset) => {
-                    println!(
-                        "jmp {}",
-                        if *offset >= 0 {
-                            format!("+{}", offset)
-                        } else {
-                            offset.to_string()
-                        }
-                    )
-                }
-                Instruction::Store(var) => println!("store {:#08x}", var),
-                Instruction::PubStore(var) => println!("pub_store {:#08x}", var),
-                Instruction::Assign => println!("assign"),
-                Instruction::LoadConst(constant) => {
-                    print!("load_const ");
-                    match constant {
-                        Constant::Integer(i) => println!("{}", i),
-                        Constant::Float(f) => println!("{}f", f),
-                        Constant::String(s) => println!("\"{}\"", s),
-                        Constant::Boolean(b) => println!("{}", b),
-                        Constant::Function(ptr) => println!("function({:#08x})", ptr),
-                        Constant::Null => println!("null"),
-                    }
-                }
-                Instruction::LoadVar(var) => println!("load_var {:#08x}", var),
-                Instruction::LoadVarSave(var) => println!("load_var_save {:#08x}", var),
-                Instruction::Call(argc) => println!("call {}", argc),
-                _ => {}
-            }
-        }
-    }
-
     pub fn program(self) -> Program {
         Program::new(self.instructions, self.environment.functions())
     }

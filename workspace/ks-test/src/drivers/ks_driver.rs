@@ -51,7 +51,6 @@ impl KsDriver {
         let statements = self.parser()?;
         let mut compiler = CompilerNew::new();
         compiler.compile(statements)?;
-        compiler.display();
 
         Ok(compiler.program())
     }
