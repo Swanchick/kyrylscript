@@ -4,7 +4,6 @@ use ks_core::compiler_new::constant::Constant;
 use ks_core::compiler_new::instructions::Instruction;
 use ks_core::compiler_new::program::Program;
 use ks_global::utils::ks_result::KsResult;
-use ks_vm::function::Function;
 
 use crate::drivers::KsDriver;
 
