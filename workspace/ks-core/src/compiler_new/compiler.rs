@@ -178,6 +178,62 @@ impl CompilerNew {
         Ok(())
     }
 
+    fn assign_identifier_name(&mut self, name: String, is_first: bool) -> KsResult<()> {
+        let variable_id = self.environment.variable_id(&name)?;
+
+        if is_first {
+            self.insert(Instruction::AssignVar(variable_id))?;
+        } else {
+            self.insert(Instruction::AssignModule(variable_id))?;
+        }
+
+        Ok(())
+    }
+
+    fn assign_identifier(&mut self, identifier: Vec<IdentifierTail>) -> KsResult<()> {
+        let mut index = 0;
+        for segment in identifier {
+            match segment {
+                IdentifierTail::Name(name) => self.assign_identifier_name(name, index == 0),
+                IdentifierTail::Call(_) => {
+                    Err(KsError::parse("Cannot call in assignment identifier"))
+                }
+                _ => todo!(),
+            }?;
+
+            index += 1;
+        }
+
+        Ok(())
+    }
+
+    fn assignment(
+        &mut self,
+        identifier: Vec<IdentifierTail>,
+        expression: Expression,
+    ) -> KsResult<()> {
+        self.assign_identifier(identifier)?;
+        self.compile_expression(expression)?;
+        self.insert(Instruction::Assign)?;
+        Ok(())
+    }
+
+    fn arithmetic_assignment(
+        &mut self,
+        identifier: Vec<IdentifierTail>,
+        expression: Expression,
+        operator: Operator,
+    ) -> KsResult<()> {
+        let assign_identifier = identifier.clone();
+        self.assign_identifier(assign_identifier)?;
+        self.identifier(identifier)?;
+        self.compile_expression(expression)?;
+        self.insert_operator(operator)?;
+        self.insert(Instruction::Assign)?;
+
+        Ok(())
+    }
+
     fn compile_statement(&mut self, statement: Statement) -> KsResult<()> {
         match statement {
             Statement::VariableDeclaration {
@@ -195,6 +251,13 @@ impl CompilerNew {
                 body,
             } => self.function_declaration(name, public, parameters, body),
             Statement::ReturnStatement { value } => self.return_statement(value),
+            Statement::Assignment { segments, value } => self.assignment(segments, value),
+            Statement::AddValue { segments, value } => {
+                self.arithmetic_assignment(segments, value, Operator::Plus)
+            }
+            Statement::RemoveValue { segments, value } => {
+                self.arithmetic_assignment(segments, value, Operator::Minus)
+            }
             _ => todo!(),
         }?;
 
@@ -248,7 +311,7 @@ impl CompilerNew {
         Ok(())
     }
 
-    fn operator(&mut self, operator: Operator) -> KsResult<()> {
+    fn insert_operator(&mut self, operator: Operator) -> KsResult<()> {
         let instruction = match operator {
             Operator::Plus => Instruction::Add,
             Operator::Minus => Instruction::Minus,
@@ -282,7 +345,7 @@ impl CompilerNew {
     ) -> KsResult<()> {
         self.compile_expression(left)?;
         self.compile_expression(right)?;
-        self.operator(operator)?;
+        self.insert_operator(operator)?;
         Ok(())
     }
 

@@ -235,3 +235,69 @@ fn function_call_with_parameters() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn assignment_statment() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::Store(0),
+        Instruction::AssignVar(0),
+        Instruction::LoadConst(Constant::Integer(20)),
+        Instruction::Assign,
+    ];
+
+    let test_program = Program::new(instructions, HashMap::new());
+
+    let driver = KsDriver::new("compiler/assignment_statment.ks");
+    let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
+
+#[test]
+#[ignore = "Broken parser, does not provide the structure, instead panics!"]
+fn add_value_statment() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::Store(0),
+        Instruction::AssignVar(0),
+        Instruction::LoadVar(0),
+        Instruction::LoadConst(Constant::Integer(20)),
+        Instruction::Add,
+        Instruction::Assign,
+    ];
+
+    let test_program = Program::new(instructions, HashMap::new());
+
+    let driver = KsDriver::new("compiler/add_value_statment.ks");
+    let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
+
+#[test]
+#[ignore = "Broken parser, does not provide the structure, instead panics!"]
+fn remove_value_statment() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::Store(0),
+        Instruction::AssignVar(0),
+        Instruction::LoadVar(0),
+        Instruction::LoadConst(Constant::Integer(20)),
+        Instruction::Minus,
+        Instruction::Assign,
+    ];
+
+    let test_program = Program::new(instructions, HashMap::new());
+
+    let driver = KsDriver::new("compiler/assignment_statment.ks");
+    let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}

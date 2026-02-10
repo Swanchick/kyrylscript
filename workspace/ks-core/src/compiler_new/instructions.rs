@@ -32,9 +32,9 @@ pub enum Instruction {
     Assign,
     LoadConst(Constant),
     LoadVar(VariableId),
-    LoadVarSave(VariableId),
     Closure(VariableId),
     Call(ArgumentSize),
+    AssignVar(VariableId),
 
     // List & Tuple & Module
     LoadModule(VariableId),
@@ -47,7 +47,7 @@ pub enum Instruction {
     LoadFromTupleSave(usize),
     LoadFromModule(VariableId),
     LoadFromModuleSave(String),
-    AssignModule(String),
+    AssignModule(VariableId),
 
     // System
     Enter,
