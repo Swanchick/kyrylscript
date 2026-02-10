@@ -301,3 +301,55 @@ fn remove_value_statment() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn if_statement() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::Store(0),
+        Instruction::LoadVar(0),
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::Eq,
+        Instruction::JumpIfFalse(3),
+        Instruction::AssignVar(0),
+        Instruction::LoadConst(Constant::Integer(20)),
+        Instruction::Assign,
+    ];
+
+    let test_program = Program::new(instructions, HashMap::new());
+
+    let driver = KsDriver::new("compiler/if_statement.ks");
+    let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
+
+#[test]
+fn if_statement_with_else() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::Store(0),
+        Instruction::LoadVar(0),
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::Eq,
+        Instruction::JumpIfFalse(4),
+        Instruction::AssignVar(0),
+        Instruction::LoadConst(Constant::Integer(20)),
+        Instruction::Assign,
+        Instruction::Jump(3),
+        Instruction::AssignVar(0),
+        Instruction::LoadConst(Constant::Integer(30)),
+        Instruction::Assign,
+    ];
+
+    let test_program = Program::new(instructions, HashMap::new());
+
+    let driver = KsDriver::new("compiler/if_statement_with_else.ks");
+    let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}

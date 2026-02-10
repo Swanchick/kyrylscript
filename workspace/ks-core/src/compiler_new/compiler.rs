@@ -234,6 +234,36 @@ impl CompilerNew {
         Ok(())
     }
 
+    fn if_statement(
+        &mut self,
+        expression: Expression,
+        body: Vec<Statement>,
+        else_body: Option<Vec<Statement>>,
+    ) -> KsResult<()> {
+        self.compile_expression(expression)?;
+
+        self.scope_enter();
+        self.compile_statements(body)?;
+        let mut body_scope = self.scope_pop()?;
+
+        let mut else_body_scope = if let Some(else_body) = else_body {
+            self.scope_enter();
+            self.compile_statements(else_body)?;
+            let else_body_scope = self.scope_pop()?;
+            body_scope.push(Instruction::Jump(else_body_scope.len() as i32));
+
+            else_body_scope
+        } else {
+            Vec::new()
+        };
+
+        self.insert(Instruction::JumpIfFalse(body_scope.len() as i32))?;
+        self.scope_append(&mut body_scope)?;
+        self.scope_append(&mut else_body_scope)?;
+
+        Ok(())
+    }
+
     fn compile_statement(&mut self, statement: Statement) -> KsResult<()> {
         match statement {
             Statement::VariableDeclaration {
@@ -258,6 +288,11 @@ impl CompilerNew {
             Statement::RemoveValue { segments, value } => {
                 self.arithmetic_assignment(segments, value, Operator::Minus)
             }
+            Statement::IfStatement {
+                condition,
+                body,
+                else_body,
+            } => self.if_statement(condition, body, else_body),
             _ => todo!(),
         }?;
 
