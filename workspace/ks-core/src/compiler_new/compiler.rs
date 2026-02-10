@@ -264,6 +264,25 @@ impl CompilerNew {
         Ok(())
     }
 
+    fn while_statement(&mut self, expression: Expression, body: Vec<Statement>) -> KsResult<()> {
+        self.scope_enter();
+        self.compile_expression(expression)?;
+        let mut expression_scope = self.scope_pop()?;
+
+        self.scope_enter();
+        self.compile_statements(body)?;
+        let mut body_scope = self.scope_pop()?;
+        expression_scope.push(Instruction::JumpIfFalse(body_scope.len() as i32 + 1));
+        body_scope.push(Instruction::Jump(
+            -(expression_scope.len() as i32) - body_scope.len() as i32,
+        ));
+
+        self.scope_append(&mut expression_scope)?;
+        self.scope_append(&mut body_scope)?;
+
+        Ok(())
+    }
+
     fn compile_statement(&mut self, statement: Statement) -> KsResult<()> {
         match statement {
             Statement::VariableDeclaration {
@@ -293,6 +312,8 @@ impl CompilerNew {
                 body,
                 else_body,
             } => self.if_statement(condition, body, else_body),
+
+            Statement::WhileStatement { condition, body } => self.while_statement(condition, body),
             _ => todo!(),
         }?;
 

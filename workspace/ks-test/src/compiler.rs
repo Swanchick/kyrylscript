@@ -353,3 +353,30 @@ fn if_statement_with_else() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn while_statement() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::Integer(0)),
+        Instruction::Store(0),
+        Instruction::LoadVar(0),
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::GreaterEq,
+        Instruction::JumpIfFalse(6),
+        Instruction::AssignVar(0),
+        Instruction::LoadVar(0),
+        Instruction::LoadConst(Constant::Integer(1)),
+        Instruction::Add,
+        Instruction::Assign,
+        Instruction::Jump(-9),
+    ];
+
+    let test_program = Program::new(instructions, HashMap::new());
+
+    let driver = KsDriver::new("compiler/while_statement.ks");
+    let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
