@@ -88,6 +88,14 @@ impl CompilerNew {
         }
     }
 
+    fn wrap_scope_into_enter(&mut self, mut scope: Vec<Instruction>) -> Vec<Instruction> {
+        let mut final_scope = Vec::<Instruction>::new();
+        final_scope.push(Instruction::Enter);
+        final_scope.append(&mut scope);
+        final_scope.push(Instruction::Exit);
+        final_scope
+    }
+
     fn insert(&mut self, instruction: Instruction) -> KsResult<()> {
         let last_scope = self.scope_last_mut()?;
         last_scope.push(instruction);
@@ -244,12 +252,14 @@ impl CompilerNew {
 
         self.scope_enter();
         self.compile_statements(body)?;
-        let mut body_scope = self.scope_pop()?;
+        let body_scope = self.scope_pop()?;
+        let mut body_scope = self.wrap_scope_into_enter(body_scope);
 
         let mut else_body_scope = if let Some(else_body) = else_body {
             self.scope_enter();
             self.compile_statements(else_body)?;
             let else_body_scope = self.scope_pop()?;
+            let else_body_scope = self.wrap_scope_into_enter(else_body_scope);
             body_scope.push(Instruction::Jump(else_body_scope.len() as i32));
 
             else_body_scope
@@ -271,7 +281,8 @@ impl CompilerNew {
 
         self.scope_enter();
         self.compile_statements(body)?;
-        let mut body_scope = self.scope_pop()?;
+        let body_scope = self.scope_pop()?;
+        let mut body_scope = self.wrap_scope_into_enter(body_scope);
         expression_scope.push(Instruction::JumpIfFalse(body_scope.len() as i32 + 1));
         body_scope.push(Instruction::Jump(
             -(expression_scope.len() as i32) - body_scope.len() as i32,
@@ -312,7 +323,6 @@ impl CompilerNew {
                 body,
                 else_body,
             } => self.if_statement(condition, body, else_body),
-
             Statement::WhileStatement { condition, body } => self.while_statement(condition, body),
             _ => todo!(),
         }?;

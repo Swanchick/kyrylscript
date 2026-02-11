@@ -309,10 +309,12 @@ fn if_statement() -> KsResult<()> {
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Eq,
-        Instruction::JumpIfFalse(3),
+        Instruction::JumpIfFalse(5),
+        Instruction::Enter,
         Instruction::AssignVar(0),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Assign,
+        Instruction::Exit,
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -333,14 +335,18 @@ fn if_statement_with_else() -> KsResult<()> {
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Eq,
-        Instruction::JumpIfFalse(4),
+        Instruction::JumpIfFalse(6),
+        Instruction::Enter,
         Instruction::AssignVar(0),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Assign,
-        Instruction::Jump(3),
+        Instruction::Exit,
+        Instruction::Jump(5),
+        Instruction::Enter,
         Instruction::AssignVar(0),
         Instruction::LoadConst(Constant::Integer(30)),
         Instruction::Assign,
+        Instruction::Exit,
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -361,18 +367,35 @@ fn while_statement() -> KsResult<()> {
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::GreaterEq,
-        Instruction::JumpIfFalse(6),
+        Instruction::JumpIfFalse(8),
+        Instruction::Enter,
         Instruction::AssignVar(0),
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(1)),
         Instruction::Add,
         Instruction::Assign,
-        Instruction::Jump(-9),
+        Instruction::Exit,
+        Instruction::Jump(-11),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/while_statement.ks");
+    let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
+
+#[test]
+#[ignore = "asd"]
+fn for_statement() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![];
+
+    let test_program = Program::new(instructions, HashMap::new());
+
+    let driver = KsDriver::new("compiler/for_statement.ks");
     let program = driver.compiler_new()?;
 
     assert_eq!(test_program, program);
