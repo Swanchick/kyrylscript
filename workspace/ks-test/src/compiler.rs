@@ -394,8 +394,25 @@ fn for_statement() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::Enter,
         Instruction::LoadConst(Constant::Integer(0)),
-        Instruction::Store(0), // iterator = 0,
+        Instruction::LoadConst(Constant::Integer(1)),
+        Instruction::LoadConst(Constant::Integer(2)),
+        Instruction::LoadList(3),
+        Instruction::Store(0), // list_iter = [0, 1, 2]
+        Instruction::LoadConst(Constant::Integer(0)),
+        Instruction::Store(1), // iterator = 0,
+        Instruction::Enter,
+        Instruction::LoadVar(1),
         Instruction::LoadVar(0),
+        Instruction::LoadFromList,
+        Instruction::Store(3),
+        Instruction::Exit,
+        Instruction::LoadVar(1),
+        Instruction::Increment, // iterator++
+        Instruction::LoadVar(0),
+        Instruction::ListLen,
+        Instruction::GreaterEq, // iterator >= list_iter.len()
+        Instruction::JumpIfFalse(-11),
+        Instruction::Exit,
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
