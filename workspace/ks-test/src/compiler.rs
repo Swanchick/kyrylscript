@@ -389,13 +389,40 @@ fn while_statement() -> KsResult<()> {
 }
 
 #[test]
-#[ignore = "asd"]
+#[ignore = "No list expression yet"]
 fn for_statement() -> KsResult<()> {
-    let instructions: Vec<Instruction> = vec![];
+    let instructions: Vec<Instruction> = vec![
+        Instruction::Enter,
+        Instruction::LoadConst(Constant::Integer(0)),
+        Instruction::Store(0), // iterator = 0,
+        Instruction::LoadVar(0),
+    ];
 
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/for_statement.ks");
+    let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
+
+#[test]
+fn list_expression() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::LoadConst(Constant::Integer(20)),
+        Instruction::LoadConst(Constant::Integer(30)),
+        Instruction::LoadConst(Constant::Integer(40)),
+        Instruction::LoadConst(Constant::Integer(50)),
+        Instruction::LoadList(5),
+        Instruction::Store(0),
+    ];
+
+    let test_program = Program::new(instructions, HashMap::new());
+
+    let driver = KsDriver::new("compiler/list_expression.ks");
     let program = driver.compiler_new()?;
 
     assert_eq!(test_program, program);

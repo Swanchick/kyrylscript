@@ -1,7 +1,7 @@
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
-use crate::parser::expression::Expression;
+use crate::parser::expression::{self, Expression};
 use crate::parser::identifier_tail::IdentifierTail;
 use crate::parser::operator::Operator;
 use crate::parser::parameter::Parameter;
@@ -415,6 +415,17 @@ impl CompilerNew {
         Ok(())
     }
 
+    fn list_literal(&mut self, expressions: Vec<Expression>) -> KsResult<()> {
+        let list_len = expressions.len();
+
+        for expression in expressions {
+            self.compile_expression(expression)?;
+        }
+
+        self.insert(Instruction::LoadList(list_len))?;
+        Ok(())
+    }
+
     fn compile_expression(&mut self, expression: Expression) -> KsResult<()> {
         match expression {
             Expression::NullLiteral => self.insert_constant(Constant::Null),
@@ -423,6 +434,7 @@ impl CompilerNew {
             Expression::FloatLiteral(float) => self.insert_constant(Constant::Float(float)),
             Expression::StringLiteral(string) => self.insert_constant(Constant::String(string)),
             Expression::Identifier(identifier) => self.identifier(identifier),
+            Expression::ListLiteral(expressions) => self.list_literal(expressions),
             Expression::BinaryOp {
                 left,
                 operator,
