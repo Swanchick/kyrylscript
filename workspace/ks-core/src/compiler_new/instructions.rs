@@ -26,6 +26,7 @@ pub enum Instruction {
     End,
     Return,
     JumpIfFalse(Offset),
+    JumpIfTrue(Offset),
     Jump(Offset),
     Store(VariableId),
     PubStore(VariableId),

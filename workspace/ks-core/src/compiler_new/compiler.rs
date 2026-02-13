@@ -1,7 +1,7 @@
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
-use crate::parser::expression::{self, Expression};
+use crate::parser::expression::Expression;
 use crate::parser::identifier_tail::IdentifierTail;
 use crate::parser::operator::Operator;
 use crate::parser::parameter::Parameter;
@@ -75,9 +75,9 @@ impl CompilerNew {
         }
     }
 
-    fn scope_append(&mut self, scope: &mut Vec<Instruction>) -> KsResult<()> {
+    fn scope_append(&mut self, mut scope: Vec<Instruction>) -> KsResult<()> {
         let last_scope = self.scope_last_mut()?;
-        last_scope.append(scope);
+        last_scope.append(&mut scope);
 
         Ok(())
     }
@@ -168,7 +168,7 @@ impl CompilerNew {
         }
 
         self.insert(Instruction::Jump(final_scope.len() as i32))?;
-        self.scope_append(&mut final_scope)?;
+        self.scope_append(final_scope)?;
 
         self.insert_constant(Constant::Function(pointer))?;
         self.insert_store(variable_id, public)?;
@@ -268,8 +268,8 @@ impl CompilerNew {
         };
 
         self.insert(Instruction::JumpIfFalse(body_scope.len() as i32))?;
-        self.scope_append(&mut body_scope)?;
-        self.scope_append(&mut else_body_scope)?;
+        self.scope_append(body_scope)?;
+        self.scope_append(else_body_scope)?;
 
         Ok(())
     }
@@ -277,19 +277,21 @@ impl CompilerNew {
     fn while_statement(&mut self, expression: Expression, body: Vec<Statement>) -> KsResult<()> {
         self.scope_enter();
         self.compile_expression(expression)?;
-        let mut expression_scope = self.scope_pop()?;
+        let expression_scope = self.scope_pop()?;
 
         self.scope_enter();
         self.compile_statements(body)?;
         let body_scope = self.scope_pop()?;
-        let mut body_scope = self.wrap_scope_into_enter(body_scope);
-        expression_scope.push(Instruction::JumpIfFalse(body_scope.len() as i32 + 1));
-        body_scope.push(Instruction::Jump(
-            -(expression_scope.len() as i32) - body_scope.len() as i32,
-        ));
+        let body_scope = self.wrap_scope_into_enter(body_scope);
 
-        self.scope_append(&mut expression_scope)?;
-        self.scope_append(&mut body_scope)?;
+        let expression_len = expression_scope.len() as i32;
+        let body_len = body_scope.len() as i32;
+
+        self.insert(Instruction::Jump(body_len))?;
+
+        self.scope_append(body_scope)?;
+        self.scope_append(expression_scope)?;
+        self.insert(Instruction::JumpIfTrue(-body_len - expression_len))?;
 
         Ok(())
     }

@@ -361,13 +361,27 @@ fn if_statement_with_else() -> KsResult<()> {
 
 #[test]
 fn while_statement() -> KsResult<()> {
+    // let instructions: Vec<Instruction> = vec![
+    //     Instruction::LoadConst(Constant::Integer(0)),
+    //     Instruction::Store(0),
+    //     Instruction::LoadVar(0),
+    //     Instruction::LoadConst(Constant::Integer(10)),
+    //     Instruction::GreaterEq,
+    //     Instruction::JumpIfFalse(8),
+    //     Instruction::Enter,
+    //     Instruction::AssignVar(0),
+    //     Instruction::LoadVar(0),
+    //     Instruction::LoadConst(Constant::Integer(1)),
+    //     Instruction::Add,
+    //     Instruction::Assign,
+    //     Instruction::Exit,
+    //     Instruction::Jump(-11),
+    // ];
+
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(0)),
         Instruction::Store(0),
-        Instruction::LoadVar(0),
-        Instruction::LoadConst(Constant::Integer(10)),
-        Instruction::GreaterEq,
-        Instruction::JumpIfFalse(8),
+        Instruction::Jump(7),
         Instruction::Enter,
         Instruction::AssignVar(0),
         Instruction::LoadVar(0),
@@ -375,7 +389,10 @@ fn while_statement() -> KsResult<()> {
         Instruction::Add,
         Instruction::Assign,
         Instruction::Exit,
-        Instruction::Jump(-11),
+        Instruction::LoadVar(0),
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::GreaterEq,
+        Instruction::JumpIfTrue(-10),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
