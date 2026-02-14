@@ -406,7 +406,6 @@ fn while_statement() -> KsResult<()> {
 }
 
 #[test]
-#[ignore = "No list expression yet"]
 fn for_statement() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::Enter,
@@ -417,11 +416,14 @@ fn for_statement() -> KsResult<()> {
         Instruction::Store(0), // list_iter = [0, 1, 2]
         Instruction::LoadConst(Constant::Integer(0)),
         Instruction::Store(1), // iterator = 0,
+        Instruction::LoadConst(Constant::Null),
+        Instruction::Store(3), // our preallocated variable
         Instruction::Enter,
+        Instruction::AssignVar(3),
         Instruction::LoadVar(1),
         Instruction::LoadVar(0),
         Instruction::LoadFromList,
-        Instruction::Store(3),
+        Instruction::Assign,
         Instruction::Exit,
         Instruction::LoadVar(1),
         Instruction::Increment, // iterator++
