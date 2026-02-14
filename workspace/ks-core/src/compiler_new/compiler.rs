@@ -459,14 +459,18 @@ impl CompilerNew {
         Ok(())
     }
 
-    fn list_literal(&mut self, expressions: Vec<Expression>) -> KsResult<()> {
+    fn collection(
+        &mut self,
+        collection: Instruction,
+        expressions: Vec<Expression>,
+    ) -> KsResult<()> {
         let list_len = expressions.len();
 
         for expression in expressions {
             self.compile_expression(expression)?;
         }
 
-        self.insert(Instruction::LoadList(list_len))?;
+        self.insert(collection)?;
         Ok(())
     }
 
@@ -497,7 +501,12 @@ impl CompilerNew {
             Expression::FloatLiteral(float) => self.insert_constant(Constant::Float(float)),
             Expression::StringLiteral(string) => self.insert_constant(Constant::String(string)),
             Expression::Identifier(identifier) => self.identifier(identifier),
-            Expression::ListLiteral(expressions) => self.list_literal(expressions),
+            Expression::ListLiteral(expressions) => {
+                self.collection(Instruction::LoadList(expressions.len()), expressions)
+            }
+            Expression::TupleLiteral(expressions) => {
+                self.collection(Instruction::LoadTuple(expressions.len()), expressions)
+            }
             Expression::BinaryOp {
                 left,
                 operator,

@@ -514,3 +514,24 @@ fn front_unary_operator() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn tuple_literal() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::LoadConst(Constant::String(String::from("Hello World"))),
+        Instruction::LoadConst(Constant::Float(3.14)),
+        Instruction::LoadConst(Constant::Boolean(true)),
+        Instruction::LoadTuple(4),
+        Instruction::Store(0),
+    ];
+
+    let test_program = Program::new(instructions, HashMap::new());
+
+    let driver = KsDriver::new("compiler/tuple_literal.ks");
+    let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
