@@ -417,20 +417,20 @@ fn for_statement() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(0)),
         Instruction::Store(1), // iterator = 0,
         Instruction::LoadConst(Constant::Null),
-        Instruction::Store(3), // our preallocated variable
-        Instruction::Enter,
-        Instruction::AssignVar(3),
+        Instruction::Store(2), // our preallocated variable
+        Instruction::Enter,    // Empty scope
+        Instruction::AssignVar(2),
         Instruction::LoadVar(1),
         Instruction::LoadVar(0),
         Instruction::LoadFromList,
-        Instruction::Assign,
-        Instruction::Exit,
+        Instruction::Assign, // changing the variable to the list number
+        Instruction::Exit,   // Empty scope
         Instruction::LoadVar(1),
         Instruction::Increment, // iterator++
         Instruction::LoadVar(0),
         Instruction::ListLen,
         Instruction::GreaterEq, // iterator >= list_iter.len()
-        Instruction::JumpIfFalse(-11),
+        Instruction::JumpIfFalse(-12),
         Instruction::Exit,
     ];
 

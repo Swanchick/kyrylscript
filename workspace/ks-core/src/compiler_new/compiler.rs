@@ -255,7 +255,7 @@ impl CompilerNew {
         let body_scope = self.scope_pop()?;
         let mut body_scope = self.wrap_scope_into_enter(body_scope);
 
-        let mut else_body_scope = if let Some(else_body) = else_body {
+        let else_body_scope = if let Some(else_body) = else_body {
             self.scope_enter();
             self.compile_statements(else_body)?;
             let else_body_scope = self.scope_pop()?;
@@ -296,6 +296,57 @@ impl CompilerNew {
         Ok(())
     }
 
+    fn for_statement(
+        &mut self,
+        name: String,
+        list: Expression,
+        body: Vec<Statement>,
+    ) -> KsResult<()> {
+        let iter_list = self
+            .environment
+            .define_variable(format!("__iter_list_{}", name))?;
+        let iter = self
+            .environment
+            .define_variable(format!("__iter_{}", name))?;
+        let iter_variable_id = self.environment.define_variable(name)?;
+
+        self.insert(Instruction::Enter)?;
+        self.compile_expression(list)?;
+        self.insert(Instruction::Store(iter_list))?;
+        self.insert_constant(Constant::Integer(0))?;
+        self.insert(Instruction::Store(iter))?;
+        self.insert_constant(Constant::Null)?;
+        self.insert(Instruction::Store(iter_variable_id))?;
+
+        self.scope_enter();
+        self.insert(Instruction::AssignVar(iter_variable_id))?;
+        self.insert(Instruction::LoadVar(iter))?;
+        self.insert(Instruction::LoadVar(iter_list))?;
+        self.insert(Instruction::LoadFromList)?;
+        self.insert(Instruction::Assign)?;
+
+        self.compile_statements(body)?;
+        let body_scope = self.scope_pop()?;
+        let body_scope = self.wrap_scope_into_enter(body_scope);
+        let body_len = body_scope.len() as i32;
+        self.scope_append(body_scope)?;
+
+        self.scope_enter();
+        self.insert(Instruction::LoadVar(iter))?;
+        self.insert(Instruction::Increment)?;
+        self.insert(Instruction::LoadVar(iter_list))?;
+        self.insert(Instruction::ListLen)?;
+        self.insert(Instruction::GreaterEq)?;
+        let after_scope = self.scope_pop()?;
+        let after_len = after_scope.len() as i32;
+        self.scope_append(after_scope)?;
+
+        self.insert(Instruction::JumpIfFalse(-body_len - after_len))?;
+        self.insert(Instruction::Exit)?;
+
+        Ok(())
+    }
+
     fn compile_statement(&mut self, statement: Statement) -> KsResult<()> {
         match statement {
             Statement::VariableDeclaration {
@@ -326,6 +377,9 @@ impl CompilerNew {
                 else_body,
             } => self.if_statement(condition, body, else_body),
             Statement::WhileStatement { condition, body } => self.while_statement(condition, body),
+            Statement::ForLoopStatement { name, list, body } => {
+                self.for_statement(name, list, body)
+            }
             _ => todo!(),
         }?;
 
