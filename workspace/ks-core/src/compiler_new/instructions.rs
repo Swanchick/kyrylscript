@@ -38,7 +38,7 @@ pub enum Instruction {
     AssignVar(VariableId),
 
     // List & Tuple & Module
-    LoadModule(VariableId),
+    LoadModule(usize),
     LoadList(usize),
     LoadTuple(usize),
     LoadFromList,

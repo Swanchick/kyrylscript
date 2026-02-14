@@ -535,3 +535,23 @@ fn tuple_literal() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn module_literal() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::String(String::from("Kyryl"))),
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::LoadConst(Constant::Integer(20)),
+        Instruction::LoadModule(3),
+        Instruction::Store(0),
+    ];
+
+    let test_program = Program::new(instructions, HashMap::new());
+
+    let driver = KsDriver::new("compiler/module_literal.ks");
+    let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
