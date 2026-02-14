@@ -459,6 +459,17 @@ impl CompilerNew {
         Ok(())
     }
 
+    fn list_literal(&mut self, expressions: Vec<Expression>) -> KsResult<()> {
+        let list_len = expressions.len();
+
+        for expression in expressions {
+            self.compile_expression(expression)?;
+        }
+
+        self.insert(Instruction::LoadList(list_len))?;
+        Ok(())
+    }
+
     fn binary_operation(
         &mut self,
         left: Expression,
@@ -471,14 +482,10 @@ impl CompilerNew {
         Ok(())
     }
 
-    fn list_literal(&mut self, expressions: Vec<Expression>) -> KsResult<()> {
-        let list_len = expressions.len();
+    fn unary_operator(&mut self, expression: Expression, operator: Operator) -> KsResult<()> {
+        self.compile_expression(expression)?;
+        self.insert_operator(operator)?;
 
-        for expression in expressions {
-            self.compile_expression(expression)?;
-        }
-
-        self.insert(Instruction::LoadList(list_len))?;
         Ok(())
     }
 
@@ -496,6 +503,14 @@ impl CompilerNew {
                 operator,
                 right,
             } => self.binary_operation(*left, operator, *right),
+            Expression::UnaryOp {
+                expression,
+                operator,
+            } => self.unary_operator(*expression, operator),
+            Expression::FrontUnaryOp {
+                expression,
+                operator,
+            } => self.unary_operator(*expression, operator),
             _ => todo!(),
         }?;
 

@@ -465,3 +465,52 @@ fn list_expression() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn unary_operator() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::Boolean(true)),
+        Instruction::Store(0),
+        Instruction::LoadVar(0),
+        Instruction::Not,
+        Instruction::Store(1),
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::Minus,
+        Instruction::Store(2),
+    ];
+
+    let test_program = Program::new(instructions, HashMap::new());
+
+    let driver = KsDriver::new("compiler/unary_operator.ks");
+    let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
+
+#[test]
+fn front_unary_operator() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::Store(0),
+        Instruction::LoadVar(0),
+        Instruction::Increment,
+        Instruction::End,
+        Instruction::LoadVar(0),
+        Instruction::Decrement,
+        Instruction::End,
+        Instruction::LoadVar(0),
+        Instruction::Clone,
+        Instruction::Store(1),
+    ];
+
+    let test_program = Program::new(instructions, HashMap::new());
+
+    let driver = KsDriver::new("compiler/front_unary_operator.ks");
+    let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
