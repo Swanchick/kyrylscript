@@ -128,6 +128,7 @@ impl CompilerNew {
             self.insert_constant(Constant::Null)
         }?;
 
+        self.environment.define_module_if_created(variable_id)?;
         self.insert_store(variable_id, public)?;
 
         Ok(())
@@ -474,31 +475,22 @@ impl CompilerNew {
         Ok(())
     }
 
-    fn save_if_module(&mut self, name: String) -> KsResult<()> {
-        // let last_module = self.last_module.take();
-        // if let Some(module) = last_module {
-        //     self.environment.define_module(name)?;
-        // }
-
-        Ok(())
-    }
-
     fn module_literal(&mut self, module: HashMap<String, Expression>) -> KsResult<()> {
+        let module_len = module.len();
         self.environment.create_module()?;
-
         for (name, expression) in module {
             let last_temp_modules_len = self.environment.temporary_modules_len();
-
             self.compile_expression(expression)?;
 
             let is_field = self.environment.temporary_modules_len() == last_temp_modules_len;
-
             if is_field {
                 self.environment.insert_field(name)?;
             } else {
                 self.environment.insert_module(name)?;
             }
         }
+
+        self.insert(Instruction::LoadModule(module_len))?;
 
         Ok(())
     }
