@@ -555,3 +555,24 @@ fn module_literal() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn complex_module() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::String(String::from("Kyryl"))),
+        Instruction::LoadConst(Constant::String(String::from("Monobank"))),
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::LoadModule(2),
+        Instruction::LoadModule(2),
+        Instruction::Store(0),
+    ];
+
+    let test_program = Program::new(instructions, HashMap::new());
+
+    let driver = KsDriver::new("compiler/module_literal.ks");
+    let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
@@ -48,7 +50,7 @@ impl CompilerNew {
         Ok(())
     }
 
-    fn current_pc(&mut self) -> Pointer {
+    fn current_pc(&self) -> Pointer {
         let saved_insctructions = self.instructions.len();
         let scope_instructions: usize = self.scopes.iter().map(|scope| scope.len()).sum();
 
@@ -88,7 +90,7 @@ impl CompilerNew {
         }
     }
 
-    fn wrap_scope_into_enter(&mut self, mut scope: Vec<Instruction>) -> Vec<Instruction> {
+    fn wrap_scope_into_enter(&self, mut scope: Vec<Instruction>) -> Vec<Instruction> {
         let mut final_scope = Vec::<Instruction>::new();
         final_scope.push(Instruction::Enter);
         final_scope.append(&mut scope);
@@ -464,13 +466,40 @@ impl CompilerNew {
         collection: Instruction,
         expressions: Vec<Expression>,
     ) -> KsResult<()> {
-        let list_len = expressions.len();
-
         for expression in expressions {
             self.compile_expression(expression)?;
         }
 
         self.insert(collection)?;
+        Ok(())
+    }
+
+    fn save_if_module(&mut self, name: String) -> KsResult<()> {
+        // let last_module = self.last_module.take();
+        // if let Some(module) = last_module {
+        //     self.environment.define_module(name)?;
+        // }
+
+        Ok(())
+    }
+
+    fn module_literal(&mut self, module: HashMap<String, Expression>) -> KsResult<()> {
+        self.environment.create_module()?;
+
+        for (name, expression) in module {
+            let last_temp_modules_len = self.environment.temporary_modules_len();
+
+            self.compile_expression(expression)?;
+
+            let is_field = self.environment.temporary_modules_len() == last_temp_modules_len;
+
+            if is_field {
+                self.environment.insert_field(name)?;
+            } else {
+                self.environment.insert_module(name)?;
+            }
+        }
+
         Ok(())
     }
 
@@ -507,6 +536,7 @@ impl CompilerNew {
             Expression::TupleLiteral(expressions) => {
                 self.collection(Instruction::LoadTuple(expressions.len()), expressions)
             }
+            Expression::Module(module) => self.module_literal(module),
             Expression::BinaryOp {
                 left,
                 operator,
