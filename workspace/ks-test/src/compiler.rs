@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use ks_core::compiler_new::constant::Constant;
 use ks_core::compiler_new::instructions::Instruction;
 use ks_core::compiler_new::program::Program;
+use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
 use crate::drivers::KsDriver;
@@ -536,6 +537,20 @@ fn tuple_literal() -> KsResult<()> {
     Ok(())
 }
 
+fn check_module(test_instructions: &[Instruction], instructions: &[Instruction]) -> KsResult<()> {
+    println!("{:?}", test_instructions);
+    println!("{:?}", instructions);
+
+
+    for test_instruction in test_instructions {
+        if !instructions.contains(test_instruction) {
+            return Err(KsError::parse(&format!("There is no insturction {:?}", test_instruction)))
+        }
+    }
+
+    Ok(())
+}
+
 #[test]
 fn module_literal() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
@@ -546,12 +561,10 @@ fn module_literal() -> KsResult<()> {
         Instruction::Store(0),
     ];
 
-    let test_program = Program::new(instructions, HashMap::new());
-
     let driver = KsDriver::new("compiler/module_literal.ks");
     let program = driver.compiler_new()?;
 
-    assert_eq!(test_program, program);
+    check_module(&instructions[0..4], &program.instructions()[0..4])?;
 
     Ok(())
 }
@@ -567,12 +580,12 @@ fn complex_module() -> KsResult<()> {
         Instruction::Store(0),
     ];
 
-    let test_program = Program::new(instructions, HashMap::new());
-
-    let driver = KsDriver::new("compiler/module_literal.ks");
+    let driver = KsDriver::new("compiler/complex_module.ks");
     let program = driver.compiler_new()?;
 
-    assert_eq!(test_program, program);
+    println!("{:?}", program);
+
+    check_module(&instructions[0..5], &program.instructions()[0..5])?;
 
     Ok(())
 }

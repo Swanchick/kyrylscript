@@ -15,4 +15,8 @@ impl Program {
             functions,
         }
     }
+
+    pub fn instructions(&self) -> &[Instruction] {
+        &self.instructions
+    }
 }
