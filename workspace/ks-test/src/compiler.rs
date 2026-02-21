@@ -362,23 +362,6 @@ fn if_statement_with_else() -> KsResult<()> {
 
 #[test]
 fn while_statement() -> KsResult<()> {
-    // let instructions: Vec<Instruction> = vec![
-    //     Instruction::LoadConst(Constant::Integer(0)),
-    //     Instruction::Store(0),
-    //     Instruction::LoadVar(0),
-    //     Instruction::LoadConst(Constant::Integer(10)),
-    //     Instruction::GreaterEq,
-    //     Instruction::JumpIfFalse(8),
-    //     Instruction::Enter,
-    //     Instruction::AssignVar(0),
-    //     Instruction::LoadVar(0),
-    //     Instruction::LoadConst(Constant::Integer(1)),
-    //     Instruction::Add,
-    //     Instruction::Assign,
-    //     Instruction::Exit,
-    //     Instruction::Jump(-11),
-    // ];
-
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(0)),
         Instruction::Store(0),
@@ -541,10 +524,12 @@ fn check_module(test_instructions: &[Instruction], instructions: &[Instruction])
     println!("{:?}", test_instructions);
     println!("{:?}", instructions);
 
-
     for test_instruction in test_instructions {
         if !instructions.contains(test_instruction) {
-            return Err(KsError::parse(&format!("There is no insturction {:?}", test_instruction)))
+            return Err(KsError::parse(&format!(
+                "There is no insturction {:?}",
+                test_instruction
+            )));
         }
     }
 
@@ -581,6 +566,29 @@ fn complex_module() -> KsResult<()> {
     ];
 
     let driver = KsDriver::new("compiler/complex_module.ks");
+    let program = driver.compiler_new()?;
+
+    println!("{:?}", program);
+
+    check_module(&instructions[0..5], &program.instructions()[0..5])?;
+
+    Ok(())
+}
+
+#[test]
+#[ignore = "Doesn't work for now, will be fixed on next update"]
+fn access_module_children() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::String(String::from("Hello World"))),
+        Instruction::LoadConst(Constant::String(String::from("Hi"))),
+        Instruction::LoadModule(1),
+        Instruction::LoadModule(2),
+        Instruction::Store(0),
+        Instruction::LoadVar(0),
+        Instruction::LoadFromModule(1),
+    ];
+
+    let driver = KsDriver::new("compiler/access_module_children.ks");
     let program = driver.compiler_new()?;
 
     println!("{:?}", program);

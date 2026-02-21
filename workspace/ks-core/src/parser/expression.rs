@@ -1,8 +1,8 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
+use super::data_type::DataType;
 use super::identifier_tail::IdentifierTail;
 use super::statement::Statement;
-use super::data_type::DataType;
 
 use super::parameter::Parameter;
 
@@ -19,7 +19,7 @@ pub enum Expression {
     FunctionCall(String, Vec<Expression>),
     ListLiteral(Vec<Expression>),
     TupleLiteral(Vec<Expression>),
-    Module(HashMap<String, Expression>),
+    Module(BTreeMap<String, Expression>),
     FunctionLiteral {
         parameters: Vec<Parameter>,
         return_type: DataType,

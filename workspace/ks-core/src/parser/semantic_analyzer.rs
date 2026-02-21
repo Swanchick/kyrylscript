@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::rc::Rc;
 
 use ks_global::utils::ks_error::KsError;
@@ -431,7 +431,7 @@ impl SemanticAnalyzer {
                 })
             }
             Expression::Module(module) => {
-                let mut module_type: HashMap<String, DataType> = HashMap::new();
+                let mut module_type: BTreeMap<String, DataType> = BTreeMap::new();
 
                 for (field_name, expression) in module {
                     let data_type = self.get_data_type(expression)?;

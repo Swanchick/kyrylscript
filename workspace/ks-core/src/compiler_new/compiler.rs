@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
@@ -475,7 +475,7 @@ impl CompilerNew {
         Ok(())
     }
 
-    fn module_literal(&mut self, module: HashMap<String, Expression>) -> KsResult<()> {
+    fn module_literal(&mut self, module: BTreeMap<String, Expression>) -> KsResult<()> {
         let module_len = module.len();
         self.environment.create_module()?;
         for (name, expression) in module {

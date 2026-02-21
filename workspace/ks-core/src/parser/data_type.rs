@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use crate::parser::parameter::Parameter;
 
@@ -11,7 +11,7 @@ pub enum DataType {
     Void(Option<Box<DataType>>),
     List(Box<DataType>),
     Tuple(Vec<DataType>),
-    Module(HashMap<String, DataType>),
+    Module(BTreeMap<String, DataType>),
     RustFunction {
         return_type: Box<DataType>,
     },

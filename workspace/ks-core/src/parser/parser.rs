@@ -13,7 +13,7 @@ use super::parameter::Parameter;
 use super::semantic_analyzer::SemanticAnalyzer;
 use super::statement::Statement;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 pub struct Parser {
     tokens: Vec<Token>,
@@ -891,7 +891,7 @@ impl Parser {
     }
 
     fn parse_module(&mut self) -> KsResult<Expression> {
-        let mut module: HashMap<String, Expression> = HashMap::new();
+        let mut module: BTreeMap<String, Expression> = BTreeMap::new();
 
         loop {
             let field_name: String = self.consume_identifier()?;
@@ -1056,7 +1056,7 @@ impl Parser {
                 Ok(DataType::Tuple(data_types))
             }
             Some(Token::LeftBrace) => {
-                let mut module: HashMap<String, DataType> = HashMap::new();
+                let mut module: BTreeMap<String, DataType> = BTreeMap::new();
                 loop {
                     let field_name = self.consume_identifier()?;
                     self.consume_token(Token::Colon)?;
