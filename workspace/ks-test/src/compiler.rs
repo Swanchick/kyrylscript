@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use ks_core::compiler_new::constant::Constant;
 use ks_core::compiler_new::instructions::Instruction;
 use ks_core::compiler_new::program::Program;
-use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
 use crate::drivers::KsDriver;
@@ -562,7 +561,6 @@ fn complex_module() -> KsResult<()> {
 }
 
 #[test]
-#[ignore = "Doesn't work for now, will be fixed on next update"]
 fn access_module_children() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::String(String::from("Hello World"))),
@@ -574,8 +572,12 @@ fn access_module_children() -> KsResult<()> {
         Instruction::LoadFromModule(1),
     ];
 
+    let test_program = Program::new(instructions, HashMap::new());
+
     let driver = KsDriver::new("compiler/access_module_children.ks");
     let program = driver.compiler_new()?;
+
+    assert_eq!(test_program, program);
 
     Ok(())
 }
