@@ -520,36 +520,22 @@ fn tuple_literal() -> KsResult<()> {
     Ok(())
 }
 
-fn check_module(test_instructions: &[Instruction], instructions: &[Instruction]) -> KsResult<()> {
-    println!("{:?}", test_instructions);
-    println!("{:?}", instructions);
-
-    for test_instruction in test_instructions {
-        if !instructions.contains(test_instruction) {
-            return Err(KsError::parse(&format!(
-                "There is no insturction {:?}",
-                test_instruction
-            )));
-        }
-    }
-
-    Ok(())
-}
-
 #[test]
 fn module_literal() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::LoadConst(Constant::String(String::from("Kyryl"))),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::LoadConst(Constant::Integer(20)),
+        Instruction::LoadConst(Constant::String(String::from("Kyryl"))),
         Instruction::LoadModule(3),
         Instruction::Store(0),
     ];
 
+    let test_program = Program::new(instructions, HashMap::new());
+
     let driver = KsDriver::new("compiler/module_literal.ks");
     let program = driver.compiler_new()?;
 
-    check_module(&instructions[0..4], &program.instructions()[0..4])?;
+    assert_eq!(test_program, program);
 
     Ok(())
 }
@@ -557,20 +543,20 @@ fn module_literal() -> KsResult<()> {
 #[test]
 fn complex_module() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::LoadConst(Constant::String(String::from("Kyryl"))),
-        Instruction::LoadConst(Constant::String(String::from("Monobank"))),
         Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::LoadConst(Constant::String(String::from("Monobank"))),
         Instruction::LoadModule(2),
+        Instruction::LoadConst(Constant::String(String::from("Kyryl"))),
         Instruction::LoadModule(2),
         Instruction::Store(0),
     ];
 
+    let test_program = Program::new(instructions, HashMap::new());
+
     let driver = KsDriver::new("compiler/complex_module.ks");
     let program = driver.compiler_new()?;
 
-    println!("{:?}", program);
-
-    check_module(&instructions[0..5], &program.instructions()[0..5])?;
+    assert_eq!(test_program, program);
 
     Ok(())
 }
@@ -590,10 +576,6 @@ fn access_module_children() -> KsResult<()> {
 
     let driver = KsDriver::new("compiler/access_module_children.ks");
     let program = driver.compiler_new()?;
-
-    println!("{:?}", program);
-
-    check_module(&instructions[0..5], &program.instructions()[0..5])?;
 
     Ok(())
 }
