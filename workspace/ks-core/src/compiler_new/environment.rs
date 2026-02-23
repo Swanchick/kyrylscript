@@ -2,14 +2,14 @@ use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 use std::collections::HashMap;
 
-use super::module::Module;
+use super::collection::Collection;
 use super::types::{Pointer, VariableId};
 
 pub struct Environment {
     functions: HashMap<String, Pointer>,
     variables: HashMap<String, VariableId>,
-    modules: HashMap<VariableId, Module>,
-    temporary_module: Vec<Module>,
+    modules: HashMap<VariableId, Collection>,
+    temporary_module: Vec<Collection>,
     current: usize,
 }
 
@@ -40,18 +40,21 @@ impl Environment {
     pub fn create_module(&mut self) -> KsResult<()> {
         if let Some(module) = self.temporary_module.last() {
             let variable_id = module.len()?;
-            self.temporary_module.push(Module::Module {
-                variable_id,
+            self.temporary_module.push(Collection::Module {
+                variable_id: Some(variable_id),
                 fields: HashMap::new(),
             });
         } else {
-            self.temporary_module.push(Module::Root(HashMap::new()));
+            self.temporary_module.push(Collection::Module {
+                variable_id: None,
+                fields: HashMap::new(),
+            });
         }
 
         Ok(())
     }
 
-    fn module_pop(&mut self) -> KsResult<Module> {
+    fn module_pop(&mut self) -> KsResult<Collection> {
         if let Some(module) = self.temporary_module.pop() {
             Ok(module)
         } else {
@@ -59,7 +62,7 @@ impl Environment {
         }
     }
 
-    fn module_last_mut(&mut self) -> KsResult<&mut Module> {
+    fn module_last_mut(&mut self) -> KsResult<&mut Collection> {
         if let Some(module) = self.temporary_module.last_mut() {
             Ok(module)
         } else {

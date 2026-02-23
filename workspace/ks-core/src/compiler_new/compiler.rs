@@ -9,6 +9,7 @@ use crate::parser::operator::Operator;
 use crate::parser::parameter::Parameter;
 use crate::parser::statement::Statement;
 
+use super::collection::Collection;
 use super::constant::Constant;
 use super::environment::Environment;
 use super::instructions::Instruction;
@@ -394,8 +395,9 @@ impl CompilerNew {
         Ok(())
     }
 
-    fn identifier_name(&mut self, name: String, is_first: bool) -> KsResult<()> {
+    fn identifier_name(&mut self, name: String, modules: &mut Vec<Collection>) -> KsResult<()> {
         let variable_id = self.environment.variable_id(&name)?;
+        let is_first = modules.is_empty();
 
         let instruction = if is_first {
             Instruction::LoadVar(variable_id)
@@ -421,17 +423,18 @@ impl CompilerNew {
     }
 
     fn identifier(&mut self, identifier: Vec<IdentifierTail>) -> KsResult<()> {
-        let mut index = 0;
+        // let mut index = 0;
+        // let mut modules = Vec::<Collection>::new();
 
-        for segment in identifier {
-            match segment {
-                IdentifierTail::Name(name) => self.identifier_name(name, index == 0),
-                IdentifierTail::Call(expressions) => self.identifier_call(expressions),
-                _ => todo!(),
-            }?;
+        // for segment in identifier {
+        //     match segment {
+        //         IdentifierTail::Name(name) => self.identifier_name(name, &mut modules),
+        //         IdentifierTail::Call(expressions) => self.identifier_call(expressions),
+        //         _ => todo!(),
+        //     }?;
 
-            index += 1;
-        }
+        //     index += 1;
+        // }
 
         Ok(())
     }

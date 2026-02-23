@@ -3,19 +3,23 @@ use std::collections::HashMap;
 
 use super::types::VariableId;
 
-pub enum Module {
+pub enum Collection {
     Field(VariableId),
     Module {
-        variable_id: VariableId,
-        fields: HashMap<String, Module>,
+        variable_id: Option<VariableId>,
+        fields: HashMap<String, Collection>,
     },
-    Root(HashMap<String, Module>),
+    List {
+        children: Vec<Collection>,
+    },
+    Tuple {
+        children: Vec<Collection>,
+    },
 }
 
-impl Module {
-    fn fields(&self) -> KsResult<&HashMap<String, Module>> {
-        if let Self::Root(fields)
-        | Self::Module {
+impl Collection {
+    fn fields(&self) -> KsResult<&HashMap<String, Collection>> {
+        if let Self::Module {
             variable_id: _,
             fields,
         } = self
@@ -28,9 +32,8 @@ impl Module {
         }
     }
 
-    fn fields_mut(&mut self) -> KsResult<&mut HashMap<String, Module>> {
-        if let Self::Root(fields)
-        | Self::Module {
+    fn fields_mut(&mut self) -> KsResult<&mut HashMap<String, Collection>> {
+        if let Self::Module {
             variable_id: _,
             fields,
         } = self
@@ -48,7 +51,7 @@ impl Module {
         Ok(fields.len())
     }
 
-    pub fn insert_module(&mut self, name: String, other: Module) -> KsResult<()> {
+    pub fn insert_module(&mut self, name: String, other: Collection) -> KsResult<()> {
         let fields = self.fields_mut()?;
         fields.insert(name, other);
         Ok(())
@@ -57,7 +60,7 @@ impl Module {
     pub fn insert_field(&mut self, name: String) -> KsResult<()> {
         let fields = self.fields_mut()?;
         let fields_len = fields.len();
-        fields.insert(name, Module::Field(fields_len));
+        fields.insert(name, Collection::Field(fields_len));
         Ok(())
     }
 }
