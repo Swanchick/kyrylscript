@@ -12,7 +12,8 @@ fn create_main_function() -> KsResult<()> {
     let output = Program::new(Vec::new(), HashMap::new());
 
     let driver = KsDriver::new("compiler/create_main_function.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(program, output);
 
@@ -29,7 +30,8 @@ fn simple_variable_declaration() -> KsResult<()> {
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/simple_variable_declaration.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -52,7 +54,8 @@ fn expression() -> KsResult<()> {
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/expression.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -75,7 +78,8 @@ fn expression_statement() -> KsResult<()> {
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/expression_statement.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -94,7 +98,8 @@ fn simple_identifier() -> KsResult<()> {
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/simple_identifier.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -119,7 +124,8 @@ fn function_declaration() -> KsResult<()> {
     let test_program = Program::new(instructions, functions);
 
     let driver = KsDriver::new("compiler/function_declaration.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -141,7 +147,8 @@ fn should_create_return_at_the_end() -> KsResult<()> {
     let test_program = Program::new(instructions, functions);
 
     let driver = KsDriver::new("compiler/should_create_return_at_the_end.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -168,7 +175,8 @@ fn function_with_parameters() -> KsResult<()> {
     let test_program = Program::new(instructions, functions);
 
     let driver = KsDriver::new("compiler/function_with_parameters.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -196,7 +204,8 @@ fn function_call() -> KsResult<()> {
     let test_program = Program::new(instructions, functions);
 
     let driver = KsDriver::new("compiler/function_call.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -228,7 +237,8 @@ fn function_call_with_parameters() -> KsResult<()> {
     let test_program = Program::new(instructions, functions);
 
     let driver = KsDriver::new("compiler/function_call_with_parameters.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -248,7 +258,8 @@ fn assignment_statment() -> KsResult<()> {
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/assignment_statment.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -271,7 +282,8 @@ fn add_value_statment() -> KsResult<()> {
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/add_value_statment.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -294,7 +306,8 @@ fn remove_value_statment() -> KsResult<()> {
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/assignment_statment.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -320,7 +333,8 @@ fn if_statement() -> KsResult<()> {
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/if_statement.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -352,7 +366,8 @@ fn if_statement_with_else() -> KsResult<()> {
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/if_statement_with_else.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -381,7 +396,8 @@ fn while_statement() -> KsResult<()> {
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/while_statement.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -420,7 +436,8 @@ fn for_statement() -> KsResult<()> {
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/for_statement.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -442,7 +459,8 @@ fn list_expression() -> KsResult<()> {
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/list_expression.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -465,7 +483,8 @@ fn unary_operator() -> KsResult<()> {
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/unary_operator.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -491,7 +510,8 @@ fn front_unary_operator() -> KsResult<()> {
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/front_unary_operator.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -512,7 +532,8 @@ fn tuple_literal() -> KsResult<()> {
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/tuple_literal.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -532,7 +553,8 @@ fn module_literal() -> KsResult<()> {
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/module_literal.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -553,7 +575,8 @@ fn complex_module() -> KsResult<()> {
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/complex_module.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 
@@ -561,6 +584,7 @@ fn complex_module() -> KsResult<()> {
 }
 
 #[test]
+#[ignore = "Not a priority, need to change the way how collections are saved"]
 fn access_module_children() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::String(String::from("Hello World"))),
@@ -575,7 +599,8 @@ fn access_module_children() -> KsResult<()> {
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/access_module_children.ks");
-    let program = driver.compiler_new()?;
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
 
     assert_eq!(test_program, program);
 

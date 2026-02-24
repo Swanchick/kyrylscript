@@ -10,7 +10,7 @@ pub enum Collection {
         fields: HashMap<String, Collection>,
     },
     List {
-        children: Vec<Collection>,
+        children: Option<Box<Collection>>,
     },
     Tuple {
         children: Vec<Collection>,
