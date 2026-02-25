@@ -423,7 +423,6 @@ impl CompilerNew {
     }
 
     fn identifier(&mut self, identifier: Vec<IdentifierTail>) -> KsResult<()> {
-        let mut index = 0;
         let mut modules = Vec::<Collection>::new();
 
         for segment in identifier {
@@ -432,8 +431,6 @@ impl CompilerNew {
                 IdentifierTail::Call(expressions) => self.identifier_call(expressions),
                 _ => todo!(),
             }?;
-
-            index += 1;
         }
 
         Ok(())
