@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use super::types::VariableId;
 
 pub enum Collection {
-    Field(VariableId),
+    Variable(VariableId),
     Module {
         variable_id: Option<VariableId>,
         fields: HashMap<String, Collection>,
@@ -57,10 +57,10 @@ impl Collection {
         Ok(())
     }
 
-    pub fn insert_field(&mut self, name: String) -> KsResult<()> {
+    pub fn insert_variable(&mut self, name: String) -> KsResult<()> {
         let fields = self.fields_mut()?;
         let fields_len = fields.len();
-        fields.insert(name, Collection::Field(fields_len));
+        fields.insert(name, Collection::Variable(fields_len));
         Ok(())
     }
 }

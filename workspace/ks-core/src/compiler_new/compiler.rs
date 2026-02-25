@@ -396,16 +396,13 @@ impl CompilerNew {
     }
 
     fn identifier_name(&mut self, name: String, modules: &mut Vec<Collection>) -> KsResult<()> {
-        let variable_id = self.environment.variable_id(&name)?;
-        let is_first = modules.is_empty();
-
-        let instruction = if is_first {
-            Instruction::LoadVar(variable_id)
+        if let Some(collection) = modules.last() {
+            // Handle the collection. CANNOT PASS THE COLLECTION, BECAUSE IT WAS BORROWED.
         } else {
-            Instruction::LoadFromModule(variable_id)
-        };
-
-        self.insert(instruction)?;
+            let variable_id = self.environment.variable_id(&name)?;
+            self.insert(Instruction::LoadVar(variable_id))?;
+            modules.push(Collection::Variable(variable_id));
+        }
 
         Ok(())
     }

@@ -72,7 +72,7 @@ impl Environment {
 
     pub fn insert_field(&mut self, name: String) -> KsResult<()> {
         let last_module = self.module_last_mut()?;
-        last_module.insert_field(name)?;
+        last_module.insert_variable(name)?;
         Ok(())
     }
 
