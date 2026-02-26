@@ -3,22 +3,24 @@ use std::collections::HashMap;
 
 use super::types::VariableId;
 
-pub enum Collection {
+pub enum Slot {
     Variable(VariableId),
     Module {
-        variable_id: Option<VariableId>,
-        fields: HashMap<String, Collection>,
+        variable_id: VariableId,
+        fields: HashMap<String, Slot>,
     },
     List {
-        children: Option<Box<Collection>>,
+        variable_id: VariableId,
+        children: Option<Box<Slot>>,
     },
     Tuple {
-        children: Vec<Collection>,
+        variable_id: VariableId,
+        children: Vec<Slot>,
     },
 }
 
-impl Collection {
-    fn fields(&self) -> KsResult<&HashMap<String, Collection>> {
+impl Slot {
+    fn fields(&self) -> KsResult<&HashMap<String, Slot>> {
         if let Self::Module {
             variable_id: _,
             fields,
@@ -32,7 +34,7 @@ impl Collection {
         }
     }
 
-    fn fields_mut(&mut self) -> KsResult<&mut HashMap<String, Collection>> {
+    fn fields_mut(&mut self) -> KsResult<&mut HashMap<String, Slot>> {
         if let Self::Module {
             variable_id: _,
             fields,
@@ -51,7 +53,7 @@ impl Collection {
         Ok(fields.len())
     }
 
-    pub fn insert_module(&mut self, name: String, other: Collection) -> KsResult<()> {
+    pub fn insert_module(&mut self, name: String, other: Slot) -> KsResult<()> {
         let fields = self.fields_mut()?;
         fields.insert(name, other);
         Ok(())
@@ -60,7 +62,25 @@ impl Collection {
     pub fn insert_variable(&mut self, name: String) -> KsResult<()> {
         let fields = self.fields_mut()?;
         let fields_len = fields.len();
-        fields.insert(name, Collection::Variable(fields_len));
+        fields.insert(name, Slot::Variable(fields_len));
         Ok(())
+    }
+
+    pub fn variable_id(&self) -> &VariableId {
+        match self {
+            Self::Variable(variable_id)
+            | Self::Module {
+                variable_id,
+                fields: _,
+            }
+            | Self::List {
+                variable_id,
+                children: _,
+            }
+            | Self::Tuple {
+                variable_id,
+                children: _,
+            } => variable_id,
+        }
     }
 }

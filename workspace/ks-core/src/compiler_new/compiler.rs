@@ -9,11 +9,11 @@ use crate::parser::operator::Operator;
 use crate::parser::parameter::Parameter;
 use crate::parser::statement::Statement;
 
-use super::collection::Collection;
 use super::constant::Constant;
 use super::environment::Environment;
 use super::instructions::Instruction;
 use super::program::Program;
+use super::slot::Slot;
 use super::types::{Pointer, VariableId};
 
 pub struct CompilerNew {
@@ -129,7 +129,7 @@ impl CompilerNew {
             self.insert_constant(Constant::Null)
         }?;
 
-        self.environment.define_module_if_created(variable_id)?;
+        // self.environment.define_module_if_created(variable_id)?;
         self.insert_store(variable_id, public)?;
 
         Ok(())
@@ -395,13 +395,13 @@ impl CompilerNew {
         Ok(())
     }
 
-    fn identifier_name(&mut self, name: String, modules: &mut Vec<Collection>) -> KsResult<()> {
+    fn identifier_name(&mut self, name: String, modules: &mut Vec<Slot>) -> KsResult<()> {
         if let Some(collection) = modules.last() {
             // Handle the collection. CANNOT PASS THE COLLECTION, BECAUSE IT WAS BORROWED.
         } else {
             let variable_id = self.environment.variable_id(&name)?;
             self.insert(Instruction::LoadVar(variable_id))?;
-            modules.push(Collection::Variable(variable_id));
+            modules.push(Slot::Variable(variable_id));
         }
 
         Ok(())
@@ -420,7 +420,7 @@ impl CompilerNew {
     }
 
     fn identifier(&mut self, identifier: Vec<IdentifierTail>) -> KsResult<()> {
-        let mut modules = Vec::<Collection>::new();
+        let mut modules = Vec::<Slot>::new();
 
         for segment in identifier {
             match segment {
@@ -473,23 +473,7 @@ impl CompilerNew {
     }
 
     fn module_literal(&mut self, module: BTreeMap<String, Expression>) -> KsResult<()> {
-        let module_len = module.len();
-        self.environment.create_module()?;
-        for (name, expression) in module {
-            let last_temp_modules_len = self.environment.temporary_modules_len();
-            self.compile_expression(expression)?;
-
-            let is_field = self.environment.temporary_modules_len() == last_temp_modules_len;
-            if is_field {
-                self.environment.insert_field(name)?;
-            } else {
-                self.environment.insert_module(name)?;
-            }
-        }
-
-        self.insert(Instruction::LoadModule(module_len))?;
-
-        Ok(())
+        todo!()
     }
 
     fn binary_operation(
