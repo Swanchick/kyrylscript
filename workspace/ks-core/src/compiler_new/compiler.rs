@@ -473,6 +473,8 @@ impl CompilerNew {
     }
 
     fn module_literal(&mut self, module: BTreeMap<String, Expression>) -> KsResult<()> {
+        for (name, expression) in module {}
+
         todo!()
     }
 

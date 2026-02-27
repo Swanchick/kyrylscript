@@ -2,6 +2,8 @@ use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 use std::collections::HashMap;
 
+use super::types::CollectionId;
+
 use super::collection::Collection;
 use super::slot::Slot;
 use super::types::{Pointer, VariableId};
@@ -10,7 +12,7 @@ pub struct Environment {
     functions: HashMap<String, Pointer>,
     variables: HashMap<String, Slot>,
     collections: Vec<Collection>,
-    temp_slot: Vec<Slot>,
+    temp_collections: Vec<CollectionId>,
     current: usize,
 }
 
@@ -20,7 +22,7 @@ impl Environment {
             functions: HashMap::new(),
             variables: HashMap::new(),
             collections: Vec::new(),
-            temp_slot: Vec::new(),
+            temp_collections: Vec::new(),
             current: 0,
         }
     }
