@@ -466,7 +466,7 @@ impl CompilerNew {
 
         if collection_size != 0 {
             let expression = expressions.remove(0);
-            self.compile_expression(expression);
+            self.compile_expression(expression)?;
             child = self.environment.temp_collection();
         }
 
@@ -478,7 +478,7 @@ impl CompilerNew {
             self.compile_expression(expression)?;
         }
 
-        self.insert(Instruction::LoadList(collection_size))?;
+        self.insert(Instruction::LoadCollection(collection_size))?;
         Ok(())
     }
 
@@ -497,7 +497,7 @@ impl CompilerNew {
         let collection_id = self.environment.register_collection(collection);
         self.environment.set_temp_collection(collection_id);
 
-        self.insert(Instruction::LoadTuple(collection_size))?;
+        self.insert(Instruction::LoadCollection(collection_size))?;
         Ok(())
     }
 
@@ -518,7 +518,7 @@ impl CompilerNew {
         let collection_id = self.environment.register_collection(collection);
         self.environment.set_temp_collection(collection_id);
 
-        self.insert(Instruction::LoadModule(collection_size))?;
+        self.insert(Instruction::LoadCollection(collection_size))?;
 
         Ok(())
     }

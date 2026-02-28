@@ -411,7 +411,7 @@ fn for_statement() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(0)),
         Instruction::LoadConst(Constant::Integer(1)),
         Instruction::LoadConst(Constant::Integer(2)),
-        Instruction::LoadList(3),
+        Instruction::LoadCollection(3),
         Instruction::Store(0), // list_iter = [0, 1, 2]
         Instruction::LoadConst(Constant::Integer(0)),
         Instruction::Store(1), // iterator = 0,
@@ -452,7 +452,7 @@ fn list_expression() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(30)),
         Instruction::LoadConst(Constant::Integer(40)),
         Instruction::LoadConst(Constant::Integer(50)),
-        Instruction::LoadList(5),
+        Instruction::LoadCollection(5),
         Instruction::Store(0),
     ];
 
@@ -525,7 +525,7 @@ fn tuple_literal() -> KsResult<()> {
         Instruction::LoadConst(Constant::String(String::from("Hello World"))),
         Instruction::LoadConst(Constant::Float(3.14)),
         Instruction::LoadConst(Constant::Boolean(true)),
-        Instruction::LoadTuple(4),
+        Instruction::LoadCollection(4),
         Instruction::Store(0),
     ];
 
@@ -546,7 +546,7 @@ fn module_literal() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::LoadConst(Constant::String(String::from("Kyryl"))),
-        Instruction::LoadModule(3),
+        Instruction::LoadCollection(3),
         Instruction::Store(0),
     ];
 
@@ -566,9 +566,9 @@ fn complex_module() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::LoadConst(Constant::String(String::from("Monobank"))),
-        Instruction::LoadModule(2),
+        Instruction::LoadCollection(2),
         Instruction::LoadConst(Constant::String(String::from("Kyryl"))),
-        Instruction::LoadModule(2),
+        Instruction::LoadCollection(2),
         Instruction::Store(0),
     ];
 
@@ -589,8 +589,8 @@ fn access_module_children() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::String(String::from("Hello World"))),
         Instruction::LoadConst(Constant::String(String::from("Hi"))),
-        Instruction::LoadModule(1),
-        Instruction::LoadModule(2),
+        Instruction::LoadCollection(1),
+        Instruction::LoadCollection(2),
         Instruction::Store(0),
         Instruction::LoadVar(0),
         Instruction::LoadFromModule(1),

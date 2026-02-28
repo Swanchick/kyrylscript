@@ -37,6 +37,10 @@ pub enum Instruction {
     Call(ArgumentSize),
     AssignVar(VariableId),
 
+    LoadCollection(usize),
+    LoadFromCollection,
+    AssignCollection,
+
     // List & Tuple & Module
     LoadModule(usize),
     LoadList(usize),
