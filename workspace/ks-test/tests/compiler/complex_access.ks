@@ -17,4 +17,4 @@ let person = {
 
 person.name;
 person.languages[1]; // Love it
-person.items_on_the_table->2.name;
+person.items_on_the_table->2;

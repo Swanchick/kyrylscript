@@ -442,6 +442,51 @@ impl CompilerNew {
         Ok(())
     }
 
+    fn identifier_index(
+        &mut self,
+        expression: Expression,
+        last_collection_id: &mut Option<CollectionId>,
+    ) -> KsResult<()> {
+        if let Some(collection_id) = last_collection_id {
+            let collection = self.environment.collection(*collection_id)?;
+            if let Collection::List { child } = collection {
+                *last_collection_id = child.clone();
+                self.compile_expression(expression)?;
+                self.insert(Instruction::LoadFromCollection)?;
+            }
+
+            Ok(())
+        } else {
+            Err(KsError::parse(
+                "Invalid IdentifierTail, cant compile list index",
+            ))
+        }
+    }
+
+    fn identifier_tuple_index(
+        &mut self,
+        index: i32,
+        last_collection_id: &mut Option<CollectionId>,
+    ) -> KsResult<()> {
+        if let Some(collection_id) = last_collection_id {
+            let collection = self.environment.collection(*collection_id)?;
+            if let Collection::Tuple { children } = collection {
+                if let Some(collection_id) = children.get(index as usize) {
+                    *last_collection_id = collection_id.clone();
+                }
+
+                self.insert_constant(Constant::Integer(index))?;
+                self.insert(Instruction::LoadFromCollection)?;
+            }
+
+            Ok(())
+        } else {
+            Err(KsError::parse(
+                "Invalid IdentifierTail, cant compile tuple index",
+            ))
+        }
+    }
+
     fn identifier(&mut self, identifier: Vec<IdentifierTail>) -> KsResult<()> {
         let mut last_collection_id: Option<CollectionId> = None;
 
@@ -449,7 +494,12 @@ impl CompilerNew {
             match segment {
                 IdentifierTail::Name(name) => self.identifier_name(name, &mut last_collection_id),
                 IdentifierTail::Call(expressions) => self.identifier_call(expressions),
-                _ => todo!(),
+                IdentifierTail::Index(expression) => {
+                    self.identifier_index(expression, &mut last_collection_id)
+                }
+                IdentifierTail::TupleIndex(index) => {
+                    self.identifier_tuple_index(index, &mut last_collection_id)
+                }
             }?;
         }
 

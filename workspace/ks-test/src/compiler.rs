@@ -613,20 +613,21 @@ fn access_module_children() -> KsResult<()> {
 #[test]
 fn complex_access() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::LoadConst(Constant::String(String::from("Kyryl"))), // name
-        Instruction::LoadConst(Constant::String(String::from("Rust"))),
-        Instruction::LoadConst(Constant::String(String::from("KyrylScript"))),
-        Instruction::LoadConst(Constant::String(String::from("JavaScript"))),
-        Instruction::LoadConst(Constant::String(String::from("Lua"))),
-        Instruction::LoadCollection(4), // languages
         Instruction::LoadConst(Constant::String(String::from("Headphones"))),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::LoadConst(Constant::String(String::from("A PEN"))), // name
         Instruction::LoadCollection(1),
         Instruction::LoadCollection(3),
+        Instruction::LoadConst(Constant::String(String::from("Rust"))),
+        Instruction::LoadConst(Constant::String(String::from("KyrylScript"))),
+        Instruction::LoadConst(Constant::String(String::from("JavaScript"))),
+        Instruction::LoadConst(Constant::String(String::from("Lua"))),
+        Instruction::LoadCollection(4), // languages
+        Instruction::LoadConst(Constant::String(String::from("Kyryl"))), // name
+        Instruction::LoadCollection(3),
         Instruction::Store(0),
         Instruction::LoadVar(0),
-        Instruction::LoadConst(Constant::Integer(0)),
+        Instruction::LoadConst(Constant::Integer(2)),
         Instruction::LoadFromCollection,
         Instruction::End, // person.name;
         Instruction::LoadVar(0),
@@ -636,12 +637,11 @@ fn complex_access() -> KsResult<()> {
         Instruction::LoadFromCollection,
         Instruction::End, // person.languages[1];
         Instruction::LoadVar(0),
-        Instruction::LoadConst(Constant::Integer(2)),
-        Instruction::LoadFromCollection,
-        Instruction::LoadConst(Constant::Integer(2)),
-        Instruction::LoadFromCollection,
         Instruction::LoadConst(Constant::Integer(0)),
-        Instruction::LoadFromCollection, // person.items_on_the_table->2.name;
+        Instruction::LoadFromCollection,
+        Instruction::LoadConst(Constant::Integer(2)),
+        Instruction::LoadFromCollection,
+        Instruction::End, // person.items_on_the_table->2;
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
