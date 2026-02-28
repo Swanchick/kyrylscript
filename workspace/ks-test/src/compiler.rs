@@ -609,3 +609,48 @@ fn access_module_children() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn complex_access() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::String(String::from("Kyryl"))), // name
+        Instruction::LoadConst(Constant::String(String::from("Rust"))),
+        Instruction::LoadConst(Constant::String(String::from("KyrylScript"))),
+        Instruction::LoadConst(Constant::String(String::from("JavaScript"))),
+        Instruction::LoadConst(Constant::String(String::from("Lua"))),
+        Instruction::LoadCollection(4), // languages
+        Instruction::LoadConst(Constant::String(String::from("Headphones"))),
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::LoadConst(Constant::String(String::from("A PEN"))), // name
+        Instruction::LoadCollection(1),
+        Instruction::LoadCollection(3),
+        Instruction::Store(0),
+        Instruction::LoadVar(0),
+        Instruction::LoadConst(Constant::Integer(0)),
+        Instruction::LoadFromCollection,
+        Instruction::End, // person.name;
+        Instruction::LoadVar(0),
+        Instruction::LoadConst(Constant::Integer(1)),
+        Instruction::LoadFromCollection,
+        Instruction::LoadConst(Constant::Integer(1)),
+        Instruction::LoadFromCollection,
+        Instruction::End, // person.languages[1];
+        Instruction::LoadVar(0),
+        Instruction::LoadConst(Constant::Integer(2)),
+        Instruction::LoadFromCollection,
+        Instruction::LoadConst(Constant::Integer(2)),
+        Instruction::LoadFromCollection,
+        Instruction::LoadConst(Constant::Integer(0)),
+        Instruction::LoadFromCollection, // person.items_on_the_table->2.name;
+    ];
+
+    let test_program = Program::new(instructions, HashMap::new());
+
+    let driver = KsDriver::new("compiler/complex_access.ks");
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
