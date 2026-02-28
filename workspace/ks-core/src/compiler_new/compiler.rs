@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
@@ -9,12 +9,13 @@ use crate::parser::operator::Operator;
 use crate::parser::parameter::Parameter;
 use crate::parser::statement::Statement;
 
+use super::collection::Collection;
 use super::constant::Constant;
 use super::environment::Environment;
 use super::instructions::Instruction;
 use super::program::Program;
 use super::slot::Slot;
-use super::types::{Pointer, VariableId};
+use super::types::{CollectionId, Pointer, VariableId};
 
 pub struct CompilerNew {
     scopes: Vec<Vec<Instruction>>,
@@ -473,9 +474,28 @@ impl CompilerNew {
     }
 
     fn module_literal(&mut self, module: BTreeMap<String, Expression>) -> KsResult<()> {
-        for (name, expression) in module {}
+        let expressions = module.len();
+        let mut children = Vec::<Option<CollectionId>>::new();
+        let mut indeces = HashMap::<String, VariableId>::new();
 
-        todo!()
+        for (name, expression) in module {
+            self.compile_expression(expression)?;
+            indeces.insert(name, children.len());
+            let temp_collection = self.environment.temp_collection();
+            if let Some(collection_id) = temp_collection {
+                children.push(Some(collection_id));
+            } else {
+                children.push(None);
+            }
+        }
+
+        let collection = Collection::Module { children, indeces };
+        let collection_id = self.environment.register_collection(collection);
+        self.environment.set_temp_collection(collection_id);
+
+        self.insert(Instruction::LoadModule(expressions))?;
+
+        Ok(())
     }
 
     fn binary_operation(

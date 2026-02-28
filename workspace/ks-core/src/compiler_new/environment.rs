@@ -12,7 +12,7 @@ pub struct Environment {
     functions: HashMap<String, Pointer>,
     variables: HashMap<String, Slot>,
     collections: Vec<Collection>,
-    temp_collections: Vec<CollectionId>,
+    temp_collection: Option<CollectionId>,
     current: usize,
 }
 
@@ -22,13 +22,27 @@ impl Environment {
             functions: HashMap::new(),
             variables: HashMap::new(),
             collections: Vec::new(),
-            temp_collections: Vec::new(),
+            temp_collection: None,
             current: 0,
         }
     }
 
     pub fn functions(self) -> HashMap<String, Pointer> {
         self.functions
+    }
+
+    pub fn temp_collection(&mut self) -> Option<CollectionId> {
+        self.temp_collection.take()
+    }
+
+    pub fn register_collection(&mut self, collection: Collection) -> CollectionId {
+        let collection_id = self.collections.len();
+        self.collections.push(collection);
+        collection_id
+    }
+
+    pub fn set_temp_collection(&mut self, collection_id: CollectionId) {
+        self.temp_collection = Some(collection_id);
     }
 
     pub fn define_variable(&mut self, name: String) -> KsResult<VariableId> {

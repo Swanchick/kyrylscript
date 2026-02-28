@@ -7,7 +7,7 @@ use super::types::VariableId;
 pub enum Collection {
     Primitive,
     Module {
-        children: Vec<CollectionId>,
+        children: Vec<Option<CollectionId>>,
         indeces: HashMap<String, VariableId>,
     },
     List {
