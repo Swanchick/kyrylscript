@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 
-use crate::compiler_new::types::CollectionId;
-
-use super::types::VariableId;
+use super::types::{CollectionId, VariableId};
 
 pub enum Collection {
     Module {
