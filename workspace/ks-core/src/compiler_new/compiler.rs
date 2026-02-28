@@ -130,7 +130,6 @@ impl CompilerNew {
             self.insert_constant(Constant::Null)
         }?;
 
-        // self.environment.define_module_if_created(variable_id)?;
         self.insert_store(variable_id, public)?;
 
         Ok(())

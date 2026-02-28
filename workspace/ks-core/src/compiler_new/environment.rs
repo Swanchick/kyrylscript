@@ -46,12 +46,22 @@ impl Environment {
     }
 
     pub fn define_variable(&mut self, name: String) -> KsResult<VariableId> {
-        let current_count = self.current;
+        let variable_id = self.current;
 
-        self.variables.insert(name, Slot::Variable(current_count));
+        let temp_collection = self.temp_collection();
+        let slot = if let Some(collection_id) = temp_collection {
+            Slot::Collection {
+                variable_id,
+                collection_id,
+            }
+        } else {
+            Slot::Variable(variable_id)
+        };
+
+        self.variables.insert(name, slot);
         self.current += 1;
 
-        Ok(current_count)
+        Ok(variable_id)
     }
 
     pub fn define_function(&mut self, name: &str, pointer: Pointer) {
