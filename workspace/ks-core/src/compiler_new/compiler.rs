@@ -94,9 +94,8 @@ impl CompilerNew {
 
     fn wrap_scope_into_enter(&self, mut scope: Vec<Instruction>) -> Vec<Instruction> {
         let mut final_scope = Vec::<Instruction>::new();
-        final_scope.push(Instruction::Enter);
         final_scope.append(&mut scope);
-        final_scope.push(Instruction::Exit);
+        final_scope.push(Instruction::Free(100));
         final_scope
     }
 
@@ -314,7 +313,6 @@ impl CompilerNew {
             .define_variable(format!("__iter_{}", name))?;
         let iter_variable_id = self.environment.define_variable(name)?;
 
-        self.insert(Instruction::Enter)?;
         self.compile_expression(list)?;
         self.insert(Instruction::Store(iter_list))?;
         self.insert_constant(Constant::Integer(0))?;
@@ -346,7 +344,7 @@ impl CompilerNew {
         self.scope_append(after_scope)?;
 
         self.insert(Instruction::JumpIfFalse(-body_len - after_len))?;
-        self.insert(Instruction::Exit)?;
+        self.insert(Instruction::Free(100))?;
 
         Ok(())
     }

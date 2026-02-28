@@ -323,11 +323,10 @@ fn if_statement() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Eq,
         Instruction::JumpIfFalse(5),
-        Instruction::Enter,
         Instruction::AssignVar(0),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Assign,
-        Instruction::Exit,
+        Instruction::Free(0),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -350,17 +349,15 @@ fn if_statement_with_else() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Eq,
         Instruction::JumpIfFalse(6),
-        Instruction::Enter,
         Instruction::AssignVar(0),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Assign,
-        Instruction::Exit,
+        Instruction::Free(0),
         Instruction::Jump(5),
-        Instruction::Enter,
         Instruction::AssignVar(0),
         Instruction::LoadConst(Constant::Integer(30)),
         Instruction::Assign,
-        Instruction::Exit,
+        Instruction::Free(0),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -380,13 +377,12 @@ fn while_statement() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(0)),
         Instruction::Store(0),
         Instruction::Jump(7),
-        Instruction::Enter,
         Instruction::AssignVar(0),
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(1)),
         Instruction::Add,
         Instruction::Assign,
-        Instruction::Exit,
+        Instruction::Free(0),
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::GreaterEq,
@@ -407,7 +403,6 @@ fn while_statement() -> KsResult<()> {
 #[test]
 fn for_statement() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Enter,
         Instruction::LoadConst(Constant::Integer(0)),
         Instruction::LoadConst(Constant::Integer(1)),
         Instruction::LoadConst(Constant::Integer(2)),
@@ -417,20 +412,19 @@ fn for_statement() -> KsResult<()> {
         Instruction::Store(1), // iterator = 0,
         Instruction::LoadConst(Constant::Null),
         Instruction::Store(2), // our preallocated variable
-        Instruction::Enter,    // Empty scope
         Instruction::AssignVar(2),
         Instruction::LoadVar(1),
         Instruction::LoadVar(0),
         Instruction::LoadFromCollection,
-        Instruction::Assign, // changing the variable to the list number
-        Instruction::Exit,   // Empty scope
+        Instruction::Assign,  // changing the variable to the list number
+        Instruction::Free(0), // Empty scope
         Instruction::LoadVar(1),
         Instruction::Increment, // iterator++
         Instruction::LoadVar(0),
         Instruction::CollectionLen,
         Instruction::GreaterEq, // iterator >= list_iter.len()
         Instruction::JumpIfFalse(-12),
-        Instruction::Exit,
+        Instruction::Free(3),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());

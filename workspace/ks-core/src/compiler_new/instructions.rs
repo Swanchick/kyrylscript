@@ -35,14 +35,11 @@ pub enum Instruction {
     LoadVar(VariableId),
     Closure(VariableId),
     Call(ArgumentSize),
+    Free(usize),
     AssignVar(VariableId),
 
     LoadCollection(usize),
     LoadFromCollection,
     AssignCollection,
     CollectionLen,
-
-    // System
-    Enter,
-    Exit,
 }
