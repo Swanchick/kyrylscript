@@ -421,13 +421,13 @@ fn for_statement() -> KsResult<()> {
         Instruction::AssignVar(2),
         Instruction::LoadVar(1),
         Instruction::LoadVar(0),
-        Instruction::LoadFromList,
+        Instruction::LoadFromCollection,
         Instruction::Assign, // changing the variable to the list number
         Instruction::Exit,   // Empty scope
         Instruction::LoadVar(1),
         Instruction::Increment, // iterator++
         Instruction::LoadVar(0),
-        Instruction::ListLen,
+        Instruction::CollectionLen,
         Instruction::GreaterEq, // iterator >= list_iter.len()
         Instruction::JumpIfFalse(-12),
         Instruction::Exit,
@@ -593,7 +593,8 @@ fn access_module_children() -> KsResult<()> {
         Instruction::LoadCollection(2),
         Instruction::Store(0),
         Instruction::LoadVar(0),
-        Instruction::LoadFromModule(1),
+        Instruction::LoadConst(Constant::Integer(1)),
+        Instruction::LoadFromCollection,
     ];
 
     let test_program = Program::new(instructions, HashMap::new());

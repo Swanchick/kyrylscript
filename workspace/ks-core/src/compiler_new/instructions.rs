@@ -40,19 +40,7 @@ pub enum Instruction {
     LoadCollection(usize),
     LoadFromCollection,
     AssignCollection,
-
-    // List & Tuple & Module
-    LoadModule(usize),
-    LoadList(usize),
-    LoadTuple(usize),
-    LoadFromList,
-    LoadFromListSave,
-    ListLen,
-    LoadFromTuple(usize),
-    LoadFromTupleSave(usize),
-    LoadFromModule(VariableId),
-    LoadFromModuleSave(String),
-    AssignModule(VariableId),
+    CollectionLen,
 
     // System
     Enter,

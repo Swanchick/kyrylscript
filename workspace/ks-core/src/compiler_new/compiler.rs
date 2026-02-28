@@ -197,7 +197,7 @@ impl CompilerNew {
         if is_first {
             self.insert(Instruction::AssignVar(variable_id))?;
         } else {
-            self.insert(Instruction::AssignModule(variable_id))?;
+            // self.insert(Instruction::AssignModule(variable_id))?;
         }
 
         Ok(())
@@ -327,7 +327,7 @@ impl CompilerNew {
         self.insert(Instruction::AssignVar(iter_variable_id))?;
         self.insert(Instruction::LoadVar(iter))?;
         self.insert(Instruction::LoadVar(iter_list))?;
-        self.insert(Instruction::LoadFromList)?;
+        self.insert(Instruction::LoadFromCollection)?;
         self.insert(Instruction::Assign)?;
 
         self.compile_statements(body)?;
@@ -340,7 +340,7 @@ impl CompilerNew {
         self.insert(Instruction::LoadVar(iter))?;
         self.insert(Instruction::Increment)?;
         self.insert(Instruction::LoadVar(iter_list))?;
-        self.insert(Instruction::ListLen)?;
+        self.insert(Instruction::CollectionLen)?;
         self.insert(Instruction::GreaterEq)?;
         let after_scope = self.scope_pop()?;
         let after_len = after_scope.len() as i32;
