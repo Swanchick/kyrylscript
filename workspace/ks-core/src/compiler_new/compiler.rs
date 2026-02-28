@@ -550,12 +550,8 @@ impl CompilerNew {
             Expression::FloatLiteral(float) => self.insert_constant(Constant::Float(float)),
             Expression::StringLiteral(string) => self.insert_constant(Constant::String(string)),
             Expression::Identifier(identifier) => self.identifier(identifier),
-            Expression::ListLiteral(expressions) => {
-                self.collection(Instruction::LoadList(expressions.len()), expressions)
-            }
-            Expression::TupleLiteral(expressions) => {
-                self.collection(Instruction::LoadTuple(expressions.len()), expressions)
-            }
+            Expression::ListLiteral(expressions) => self.list_literal(expressions),
+            Expression::TupleLiteral(expressions) => self.tuple_literal(expressions),
             Expression::Module(module) => self.module_literal(module),
             Expression::BinaryOp {
                 left,
