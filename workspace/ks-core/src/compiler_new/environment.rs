@@ -43,12 +43,16 @@ impl Environment {
 
     pub fn set_temp_collection(&mut self, collection_id: CollectionId) {
         self.temp_collection = Some(collection_id);
+
+        println!("{:?}", self.temp_collection);
     }
 
     pub fn define_variable(&mut self, name: String) -> KsResult<VariableId> {
         let variable_id = self.current;
 
         let temp_collection = self.temp_collection();
+        println!("{:?}", temp_collection);
+
         let slot = if let Some(collection_id) = temp_collection {
             Slot::Collection {
                 variable_id,
@@ -73,9 +77,28 @@ impl Environment {
             Ok(*variable_id.variable_id())
         } else {
             Err(KsError::parse(&format!(
-                "Did not find variable by this name: {}",
+                "Cannot find variable by this name: {}",
                 name
             )))
+        }
+    }
+
+    pub fn slot(&self, name: &str) -> KsResult<&Slot> {
+        if let Some(slot) = self.variables.get(name) {
+            Ok(slot)
+        } else {
+            Err(KsError::parse(&format!(
+                "Cannot find slot by this name: {}",
+                name
+            )))
+        }
+    }
+
+    pub fn collection(&self, collection_id: CollectionId) -> KsResult<&Collection> {
+        if let Some(collection) = self.collections.get(collection_id) {
+            Ok(collection)
+        } else {
+            Err(KsError::parse("Cannot find collection"))
         }
     }
 }

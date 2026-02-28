@@ -122,13 +122,13 @@ impl CompilerNew {
         public: bool,
         expression: Option<Expression>,
     ) -> KsResult<()> {
-        let variable_id = self.environment.define_variable(name)?;
-
         if let Some(expression) = expression {
             self.compile_expression(expression)
         } else {
             self.insert_constant(Constant::Null)
         }?;
+
+        let variable_id = self.environment.define_variable(name)?;
 
         self.insert_store(variable_id, public)?;
 
@@ -395,13 +395,36 @@ impl CompilerNew {
         Ok(())
     }
 
-    fn identifier_name(&mut self, name: String, modules: &mut Vec<Slot>) -> KsResult<()> {
-        if let Some(collection) = modules.last() {
-            // Handle the collection. CANNOT PASS THE COLLECTION, BECAUSE IT WAS BORROWED.
+    fn identifier_name(
+        &mut self,
+        name: String,
+        last_collection_id: &mut Option<CollectionId>,
+    ) -> KsResult<()> {
+        if let Some(collection_id) = last_collection_id {
+            let collection = self.environment.collection(*collection_id)?;
+            if let Collection::Module { children, indeces } = collection {
+                if let Some(variable_id) = indeces.get(&name) {
+                    if let Some(collection_id) = children.get(*variable_id) {
+                        *last_collection_id = collection_id.clone();
+                    }
+
+                    self.insert_constant(Constant::Integer(*variable_id as i32))?;
+                    self.insert(Instruction::LoadFromCollection)?;
+                }
+            }
         } else {
-            let variable_id = self.environment.variable_id(&name)?;
+            let slot = self.environment.slot(&name)?;
+            let variable_id = *slot.variable_id();
+
+            if let Slot::Collection {
+                variable_id: _,
+                collection_id,
+            } = slot
+            {
+                *last_collection_id = Some(*collection_id);
+            }
+
             self.insert(Instruction::LoadVar(variable_id))?;
-            modules.push(Slot::Variable(variable_id));
         }
 
         Ok(())
@@ -420,11 +443,11 @@ impl CompilerNew {
     }
 
     fn identifier(&mut self, identifier: Vec<IdentifierTail>) -> KsResult<()> {
-        let mut modules = Vec::<Slot>::new();
+        let mut last_collection_id: Option<CollectionId> = None;
 
         for segment in identifier {
             match segment {
-                IdentifierTail::Name(name) => self.identifier_name(name, &mut modules),
+                IdentifierTail::Name(name) => self.identifier_name(name, &mut last_collection_id),
                 IdentifierTail::Call(expressions) => self.identifier_call(expressions),
                 _ => todo!(),
             }?;

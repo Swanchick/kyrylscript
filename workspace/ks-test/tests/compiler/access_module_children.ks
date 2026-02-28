@@ -1,7 +1,7 @@
 let test_module = {
     field_1: "Hello World",
     module_inside: {
-        field_1: "Hi!"
+        field_1: "Hi"
     }
 };
 

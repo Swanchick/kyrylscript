@@ -1,5 +1,6 @@
 use super::types::{CollectionId, VariableId};
 
+#[derive(Debug)]
 pub enum Slot {
     Variable(VariableId),
     Collection {

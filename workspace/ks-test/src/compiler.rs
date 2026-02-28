@@ -584,7 +584,6 @@ fn complex_module() -> KsResult<()> {
 }
 
 #[test]
-#[ignore = "Not a priority, need to change the way how collections are saved"]
 fn access_module_children() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::String(String::from("Hello World"))),
@@ -595,6 +594,9 @@ fn access_module_children() -> KsResult<()> {
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(1)),
         Instruction::LoadFromCollection,
+        Instruction::LoadConst(Constant::Integer(0)),
+        Instruction::LoadFromCollection,
+        Instruction::End,
     ];
 
     let test_program = Program::new(instructions, HashMap::new());

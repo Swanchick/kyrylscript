@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use super::types::{CollectionId, VariableId};
 
+#[derive(Debug)]
 pub enum Collection {
     Module {
         children: Vec<Option<CollectionId>>,
