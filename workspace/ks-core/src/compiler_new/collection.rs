@@ -11,9 +11,9 @@ pub enum Collection {
         indeces: HashMap<String, VariableId>,
     },
     List {
-        child: CollectionId,
+        child: Option<CollectionId>,
     },
     Tuple {
-        children: Vec<CollectionId>,
+        children: Vec<Option<CollectionId>>,
     },
 }

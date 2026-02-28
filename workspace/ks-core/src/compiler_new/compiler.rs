@@ -460,40 +460,65 @@ impl CompilerNew {
         Ok(())
     }
 
-    fn collection(
-        &mut self,
-        collection: Instruction,
-        expressions: Vec<Expression>,
-    ) -> KsResult<()> {
+    fn list_literal(&mut self, mut expressions: Vec<Expression>) -> KsResult<()> {
+        let collection_size = expressions.len();
+        let mut child: Option<CollectionId> = None;
+
+        if collection_size != 0 {
+            let expression = expressions.remove(0);
+            self.compile_expression(expression);
+            child = self.environment.temp_collection();
+        }
+
+        let collection = Collection::List { child };
+        let collection_id = self.environment.register_collection(collection);
+        self.environment.set_temp_collection(collection_id);
+
         for expression in expressions {
             self.compile_expression(expression)?;
         }
 
-        self.insert(collection)?;
+        self.insert(Instruction::LoadList(collection_size))?;
+        Ok(())
+    }
+
+    fn tuple_literal(&mut self, expressions: Vec<Expression>) -> KsResult<()> {
+        let collection_size = expressions.len();
+        let mut children = Vec::<Option<CollectionId>>::new();
+
+        for expression in expressions {
+            self.compile_expression(expression)?;
+
+            let temp_collection = self.environment.temp_collection();
+            children.push(temp_collection);
+        }
+
+        let collection = Collection::Tuple { children };
+        let collection_id = self.environment.register_collection(collection);
+        self.environment.set_temp_collection(collection_id);
+
+        self.insert(Instruction::LoadTuple(collection_size))?;
         Ok(())
     }
 
     fn module_literal(&mut self, module: BTreeMap<String, Expression>) -> KsResult<()> {
-        let expressions = module.len();
+        let collection_size = module.len();
         let mut children = Vec::<Option<CollectionId>>::new();
         let mut indeces = HashMap::<String, VariableId>::new();
 
         for (name, expression) in module {
             self.compile_expression(expression)?;
+
             indeces.insert(name, children.len());
             let temp_collection = self.environment.temp_collection();
-            if let Some(collection_id) = temp_collection {
-                children.push(Some(collection_id));
-            } else {
-                children.push(None);
-            }
+            children.push(temp_collection);
         }
 
         let collection = Collection::Module { children, indeces };
         let collection_id = self.environment.register_collection(collection);
         self.environment.set_temp_collection(collection_id);
 
-        self.insert(Instruction::LoadModule(expressions))?;
+        self.insert(Instruction::LoadModule(collection_size))?;
 
         Ok(())
     }
