@@ -2,15 +2,13 @@ use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 use std::collections::HashMap;
 
-use super::types::CollectionId;
-
 use super::collection::Collection;
 use super::slot::Slot;
-use super::types::{Pointer, VariableId};
+use super::types::{CollectionId, Pointer, VariableId};
 
 pub struct Environment {
     functions: HashMap<String, Pointer>,
-    variables: HashMap<String, Slot>,
+    variables: Vec<HashMap<String, Slot>>,
     collections: Vec<Collection>,
     temp_collection: Option<CollectionId>,
     current: usize,
@@ -20,7 +18,7 @@ impl Environment {
     pub fn new() -> Self {
         Environment {
             functions: HashMap::new(),
-            variables: HashMap::new(),
+            variables: Vec::new(),
             collections: Vec::new(),
             temp_collection: None,
             current: 0,
@@ -47,6 +45,34 @@ impl Environment {
         println!("{:?}", self.temp_collection);
     }
 
+    pub fn enter(&mut self) {
+        self.variables.push(HashMap::new());
+    }
+
+    pub fn exit(&mut self) -> KsResult<HashMap<String, Slot>> {
+        if let Some(scope) = self.variables.pop() {
+            Ok(scope)
+        } else {
+            Err(KsError::parse("No scope to exit"))
+        }
+    }
+
+    pub fn current_scope(&self) -> KsResult<&HashMap<String, Slot>> {
+        if let Some(scope) = self.variables.last() {
+            Ok(scope)
+        } else {
+            Err(KsError::parse("Cannot get last scope"))
+        }
+    }
+
+    pub fn current_scope_mut(&mut self) -> KsResult<&mut HashMap<String, Slot>> {
+        if let Some(scope) = self.variables.last_mut() {
+            Ok(scope)
+        } else {
+            Err(KsError::parse("Cannot get last scope"))
+        }
+    }
+
     pub fn define_variable(&mut self, name: String) -> KsResult<VariableId> {
         let variable_id = self.current;
 
@@ -62,7 +88,8 @@ impl Environment {
             Slot::Variable(variable_id)
         };
 
-        self.variables.insert(name, slot);
+        let current_scope = self.current_scope_mut()?;
+        current_scope.insert(name, slot);
         self.current += 1;
 
         Ok(variable_id)
@@ -73,25 +100,29 @@ impl Environment {
     }
 
     pub fn variable_id(&self, name: &str) -> KsResult<VariableId> {
-        if let Some(variable_id) = self.variables.get(name) {
-            Ok(*variable_id.variable_id())
-        } else {
-            Err(KsError::parse(&format!(
-                "Cannot find variable by this name: {}",
-                name
-            )))
+        for scope in &self.variables {
+            if let Some(slot) = scope.get(name) {
+                return Ok(*slot.variable_id());
+            }
         }
+
+        Err(KsError::parse(&format!(
+            "Cannot find variable by this name: {}",
+            name
+        )))
     }
 
     pub fn slot(&self, name: &str) -> KsResult<&Slot> {
-        if let Some(slot) = self.variables.get(name) {
-            Ok(slot)
-        } else {
-            Err(KsError::parse(&format!(
-                "Cannot find slot by this name: {}",
-                name
-            )))
+        for scope in &self.variables {
+            if let Some(slot) = scope.get(name) {
+                return Ok(slot);
+            }
         }
+
+        Err(KsError::parse(&format!(
+            "Cannot find variable by this name: {}",
+            name
+        )))
     }
 
     pub fn collection(&self, collection_id: CollectionId) -> KsResult<&Collection> {

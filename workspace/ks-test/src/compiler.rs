@@ -25,6 +25,7 @@ fn simple_variable_declaration() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(100)),
         Instruction::Store(0),
+        Instruction::Free(1),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -49,6 +50,7 @@ fn expression() -> KsResult<()> {
         Instruction::Minus,
         Instruction::Mul,
         Instruction::Store(0),
+        Instruction::Free(1),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -73,6 +75,7 @@ fn expression_statement() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(2)),
         Instruction::Minus,
         Instruction::End,
+        Instruction::Free(0),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -93,6 +96,7 @@ fn simple_identifier() -> KsResult<()> {
         Instruction::Store(0),
         Instruction::LoadVar(0),
         Instruction::Store(1),
+        Instruction::Free(2),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -109,13 +113,14 @@ fn simple_identifier() -> KsResult<()> {
 #[test]
 fn function_declaration() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(4),
+        Instruction::Jump(5),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Add,
         Instruction::Return,
         Instruction::LoadConst(Constant::Function(1)),
         Instruction::Store(0),
+        Instruction::Free(1),
     ];
 
     let mut functions = HashMap::<String, usize>::new();
@@ -135,10 +140,11 @@ fn function_declaration() -> KsResult<()> {
 #[test]
 fn should_create_return_at_the_end() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(1),
+        Instruction::Jump(2),
         Instruction::Return,
         Instruction::LoadConst(Constant::Function(1)),
         Instruction::Store(0),
+        Instruction::Free(1),
     ];
 
     let mut functions = HashMap::<String, usize>::new();
@@ -158,15 +164,17 @@ fn should_create_return_at_the_end() -> KsResult<()> {
 #[test]
 fn function_with_parameters() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(6),                          // Skiping function to store it
-        Instruction::Store(2),                         // Storing parameter b
-        Instruction::Store(1),                         // Storing parameter a
-        Instruction::LoadVar(1),                       // Loading var a to variable stack
-        Instruction::LoadVar(2),                       // Loading var b to variable stack
-        Instruction::Add,                              // Sum them
+        Instruction::Jump(6),    // Skiping function to store it
+        Instruction::Store(2),   // Storing parameter b
+        Instruction::Store(1),   // Storing parameter a
+        Instruction::LoadVar(1), // Loading var a to variable stack
+        Instruction::LoadVar(2), // Loading var b to variable stack
+        Instruction::Add,        // Sum them
+        Instruction::Free(2),
         Instruction::Return,                           // And return
         Instruction::LoadConst(Constant::Function(1)), // Defining function pointer as variable and save to variable stack
         Instruction::Store(0),                         // Saving function from variable stack
+        Instruction::Free(1),
     ];
 
     let mut functions = HashMap::<String, usize>::new();
@@ -190,12 +198,14 @@ fn function_call() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Add,
+        Instruction::Free(0),
         Instruction::Return,
         Instruction::LoadConst(Constant::Function(1)),
         Instruction::Store(0),
         Instruction::LoadVar(0),
         Instruction::Call(0),
         Instruction::End,
+        Instruction::Free(1),
     ];
 
     let mut functions = HashMap::<String, usize>::new();
@@ -215,12 +225,13 @@ fn function_call() -> KsResult<()> {
 #[test]
 fn function_call_with_parameters() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(6),                          // Skiping function to store it
-        Instruction::Store(2),                         // Storing parameter b
-        Instruction::Store(1),                         // Storing parameter a
-        Instruction::LoadVar(1),                       // Loading var a to variable stack
-        Instruction::LoadVar(2),                       // Loading var b to variable stack
-        Instruction::Add,                              // Sum them
+        Instruction::Jump(7),    // Skiping function to store it
+        Instruction::Store(2),   // Storing parameter b
+        Instruction::Store(1),   // Storing parameter a
+        Instruction::LoadVar(1), // Loading var a to variable stack
+        Instruction::LoadVar(2), // Loading var b to variable stack
+        Instruction::Add,        // Sum them
+        Instruction::Free(2),
         Instruction::Return,                           // And return
         Instruction::LoadConst(Constant::Function(1)), // Defining function pointer as variable and save to variable stack
         Instruction::Store(0),                         // Saving function from variable stack
@@ -229,6 +240,7 @@ fn function_call_with_parameters() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(20)), // Loading constant 20
         Instruction::Call(2),    // Calling function with 2 arguments stored in variable stack
         Instruction::End,        // Ending an expression
+        Instruction::Free(1),
     ];
 
     let mut functions = HashMap::<String, usize>::new();
@@ -253,6 +265,7 @@ fn assignment_statment() -> KsResult<()> {
         Instruction::AssignVar(0),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Assign,
+        Instruction::Free(1),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -277,6 +290,7 @@ fn add_value_statment() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Add,
         Instruction::Assign,
+        Instruction::Free(1),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -301,6 +315,7 @@ fn remove_value_statment() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Minus,
         Instruction::Assign,
+        Instruction::Free(1),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -322,11 +337,12 @@ fn if_statement() -> KsResult<()> {
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Eq,
-        Instruction::JumpIfFalse(5),
+        Instruction::JumpIfFalse(4),
         Instruction::AssignVar(0),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Assign,
         Instruction::Free(0),
+        Instruction::Free(1),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -348,16 +364,17 @@ fn if_statement_with_else() -> KsResult<()> {
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Eq,
-        Instruction::JumpIfFalse(6),
+        Instruction::JumpIfFalse(5),
         Instruction::AssignVar(0),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Assign,
         Instruction::Free(0),
-        Instruction::Jump(5),
+        Instruction::Jump(4),
         Instruction::AssignVar(0),
         Instruction::LoadConst(Constant::Integer(30)),
         Instruction::Assign,
         Instruction::Free(0),
+        Instruction::Free(1),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -386,7 +403,8 @@ fn while_statement() -> KsResult<()> {
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::GreaterEq,
-        Instruction::JumpIfTrue(-10),
+        Instruction::JumpIfTrue(-9),
+        Instruction::Free(1),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());

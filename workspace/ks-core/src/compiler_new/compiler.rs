@@ -52,6 +52,16 @@ impl CompilerNew {
         Ok(())
     }
 
+    fn compile_statements_free(&mut self, statements: Vec<Statement>) -> KsResult<()> {
+        self.environment.enter();
+
+        self.compile_statements(statements)?;
+
+        let variable_scope = self.environment.exit()?;
+        self.insert(Instruction::Free(variable_scope.len()))?;
+        Ok(())
+    }
+
     fn current_pc(&self) -> Pointer {
         let saved_insctructions = self.instructions.len();
         let scope_instructions: usize = self.scopes.iter().map(|scope| scope.len()).sum();
@@ -90,13 +100,6 @@ impl CompilerNew {
         if let Some(mut insctructions) = self.scopes.pop() {
             self.instructions.append(&mut insctructions);
         }
-    }
-
-    fn wrap_scope_into_enter(&self, mut scope: Vec<Instruction>) -> Vec<Instruction> {
-        let mut final_scope = Vec::<Instruction>::new();
-        final_scope.append(&mut scope);
-        final_scope.push(Instruction::Free(100));
-        final_scope
     }
 
     fn insert(&mut self, instruction: Instruction) -> KsResult<()> {
@@ -255,14 +258,13 @@ impl CompilerNew {
 
         self.scope_enter();
         self.compile_statements(body)?;
-        let body_scope = self.scope_pop()?;
-        let mut body_scope = self.wrap_scope_into_enter(body_scope);
+        let mut body_scope = self.scope_pop()?;
 
         let else_body_scope = if let Some(else_body) = else_body {
             self.scope_enter();
             self.compile_statements(else_body)?;
             let else_body_scope = self.scope_pop()?;
-            let else_body_scope = self.wrap_scope_into_enter(else_body_scope);
+
             body_scope.push(Instruction::Jump(else_body_scope.len() as i32));
 
             else_body_scope
@@ -285,7 +287,6 @@ impl CompilerNew {
         self.scope_enter();
         self.compile_statements(body)?;
         let body_scope = self.scope_pop()?;
-        let body_scope = self.wrap_scope_into_enter(body_scope);
 
         let expression_len = expression_scope.len() as i32;
         let body_len = body_scope.len() as i32;
@@ -327,9 +328,8 @@ impl CompilerNew {
         self.insert(Instruction::LoadFromCollection)?;
         self.insert(Instruction::Assign)?;
 
-        self.compile_statements(body)?;
+        self.compile_statements_free(body)?;
         let body_scope = self.scope_pop()?;
-        let body_scope = self.wrap_scope_into_enter(body_scope);
         let body_len = body_scope.len() as i32;
         self.scope_append(body_scope)?;
 
@@ -344,7 +344,6 @@ impl CompilerNew {
         self.scope_append(after_scope)?;
 
         self.insert(Instruction::JumpIfFalse(-body_len - after_len))?;
-        self.insert(Instruction::Free(100))?;
 
         Ok(())
     }

@@ -25,6 +25,7 @@ pub enum Instruction {
     // Statements
     End,
     Return,
+    Free(usize),
     JumpIfFalse(Offset),
     JumpIfTrue(Offset),
     Jump(Offset),
@@ -35,7 +36,6 @@ pub enum Instruction {
     LoadVar(VariableId),
     Closure(VariableId),
     Call(ArgumentSize),
-    Free(usize),
     AssignVar(VariableId),
 
     LoadCollection(usize),
