@@ -3,11 +3,12 @@ use ks_global::utils::ks_result::KsResult;
 use std::collections::HashMap;
 
 use super::collection::Collection;
+use super::function::Function;
 use super::slot::Slot;
-use super::types::{CollectionId, Pointer, VariableId};
+use super::types::{CollectionId, Depth, Pointer, VariableId};
 
 pub struct Environment {
-    functions: HashMap<String, Pointer>,
+    functions: HashMap<String, Function>,
     variables: Vec<HashMap<String, Slot>>,
     collections: Vec<Collection>,
     temp_collection: Option<CollectionId>,
@@ -25,8 +26,15 @@ impl Environment {
         }
     }
 
+    fn depth(&self) -> Depth {
+        self.variables.len().saturating_sub(1)
+    }
+
     pub fn functions(self) -> HashMap<String, Pointer> {
         self.functions
+            .into_iter()
+            .map(|(name, function)| (name, function.pointer))
+            .collect()
     }
 
     pub fn temp_collection(&mut self) -> Option<CollectionId> {
@@ -96,7 +104,9 @@ impl Environment {
     }
 
     pub fn define_function(&mut self, name: &str, pointer: Pointer) {
-        self.functions.insert(name.to_string(), pointer);
+        let function = Function::new(pointer, self.depth());
+
+        self.functions.insert(name.to_string(), function);
     }
 
     pub fn variable_id(&self, name: &str) -> KsResult<VariableId> {
