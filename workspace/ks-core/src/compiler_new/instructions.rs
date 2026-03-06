@@ -37,6 +37,7 @@ pub enum Instruction {
     Closure(VariableId),
     Call(ArgumentSize),
     AssignVar(VariableId),
+    LoadToAcc(VariableId),
 
     LoadCollection(usize),
     LoadFromCollection,

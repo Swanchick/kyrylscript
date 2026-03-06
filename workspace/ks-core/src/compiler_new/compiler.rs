@@ -38,7 +38,11 @@ impl CompilerNew {
 
     pub fn compile(&mut self, statements: Vec<Statement>) -> KsResult<()> {
         self.scope_enter();
+        self.environment.enter();
+
         self.compile_statements(statements)?;
+
+        self.environment.exit()?;
         self.scope_exit();
 
         Ok(())

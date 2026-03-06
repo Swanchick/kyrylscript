@@ -65,14 +65,6 @@ impl Environment {
         }
     }
 
-    pub fn current_scope(&self) -> KsResult<&HashMap<String, Slot>> {
-        if let Some(scope) = self.variables.last() {
-            Ok(scope)
-        } else {
-            Err(KsError::parse("Cannot get last scope"))
-        }
-    }
-
     pub fn current_scope_mut(&mut self) -> KsResult<&mut HashMap<String, Slot>> {
         if let Some(scope) = self.variables.last_mut() {
             Ok(scope)
