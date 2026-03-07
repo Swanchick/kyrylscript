@@ -25,7 +25,6 @@ fn simple_variable_declaration() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(100)),
         Instruction::Store(0),
-        Instruction::Free(1),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
