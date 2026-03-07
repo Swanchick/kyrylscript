@@ -243,8 +243,10 @@ impl CompilerNew {
         operator: Operator,
     ) -> KsResult<()> {
         let assign_identifier = identifier.clone();
-        self.assign_identifier(assign_identifier)?;
-        self.identifier(identifier)?;
+
+        self.identifier(assign_identifier, true)?;
+        self.identifier(identifier, false)?;
+
         self.compile_expression(expression)?;
         self.insert_operator(operator)?;
         self.insert(Instruction::Assign)?;
@@ -396,10 +398,21 @@ impl CompilerNew {
         Ok(())
     }
 
+    fn insert_collection(&mut self, assign: bool) -> KsResult<()> {
+        if assign {
+            self.insert(Instruction::AssignCollection)?;
+        } else {
+            self.insert(Instruction::LoadFromCollection)?;
+        }
+
+        Ok(())
+    }
+
     fn identifier_name(
         &mut self,
         name: String,
         last_collection_id: &mut Option<CollectionId>,
+        assign: bool,
     ) -> KsResult<()> {
         if let Some(collection_id) = last_collection_id {
             let collection = self.environment.collection(*collection_id)?;
@@ -410,7 +423,7 @@ impl CompilerNew {
                     }
 
                     self.insert_constant(Constant::Integer(*variable_id as i32))?;
-                    self.insert(Instruction::LoadFromCollection)?;
+                    self.insert_collection(assign)?;
                 }
             }
         } else {
@@ -431,7 +444,11 @@ impl CompilerNew {
         Ok(())
     }
 
-    fn identifier_call(&mut self, expressions: Vec<Expression>) -> KsResult<()> {
+    fn identifier_call(&mut self, expressions: Vec<Expression>, assign: bool) -> KsResult<()> {
+        if assign {
+            return Err(KsError::parse("Cannot call in assign statement"));
+        }
+
         let arguments = expressions.len();
 
         for expression in expressions {
@@ -447,13 +464,14 @@ impl CompilerNew {
         &mut self,
         expression: Expression,
         last_collection_id: &mut Option<CollectionId>,
+        assign: bool,
     ) -> KsResult<()> {
         if let Some(collection_id) = last_collection_id {
             let collection = self.environment.collection(*collection_id)?;
             if let Collection::List { child } = collection {
                 *last_collection_id = child.clone();
                 self.compile_expression(expression)?;
-                self.insert(Instruction::LoadFromCollection)?;
+                self.insert_collection(assign)?;
             }
 
             Ok(())
@@ -468,6 +486,7 @@ impl CompilerNew {
         &mut self,
         index: i32,
         last_collection_id: &mut Option<CollectionId>,
+        assign: bool,
     ) -> KsResult<()> {
         if let Some(collection_id) = last_collection_id {
             let collection = self.environment.collection(*collection_id)?;
@@ -477,7 +496,7 @@ impl CompilerNew {
                 }
 
                 self.insert_constant(Constant::Integer(index))?;
-                self.insert(Instruction::LoadFromCollection)?;
+                self.insert_collection(assign)?;
             }
 
             Ok(())
@@ -488,18 +507,20 @@ impl CompilerNew {
         }
     }
 
-    fn identifier(&mut self, identifier: Vec<IdentifierTail>) -> KsResult<()> {
+    fn identifier(&mut self, identifier: Vec<IdentifierTail>, assign: bool) -> KsResult<()> {
         let mut last_collection_id: Option<CollectionId> = None;
 
         for segment in identifier {
             match segment {
-                IdentifierTail::Name(name) => self.identifier_name(name, &mut last_collection_id),
-                IdentifierTail::Call(expressions) => self.identifier_call(expressions),
+                IdentifierTail::Name(name) => {
+                    self.identifier_name(name, &mut last_collection_id, assign)
+                }
+                IdentifierTail::Call(expressions) => self.identifier_call(expressions, assign),
                 IdentifierTail::Index(expression) => {
-                    self.identifier_index(expression, &mut last_collection_id)
+                    self.identifier_index(expression, &mut last_collection_id, assign)
                 }
                 IdentifierTail::TupleIndex(index) => {
-                    self.identifier_tuple_index(index, &mut last_collection_id)
+                    self.identifier_tuple_index(index, &mut last_collection_id, assign)
                 }
             }?;
         }
@@ -622,7 +643,7 @@ impl CompilerNew {
             Expression::IntegerLiteral(integer) => self.insert_constant(Constant::Integer(integer)),
             Expression::FloatLiteral(float) => self.insert_constant(Constant::Float(float)),
             Expression::StringLiteral(string) => self.insert_constant(Constant::String(string)),
-            Expression::Identifier(identifier) => self.identifier(identifier),
+            Expression::Identifier(identifier) => self.identifier(identifier, false),
             Expression::ListLiteral(expressions) => self.list_literal(expressions),
             Expression::TupleLiteral(expressions) => self.tuple_literal(expressions),
             Expression::Module(module) => self.module_literal(module),
