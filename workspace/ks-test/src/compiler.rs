@@ -50,7 +50,6 @@ fn expression() -> KsResult<()> {
         Instruction::Minus,
         Instruction::Mul,
         Instruction::Store(0),
-        Instruction::Free(1),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -75,7 +74,6 @@ fn expression_statement() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(2)),
         Instruction::Minus,
         Instruction::End,
-        Instruction::Free(0),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
