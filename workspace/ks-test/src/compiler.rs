@@ -196,14 +196,12 @@ fn function_call() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Add,
-        Instruction::Free(0),
         Instruction::Return,
         Instruction::LoadConst(Constant::Function(1)),
         Instruction::Store(0),
         Instruction::LoadVar(0),
         Instruction::Call(0),
         Instruction::End,
-        Instruction::Free(1),
     ];
 
     let mut functions = HashMap::<String, usize>::new();
@@ -223,13 +221,12 @@ fn function_call() -> KsResult<()> {
 #[test]
 fn function_call_with_parameters() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(7),    // Skiping function to store it
-        Instruction::Store(2),   // Storing parameter b
-        Instruction::Store(1),   // Storing parameter a
-        Instruction::LoadVar(1), // Loading var a to variable stack
-        Instruction::LoadVar(2), // Loading var b to variable stack
-        Instruction::Add,        // Sum them
-        Instruction::Free(2),
+        Instruction::Jump(6),                          // Skiping function to store it
+        Instruction::Store(2),                         // Storing parameter b
+        Instruction::Store(1),                         // Storing parameter a
+        Instruction::LoadVar(1),                       // Loading var a to variable stack
+        Instruction::LoadVar(2),                       // Loading var b to variable stack
+        Instruction::Add,                              // Sum them
         Instruction::Return,                           // And return
         Instruction::LoadConst(Constant::Function(1)), // Defining function pointer as variable and save to variable stack
         Instruction::Store(0),                         // Saving function from variable stack
@@ -238,7 +235,6 @@ fn function_call_with_parameters() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(20)), // Loading constant 20
         Instruction::Call(2),    // Calling function with 2 arguments stored in variable stack
         Instruction::End,        // Ending an expression
-        Instruction::Free(1),
     ];
 
     let mut functions = HashMap::<String, usize>::new();
