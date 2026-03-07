@@ -137,11 +137,10 @@ fn function_declaration() -> KsResult<()> {
 #[test]
 fn should_create_return_at_the_end() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(2),
+        Instruction::Jump(1),
         Instruction::Return,
         Instruction::LoadConst(Constant::Function(1)),
         Instruction::Store(0),
-        Instruction::Free(1),
     ];
 
     let mut functions = HashMap::<String, usize>::new();
