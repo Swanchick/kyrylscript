@@ -438,8 +438,7 @@ fn for_statement() -> KsResult<()> {
         Instruction::LoadVar(0),
         Instruction::CollectionLen,
         Instruction::GreaterEq, // iterator >= list_iter.len()
-        Instruction::JumpIfFalse(-12),
-        Instruction::Free(3),
+        Instruction::JumpIfFalse(-11),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
