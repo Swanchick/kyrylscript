@@ -77,7 +77,6 @@ impl Environment {
         let variable_id = self.current;
 
         let temp_collection = self.temp_collection();
-        println!("{:?}", temp_collection);
 
         let slot = if let Some(collection_id) = temp_collection {
             Slot::Collection {

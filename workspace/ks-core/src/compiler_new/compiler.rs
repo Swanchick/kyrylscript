@@ -196,41 +196,12 @@ impl CompilerNew {
         Ok(())
     }
 
-    fn assign_identifier_name(&mut self, name: String, is_first: bool) -> KsResult<()> {
-        let variable_id = self.environment.variable_id(&name)?;
-
-        if is_first {
-            self.insert(Instruction::AssignVar(variable_id))?;
-        } else {
-            // self.insert(Instruction::AssignModule(variable_id))?;
-        }
-
-        Ok(())
-    }
-
-    fn assign_identifier(&mut self, identifier: Vec<IdentifierTail>) -> KsResult<()> {
-        let mut index = 0;
-        for segment in identifier {
-            match segment {
-                IdentifierTail::Name(name) => self.assign_identifier_name(name, index == 0),
-                IdentifierTail::Call(_) => {
-                    Err(KsError::parse("Cannot call in assignment identifier"))
-                }
-                _ => todo!(),
-            }?;
-
-            index += 1;
-        }
-
-        Ok(())
-    }
-
     fn assignment(
         &mut self,
         identifier: Vec<IdentifierTail>,
         expression: Expression,
     ) -> KsResult<()> {
-        self.assign_identifier(identifier)?;
+        self.identifier(identifier, true)?;
         self.compile_expression(expression)?;
         self.insert(Instruction::Assign)?;
         Ok(())
@@ -438,7 +409,11 @@ impl CompilerNew {
                 *last_collection_id = Some(*collection_id);
             }
 
-            self.insert(Instruction::LoadVar(variable_id))?;
+            if assign {
+                self.insert(Instruction::AssignVar(variable_id))?;
+            } else {
+                self.insert(Instruction::LoadVar(variable_id))?;
+            }
         }
 
         Ok(())

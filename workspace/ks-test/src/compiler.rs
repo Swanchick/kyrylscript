@@ -645,3 +645,32 @@ fn complex_access() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn complex_assignment_statement() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::String(String::from("Egg"))),
+        Instruction::LoadConst(Constant::String(String::from("Soup"))),
+        Instruction::LoadConst(Constant::String(String::from("Becon"))),
+        Instruction::LoadCollection(3),
+        Instruction::LoadCollection(1),
+        Instruction::Store(0),
+        Instruction::AssignVar(0),
+        Instruction::LoadConst(Constant::Integer(0)),
+        Instruction::AssignCollection,
+        Instruction::LoadConst(Constant::Integer(2)),
+        Instruction::AssignCollection,
+        Instruction::LoadConst(Constant::String(String::from("Food"))),
+        Instruction::Assign,
+    ];
+
+    let test_program = Program::new(instructions, HashMap::new());
+
+    let driver = KsDriver::new("compiler/complex_assignment_statement.ks");
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
