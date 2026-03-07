@@ -265,7 +265,6 @@ fn assignment_statment() -> KsResult<()> {
         Instruction::AssignVar(0),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Assign,
-        Instruction::Free(1),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -320,7 +319,7 @@ fn remove_value_statment() -> KsResult<()> {
 
     let test_program = Program::new(instructions, HashMap::new());
 
-    let driver = KsDriver::new("compiler/assignment_statment.ks");
+    let driver = KsDriver::new("compiler/remove_value_statment.ks");
     let compiler = driver.compiler_new()?;
     let program = compiler.program();
 
