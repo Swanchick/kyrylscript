@@ -94,7 +94,6 @@ fn simple_identifier() -> KsResult<()> {
         Instruction::Store(0),
         Instruction::LoadVar(0),
         Instruction::Store(1),
-        Instruction::Free(2),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
