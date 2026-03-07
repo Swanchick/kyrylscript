@@ -111,14 +111,13 @@ fn simple_identifier() -> KsResult<()> {
 #[test]
 fn function_declaration() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(5),
+        Instruction::Jump(4),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Add,
         Instruction::Return,
         Instruction::LoadConst(Constant::Function(1)),
         Instruction::Store(0),
-        Instruction::Free(1),
     ];
 
     let mut functions = HashMap::<String, usize>::new();
@@ -162,17 +161,15 @@ fn should_create_return_at_the_end() -> KsResult<()> {
 #[test]
 fn function_with_parameters() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(6),    // Skiping function to store it
-        Instruction::Store(2),   // Storing parameter b
-        Instruction::Store(1),   // Storing parameter a
-        Instruction::LoadVar(1), // Loading var a to variable stack
-        Instruction::LoadVar(2), // Loading var b to variable stack
-        Instruction::Add,        // Sum them
-        Instruction::Free(2),
+        Instruction::Jump(6),                          // Skiping function to store it
+        Instruction::Store(2),                         // Storing parameter b
+        Instruction::Store(1),                         // Storing parameter a
+        Instruction::LoadVar(1),                       // Loading var a to variable stack
+        Instruction::LoadVar(2),                       // Loading var b to variable stack
+        Instruction::Add,                              // Sum them
         Instruction::Return,                           // And return
         Instruction::LoadConst(Constant::Function(1)), // Defining function pointer as variable and save to variable stack
         Instruction::Store(0),                         // Saving function from variable stack
-        Instruction::Free(1),
     ];
 
     let mut functions = HashMap::<String, usize>::new();
