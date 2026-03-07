@@ -375,18 +375,16 @@ fn while_statement() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(0)),
         Instruction::Store(0),
-        Instruction::Jump(7),
+        Instruction::Jump(5),
         Instruction::AssignVar(0),
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(1)),
         Instruction::Add,
         Instruction::Assign,
-        Instruction::Free(0),
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::GreaterEq,
-        Instruction::JumpIfTrue(-9),
-        Instruction::Free(1),
+        Instruction::JumpIfTrue(-8),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
