@@ -331,8 +331,6 @@ fn if_statement() -> KsResult<()> {
         Instruction::AssignVar(0),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Assign,
-        Instruction::Free(0),
-        Instruction::Free(1),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
