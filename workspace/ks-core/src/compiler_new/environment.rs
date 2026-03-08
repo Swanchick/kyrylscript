@@ -30,6 +30,10 @@ impl Environment {
         self.variables.len().saturating_sub(1)
     }
 
+    fn current(&self) -> VariableId {
+        self.variables.iter().map(|scope| scope.len()).sum()
+    }
+
     pub fn functions(self) -> HashMap<String, Pointer> {
         self.functions
             .into_iter()
@@ -74,7 +78,7 @@ impl Environment {
     }
 
     pub fn define_variable(&mut self, name: String) -> KsResult<VariableId> {
-        let variable_id = self.current;
+        let variable_id = self.current();
 
         let temp_collection = self.temp_collection();
 
@@ -89,7 +93,6 @@ impl Environment {
 
         let current_scope = self.current_scope_mut()?;
         current_scope.insert(name, slot);
-        self.current += 1;
 
         Ok(variable_id)
     }

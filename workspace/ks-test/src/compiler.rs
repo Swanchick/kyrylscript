@@ -414,14 +414,14 @@ fn for_statement() -> KsResult<()> {
         Instruction::LoadVar(1),
         Instruction::LoadVar(0),
         Instruction::LoadFromCollection,
-        Instruction::Assign,  // changing the variable to the list number
-        Instruction::Free(0), // Empty scope
+        Instruction::Assign, // changing the variable to the list number
         Instruction::LoadVar(1),
         Instruction::Increment, // iterator++
         Instruction::LoadVar(0),
         Instruction::CollectionLen,
         Instruction::GreaterEq, // iterator >= list_iter.len()
-        Instruction::JumpIfFalse(-11),
+        Instruction::JumpIfFalse(-10),
+        Instruction::Free(3),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -667,6 +667,66 @@ fn complex_assignment_statement() -> KsResult<()> {
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/complex_assignment_statement.ks");
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
+
+#[test]
+fn scope_enter_exit() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::Integer(20)),
+        Instruction::Store(0),
+        Instruction::LoadConst(Constant::Boolean(true)),
+        Instruction::JumpIfFalse(3),
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::Store(1),
+        Instruction::Free(1),
+        Instruction::LoadConst(Constant::Integer(23)),
+        Instruction::Store(1),
+        Instruction::Jump(3),
+        Instruction::LoadConst(Constant::String(String::from("Hello World"))),
+        Instruction::Store(2),
+        Instruction::Free(1),
+        Instruction::LoadConst(Constant::Boolean(true)),
+        Instruction::JumpIfTrue(-4),
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::Store(2),
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::LoadConst(Constant::Integer(20)),
+        Instruction::LoadConst(Constant::Integer(30)),
+        Instruction::LoadConst(Constant::Integer(40)),
+        Instruction::LoadCollection(4),
+        Instruction::Store(3),
+        Instruction::LoadConst(Constant::Integer(0)),
+        Instruction::Store(4),
+        Instruction::LoadConst(Constant::Null),
+        Instruction::Store(5),
+        Instruction::AssignVar(5),
+        Instruction::LoadVar(4),
+        Instruction::LoadVar(3),
+        Instruction::LoadFromCollection,
+        Instruction::Assign,
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::Store(6),
+        Instruction::Free(1),
+        Instruction::LoadVar(4),
+        Instruction::Increment,
+        Instruction::LoadVar(3),
+        Instruction::CollectionLen,
+        Instruction::GreaterEq,
+        Instruction::JumpIfFalse(-13),
+        Instruction::Free(3),
+        Instruction::LoadConst(Constant::Integer(345)),
+        Instruction::Store(3),
+    ];
+
+    let test_program = Program::new(instructions, HashMap::new());
+
+    let driver = KsDriver::new("compiler/scope_enter_exit.ks");
     let compiler = driver.compiler_new()?;
     let program = compiler.program();
 
