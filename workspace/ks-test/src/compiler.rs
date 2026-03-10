@@ -767,19 +767,29 @@ fn function_scope_store_name_register() -> KsResult<()> {
 #[test]
 fn multiple_function_scoping() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::Integer(783)),
+        Instruction::Store(0),
+        Instruction::Jump(15),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Store(0),
         Instruction::Jump(5),
-        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Store(0),
         Instruction::LoadVar(0),
         Instruction::Free(1),
         Instruction::Return,
-        Instruction::LoadConst(Constant::Function(1)),
+        Instruction::LoadConst(Constant::Function(5)),
         Instruction::Store(1),
         Instruction::LoadVar(1),
         Instruction::Call(0),
-        Instruction::End,
+        Instruction::LoadVar(0),
+        Instruction::Add,
+        Instruction::Return,
+        Instruction::LoadConst(Constant::Function(2)),
+        Instruction::Store(1),
+        Instruction::LoadVar(1),
+        Instruction::Call(0),
+        Instruction::Store(2),
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
