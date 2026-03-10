@@ -755,7 +755,36 @@ fn function_scope_store_name_register() -> KsResult<()> {
 
     let test_program = Program::new(instructions, HashMap::new());
 
-    let driver = KsDriver::new("compiler/function_scope_free.ks");
+    let driver = KsDriver::new("compiler/function_scope_store_name_register.ks");
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
+
+#[test]
+fn multiple_function_scoping() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::Store(0),
+        Instruction::Jump(5),
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::Store(0),
+        Instruction::LoadVar(0),
+        Instruction::Free(1),
+        Instruction::Return,
+        Instruction::LoadConst(Constant::Function(1)),
+        Instruction::Store(1),
+        Instruction::LoadVar(1),
+        Instruction::Call(0),
+        Instruction::End,
+    ];
+
+    let test_program = Program::new(instructions, HashMap::new());
+
+    let driver = KsDriver::new("compiler/multiple_function_scoping.ks");
     let compiler = driver.compiler_new()?;
     let program = compiler.program();
 
