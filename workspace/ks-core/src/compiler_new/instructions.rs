@@ -1,5 +1,5 @@
 use super::constant::Constant;
-use super::types::{ArgumentSize, Offset, VariableId};
+use super::types::{ArgumentSize, Offset, Pointer, VariableId};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Instruction {
@@ -22,8 +22,7 @@ pub enum Instruction {
     Clone,
     Power,
 
-    // Statements
-    End,
+    ClearAcc,
     Return,
     Free(usize),
     JumpIfFalse(Offset),
@@ -37,6 +36,9 @@ pub enum Instruction {
     Closure(VariableId),
     Call(ArgumentSize),
     AssignVar(VariableId),
+    Capture(VariableId),
+    LoadCapture(VariableId),
+    LoadFunction(Pointer),
 
     LoadCollection(usize),
     LoadFromCollection,

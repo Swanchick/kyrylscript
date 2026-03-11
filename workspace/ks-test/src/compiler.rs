@@ -72,7 +72,7 @@ fn expression_statement() -> KsResult<()> {
         Instruction::Add,
         Instruction::LoadConst(Constant::Integer(2)),
         Instruction::Minus,
-        Instruction::End,
+        Instruction::ClearAcc,
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -195,7 +195,7 @@ fn function_call() -> KsResult<()> {
         Instruction::Store(0),
         Instruction::LoadVar(0),
         Instruction::Call(0),
-        Instruction::End,
+        Instruction::ClearAcc,
     ];
 
     let mut functions = HashMap::<String, usize>::new();
@@ -228,7 +228,7 @@ fn function_call_with_parameters() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(10)), // Loading constant 10
         Instruction::LoadConst(Constant::Integer(20)), // Loading constant 20
         Instruction::Call(2),    // Calling function with 2 arguments stored in variable stack
-        Instruction::End,        // Ending an expression
+        Instruction::ClearAcc,   // Ending an expression
     ];
 
     let mut functions = HashMap::<String, usize>::new();
@@ -489,10 +489,10 @@ fn front_unary_operator() -> KsResult<()> {
         Instruction::Store(0),
         Instruction::LoadVar(0),
         Instruction::Increment,
-        Instruction::End,
+        Instruction::ClearAcc,
         Instruction::LoadVar(0),
         Instruction::Decrement,
-        Instruction::End,
+        Instruction::ClearAcc,
         Instruction::LoadVar(0),
         Instruction::Clone,
         Instruction::Store(1),
@@ -587,7 +587,7 @@ fn access_module_children() -> KsResult<()> {
         Instruction::LoadFromCollection,
         Instruction::LoadConst(Constant::Integer(0)),
         Instruction::LoadFromCollection,
-        Instruction::End,
+        Instruction::ClearAcc,
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -620,19 +620,19 @@ fn complex_access() -> KsResult<()> {
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(2)),
         Instruction::LoadFromCollection,
-        Instruction::End, // person.name;
+        Instruction::ClearAcc, // person.name;
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(1)),
         Instruction::LoadFromCollection,
         Instruction::LoadConst(Constant::Integer(1)),
         Instruction::LoadFromCollection,
-        Instruction::End, // person.languages[1];
+        Instruction::ClearAcc, // person.languages[1];
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(0)),
         Instruction::LoadFromCollection,
         Instruction::LoadConst(Constant::Integer(2)),
         Instruction::LoadFromCollection,
-        Instruction::End, // person.items_on_the_table->2;
+        Instruction::ClearAcc, // person.items_on_the_table->2;
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -750,7 +750,7 @@ fn function_scope_store_name_register() -> KsResult<()> {
         Instruction::Store(1),
         Instruction::LoadVar(1),
         Instruction::Call(0),
-        Instruction::End,
+        Instruction::ClearAcc,
     ];
 
     let test_program = Program::new(instructions, HashMap::new());

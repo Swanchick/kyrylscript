@@ -152,7 +152,7 @@ impl CompilerNew {
 
     fn expression_statement(&mut self, expression: Expression) -> KsResult<()> {
         self.compile_expression(expression)?;
-        self.insert(Instruction::End)?;
+        self.insert(Instruction::ClearAcc)?;
 
         Ok(())
     }
