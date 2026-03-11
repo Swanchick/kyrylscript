@@ -21,7 +21,6 @@ impl Environment {
             variables: Vec::new(),
             collections: Vec::new(),
             temp_collection: None,
-            current: 0,
         }
     }
 
