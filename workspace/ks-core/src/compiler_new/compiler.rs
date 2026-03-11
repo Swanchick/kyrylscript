@@ -189,7 +189,7 @@ impl CompilerNew {
         self.insert(Instruction::Jump(final_scope.len() as i32))?;
         self.scope_append(final_scope)?;
 
-        self.insert_constant(Constant::Function(pointer))?;
+        self.insert_constant(Constant::Integer(pointer as i32))?;
         self.insert_store(variable_id, public)?;
 
         Ok(())

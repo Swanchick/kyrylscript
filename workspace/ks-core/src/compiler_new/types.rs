@@ -4,3 +4,4 @@ pub type Pointer = usize;
 pub type ArgumentSize = usize;
 pub type CollectionId = usize;
 pub type Depth = usize;
+pub type CaptureSize = usize;

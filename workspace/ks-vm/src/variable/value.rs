@@ -7,7 +7,7 @@ pub enum Value {
     Null,
     Integer(i32),
     Float(f64),
-    String(String),
+    String(String), // usize (u64) 6 bytes
     Boolean(bool),
     List(Vec<Reference>),
     Tuple(Vec<Reference>),

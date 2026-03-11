@@ -12,7 +12,6 @@ pub struct Environment {
     variables: Vec<HashMap<String, Slot>>,
     collections: Vec<Collection>,
     temp_collection: Option<CollectionId>,
-    current: usize,
 }
 
 impl Environment {

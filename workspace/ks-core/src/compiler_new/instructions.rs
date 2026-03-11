@@ -1,5 +1,7 @@
+use crate::compiler_new::types::CaptureSize;
+
 use super::constant::Constant;
-use super::types::{ArgumentSize, Offset, Pointer, VariableId};
+use super::types::{ArgumentSize, Offset, VariableId};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Instruction {
@@ -38,7 +40,7 @@ pub enum Instruction {
     AssignVar(VariableId),
     Capture(VariableId),
     LoadCapture(VariableId),
-    LoadFunction(Pointer),
+    LoadFunction(CaptureSize),
 
     LoadCollection(usize),
     LoadFromCollection,
