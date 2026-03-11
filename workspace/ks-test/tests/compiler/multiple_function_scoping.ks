@@ -6,10 +6,10 @@ function foo(): int {
     function bar(): int {
         let var2 = 20;
 
-        return var2;
+        return var1 + var2;
     }
 
-    return bar() + var1;
+    return bar;
 }
 
-let result = foo();
+let result = foo()();

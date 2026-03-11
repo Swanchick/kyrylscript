@@ -53,6 +53,10 @@ impl Parser {
         self.token_pos = token_pos;
     }
 
+    pub fn function_context(&self) -> &Context {
+        &self.function_context
+    }
+
     pub fn start(&mut self) -> KsResult<Vec<Statement>> {
         let result = self.parse_block_statement();
 
