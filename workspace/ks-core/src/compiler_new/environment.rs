@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use super::collection::Collection;
 use super::slot::Slot;
-use super::types::{CollectionId, Depth, Pointer, VariableId};
+use super::types::{CollectionId, Pointer, VariableId};
 
 pub struct Environment {
     functions: HashMap<String, Pointer>,
