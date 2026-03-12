@@ -20,7 +20,7 @@ pub struct Parser {
     token_pos: Vec<TokenPos>,
     semantic_analyzer: SemanticAnalyzer,
     current_token: usize,
-    function_context: Context,
+    function_context: Vec<Context>,
 }
 
 impl Parser {
@@ -30,7 +30,7 @@ impl Parser {
             token_pos: Vec::new(),
             semantic_analyzer: SemanticAnalyzer::new(),
             current_token: 0,
-            function_context: Context::None,
+            function_context: vec![Context::process()],
         }
     }
 
@@ -44,7 +44,7 @@ impl Parser {
             token_pos,
             semantic_analyzer: semantic_analyzer,
             current_token: 0,
-            function_context: Context::None,
+            function_context: vec![Context::process()],
         }
     }
 
@@ -53,7 +53,7 @@ impl Parser {
         self.token_pos = token_pos;
     }
 
-    pub fn function_context(&self) -> &Context {
+    pub fn function_context(&self) -> &[Context] {
         &self.function_context
     }
 
@@ -151,10 +151,8 @@ impl Parser {
     pub fn parse_statement(&mut self) -> KsResult<Option<Statement>> {
         let public = self.match_token(&Token::Pub);
 
-        if let Context::Function { return_data: _ } = self.function_context {
-            if public {
-                return Err(KsError::parse("Invalid context for public visibility!"));
-            }
+        if self.function_context.len() > 1 && public {
+            return Err(KsError::parse("Invalid context for public visibility!"));
         }
 
         match self.advance() {
@@ -305,6 +303,18 @@ impl Parser {
         }
     }
 
+    fn enter_fucntion(&mut self, return_type: DataType) {
+        self.function_context.push(Context::new(return_type));
+    }
+
+    fn exit_fucntion(&mut self) -> KsResult<Context> {
+        if let Some(context) = self.function_context.pop() {
+            Ok(context)
+        } else {
+            Err(KsError::parse("No Function to exit!"))
+        }
+    }
+
     pub fn parse_function(&mut self, public: bool) -> KsResult<Statement> {
         let function_name = self.consume_identifier()?;
 
@@ -312,7 +322,7 @@ impl Parser {
 
         let parameters = self.parse_parameters()?;
 
-        let function_type = if self.match_token(&Token::Colon) {
+        let return_type = if self.match_token(&Token::Colon) {
             self.parse_data_type()?
         } else {
             DataType::void()
@@ -322,12 +332,10 @@ impl Parser {
 
         let function_data_type = DataType::Function {
             parameters: DataType::from_parameters(&parameters),
-            return_type: Box::new(function_type.clone()),
+            return_type: Box::new(return_type.clone()),
         };
 
-        self.function_context = Context::Function {
-            return_data: function_data_type.clone(),
-        };
+        self.enter_fucntion(return_type.clone());
 
         if public {
             self.semantic_analyzer
@@ -345,14 +353,14 @@ impl Parser {
         }
 
         let body = self.parse_block_statement()?;
+        let context = self.exit_fucntion()?;
 
-        self.function_context = Context::None;
         self.semantic_analyzer.exit_function_environment()?;
 
         Ok(Statement::Function {
             name: function_name,
             public,
-            return_type: function_type,
+            return_type,
             parameters,
             body,
         })
@@ -485,28 +493,33 @@ impl Parser {
         })
     }
 
+    fn last_function_context(&self) -> KsResult<&Context> {
+        if let Some(context) = self.function_context.last() {
+            Ok(context)
+        } else {
+            Err(KsError::parse("Cannot get last context"))
+        }
+    }
+
     fn parse_return_statement(&mut self) -> KsResult<Statement> {
-        if let Context::Function { return_data } = self.function_context.clone() {
-            let expression = self.parse_expression()?;
-            let data_type = self.semantic_analyzer.get_data_type(&expression)?;
-
-            if let DataType::Function {
-                parameters: _,
-                return_type,
-            } = return_data
-            {
-                if *return_type != data_type {
-                    return Err(KsError::parse("Mismatch return and function return types!"));
-                }
-
-                self.consume_token(Token::Semicolon)?;
-                return Ok(Statement::ReturnStatement {
-                    value: Some(expression),
-                });
-            }
+        if self.function_context.len() == 1 {
+            return Err(KsError::parse("No function context to return!"));
         }
 
-        Err(KsError::parse("No function context for return!"))
+        let last = self.last_function_context()?;
+        let return_type = last.return_type.clone();
+
+        let expression = self.parse_expression()?;
+        let data_type = self.semantic_analyzer.get_data_type(&expression)?;
+
+        if return_type != data_type {
+            return Err(KsError::parse("Mismatch return and function return types!"));
+        }
+
+        self.consume_token(Token::Semicolon)?;
+        Ok(Statement::ReturnStatement {
+            value: Some(expression),
+        })
     }
 
     fn parse_assignment_statement(
@@ -908,16 +921,9 @@ impl Parser {
 
                     self.consume_token(Token::LeftBrace)?;
 
-                    let function_data_type = DataType::Function {
-                        parameters: DataType::from_parameters(&parameters),
-                        return_type: Box::new(return_type.clone()),
-                    };
-
-                    self.function_context = Context::Function {
-                        return_data: function_data_type,
-                    };
+                    self.enter_fucntion(return_type.clone());
                     let block = self.parse_block_statement()?;
-                    self.function_context = Context::None;
+                    let context = self.exit_fucntion()?;
 
                     self.semantic_analyzer.exit_function_environment()?;
 
@@ -962,16 +968,10 @@ impl Parser {
 
         self.consume_token(Token::LeftBrace)?;
 
-        let function_data_type = DataType::Function {
-            parameters: DataType::from_parameters(&parameters),
-            return_type: Box::new(return_type.clone()),
-        };
-
-        self.function_context = Context::Function {
-            return_data: function_data_type.clone(),
-        };
+        self.enter_fucntion(return_type.clone());
         let block = self.parse_block_statement()?;
-        self.function_context = Context::None;
+
+        let context = self.exit_fucntion()?;
 
         self.semantic_analyzer.exit_function_environment()?;
 
