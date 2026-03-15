@@ -244,12 +244,11 @@ fn function_curring() -> KsResult<()> {
         Statement::VariableDeclaration {
             name: String::from("result"),
             public: false,
-            data_type: None,
+            data_type: Some(DataType::Int),
             value: Some(Expression::Identifier(vec![
                 IdentifierTail::Name(String::from("curry")),
                 IdentifierTail::Call(vec![Expression::IntegerLiteral(10)]),
                 IdentifierTail::Call(vec![Expression::IntegerLiteral(20)]),
-                IdentifierTail::Call(vec![Expression::IntegerLiteral(30)]),
             ])),
         },
     ];

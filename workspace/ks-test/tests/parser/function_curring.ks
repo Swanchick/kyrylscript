@@ -4,4 +4,4 @@ function curry(a int): function(int): int {
     };
 }
 
-let result1 = curry(10)(20);
+let result = curry(10)(20);

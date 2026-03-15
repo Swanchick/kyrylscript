@@ -1,7 +1,6 @@
 use super::data_type::DataType;
 use crate::lexer::token::Token;
 use crate::lexer::token_pos::TokenPos;
-use crate::parser::context;
 
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
@@ -15,7 +14,6 @@ use super::semantic_analyzer::SemanticAnalyzer;
 use super::statement::Statement;
 
 use std::collections::BTreeMap;
-use std::hash::Hash;
 
 pub struct Parser {
     tokens: Vec<Token>,
@@ -236,7 +234,12 @@ impl Parser {
                         segments.push(IdentifierTail::Name(name.clone()));
 
                         let context = self.last_function_context_mut()?;
-                        context.captured_variables.push(name);
+                        println!("NAME Captured: {}", name);
+                        println!("Variables: {:?}", context.variables);
+
+                        if !context.variables.contains(&name) {
+                            context.captured_variables.push(name);
+                        }
 
                         continue;
                     }
@@ -372,6 +375,9 @@ impl Parser {
         for parameter in &parameters {
             self.semantic_analyzer
                 .save_variable(parameter.name.clone(), parameter.data_type.clone());
+
+            let context = self.last_function_context_mut()?;
+            context.variables.push(parameter.name.clone());
         }
 
         let body = self.parse_block_statement()?;
@@ -936,10 +942,6 @@ impl Parser {
                 Some(Token::LeftParenthesis) => {
                     self.semantic_analyzer.enter_function_environment();
                     let parameters = self.parse_parameters()?;
-                    for parameter in &parameters {
-                        self.semantic_analyzer
-                            .save_variable(parameter.name.clone(), parameter.data_type.clone());
-                    }
 
                     let return_type = if self.match_token(&Token::Colon) {
                         self.parse_data_type()?
@@ -948,9 +950,18 @@ impl Parser {
                     };
 
                     self.consume_token(Token::LeftBrace)?;
-
                     self.enter_fucntion(return_type.clone());
+
+                    for parameter in &parameters {
+                        self.semantic_analyzer
+                            .save_variable(parameter.name.clone(), parameter.data_type.clone());
+
+                        let context = self.last_function_context_mut()?;
+                        context.variables.push(parameter.name.clone());
+                    }
+
                     let block = self.parse_block_statement()?;
+
                     let mut context = self.exit_fucntion()?;
                     let last_context = self.last_function_context_mut()?;
 
@@ -990,11 +1001,8 @@ impl Parser {
     fn parse_expression_function(&mut self) -> KsResult<Expression> {
         self.consume_token(Token::LeftParenthesis)?;
         self.semantic_analyzer.enter_function_environment();
+
         let parameters = self.parse_parameters()?;
-        for parameter in &parameters {
-            self.semantic_analyzer
-                .save_variable(parameter.name.clone(), parameter.data_type.clone());
-        }
 
         let return_type = if self.match_token(&Token::Colon) {
             let data_type = self.parse_data_type()?;
@@ -1005,8 +1013,16 @@ impl Parser {
         };
 
         self.consume_token(Token::LeftBrace)?;
-
         self.enter_fucntion(return_type.clone());
+
+        for parameter in &parameters {
+            self.semantic_analyzer
+                .save_variable(parameter.name.clone(), parameter.data_type.clone());
+
+            let context = self.last_function_context_mut()?;
+            context.variables.push(parameter.name.clone());
+        }
+
         let block = self.parse_block_statement()?;
 
         let mut context = self.exit_fucntion()?;
