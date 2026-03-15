@@ -24,6 +24,7 @@ pub enum Expression {
         parameters: Vec<Parameter>,
         return_type: DataType,
         block: Vec<Statement>,
+        captured: Vec<String>,
     },
     ListIndex {
         left: Box<Expression>,

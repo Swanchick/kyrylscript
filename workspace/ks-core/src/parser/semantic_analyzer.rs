@@ -418,6 +418,7 @@ impl SemanticAnalyzer {
                 parameters,
                 return_type,
                 block: _,
+                captured: _,
             } => {
                 let mut data_types: Vec<DataType> = Vec::new();
 

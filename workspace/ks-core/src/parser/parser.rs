@@ -1,6 +1,7 @@
 use super::data_type::DataType;
 use crate::lexer::token::Token;
 use crate::lexer::token_pos::TokenPos;
+use crate::parser::context;
 
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
@@ -14,6 +15,7 @@ use super::semantic_analyzer::SemanticAnalyzer;
 use super::statement::Statement;
 
 use std::collections::BTreeMap;
+use std::hash::Hash;
 
 pub struct Parser {
     tokens: Vec<Token>,
@@ -55,6 +57,22 @@ impl Parser {
 
     pub fn function_context(&self) -> &[Context] {
         &self.function_context
+    }
+
+    fn last_function_context(&self) -> KsResult<&Context> {
+        if let Some(context) = self.function_context.last() {
+            Ok(context)
+        } else {
+            Err(KsError::parse("Cannot get the last function context"))
+        }
+    }
+
+    fn last_function_context_mut(&mut self) -> KsResult<&mut Context> {
+        if let Some(context) = self.function_context.last_mut() {
+            Ok(context)
+        } else {
+            Err(KsError::parse("Cannot get the last function context"))
+        }
     }
 
     pub fn start(&mut self) -> KsResult<Vec<Statement>> {
@@ -215,7 +233,11 @@ impl Parser {
                     if segments.is_empty() {
                         let current_data_type = self.semantic_analyzer.get_variable(&name)?;
                         segment_data_type = Some(current_data_type);
-                        segments.push(IdentifierTail::Name(name));
+                        segments.push(IdentifierTail::Name(name.clone()));
+
+                        let context = self.last_function_context_mut()?;
+                        context.captured_variables.push(name);
+
                         continue;
                     }
                 }
@@ -353,7 +375,17 @@ impl Parser {
         }
 
         let body = self.parse_block_statement()?;
-        let context = self.exit_fucntion()?;
+
+        let mut context = self.exit_fucntion()?;
+        let last_context = self.last_function_context_mut()?;
+
+        for capture in &mut context.captured_variables {
+            if last_context.variables.contains(&capture) {
+                continue;
+            }
+
+            last_context.captured_variables.push(capture.clone());
+        }
 
         self.semantic_analyzer.exit_function_environment()?;
 
@@ -363,6 +395,7 @@ impl Parser {
             return_type,
             parameters,
             body,
+            captured: context.captured_variables,
         })
     }
 
@@ -456,6 +489,9 @@ impl Parser {
     fn parse_variable_declaration_statement(&mut self, public: bool) -> KsResult<Statement> {
         let name = self.consume_identifier()?;
 
+        let context = self.last_function_context_mut()?;
+        context.variables.push(name.clone());
+
         let data_type = if self.match_token(&Token::Colon) {
             Some(self.parse_data_type()?)
         } else {
@@ -491,14 +527,6 @@ impl Parser {
             data_type: Some(dt),
             value: Some(expression),
         })
-    }
-
-    fn last_function_context(&self) -> KsResult<&Context> {
-        if let Some(context) = self.function_context.last() {
-            Ok(context)
-        } else {
-            Err(KsError::parse("Cannot get last context"))
-        }
     }
 
     fn parse_return_statement(&mut self) -> KsResult<Statement> {
@@ -923,7 +951,16 @@ impl Parser {
 
                     self.enter_fucntion(return_type.clone());
                     let block = self.parse_block_statement()?;
-                    let context = self.exit_fucntion()?;
+                    let mut context = self.exit_fucntion()?;
+                    let last_context = self.last_function_context_mut()?;
+
+                    for capture in &mut context.captured_variables {
+                        if last_context.variables.contains(&capture) {
+                            continue;
+                        }
+
+                        last_context.captured_variables.push(capture.clone());
+                    }
 
                     self.semantic_analyzer.exit_function_environment()?;
 
@@ -933,6 +970,7 @@ impl Parser {
                             parameters,
                             return_type,
                             block,
+                            captured: context.captured_variables,
                         },
                     );
                 }
@@ -971,7 +1009,16 @@ impl Parser {
         self.enter_fucntion(return_type.clone());
         let block = self.parse_block_statement()?;
 
-        let context = self.exit_fucntion()?;
+        let mut context = self.exit_fucntion()?;
+        let last_context = self.last_function_context_mut()?;
+
+        for capture in &mut context.captured_variables {
+            if last_context.variables.contains(&capture) {
+                continue;
+            }
+
+            last_context.captured_variables.push(capture.clone());
+        }
 
         self.semantic_analyzer.exit_function_environment()?;
 
@@ -979,6 +1026,7 @@ impl Parser {
             parameters,
             return_type,
             block,
+            captured: context.captured_variables,
         })
     }
 

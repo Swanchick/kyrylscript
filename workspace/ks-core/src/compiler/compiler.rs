@@ -310,6 +310,7 @@ impl Compiler {
                 return_type: _,
                 parameters,
                 body,
+                captured: _,
             } => {
                 let name = name.clone();
 
@@ -447,6 +448,7 @@ impl Compiler {
                 parameters,
                 return_type: _,
                 block,
+                captured: _,
             } => {
                 let function_name = format!(
                     "{}{}",

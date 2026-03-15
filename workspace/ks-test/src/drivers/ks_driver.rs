@@ -38,6 +38,15 @@ impl KsDriver {
         Ok(statements)
     }
 
+    pub fn parser_with_parser(&self) -> KsResult<Parser> {
+        let lexer = self.lexer()?;
+        let mut parser = Parser::new();
+        parser.set_tokens(lexer.get_tokens().to_vec(), lexer.get_token_pos().to_vec());
+        ks_register_std(&mut parser);
+
+        Ok(parser)
+    }
+
     pub fn compiler(&self) -> KsResult<HashMap<String, Function>> {
         let statements = self.parser()?;
         let mut compiler = Compiler::new();

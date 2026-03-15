@@ -163,6 +163,7 @@ impl CompilerNew {
         public: bool,
         parameters: Vec<Parameter>,
         body: Vec<Statement>,
+        captured: Vec<String>,
     ) -> KsResult<()> {
         let pointer = self.current_pc() + 1;
         self.environment.define_function(&name, pointer);
@@ -358,7 +359,8 @@ impl CompilerNew {
                 return_type: _,
                 parameters,
                 body,
-            } => self.function_declaration(name, public, parameters, body),
+                captured,
+            } => self.function_declaration(name, public, parameters, body, captured),
             Statement::ReturnStatement { value } => self.return_statement(value),
             Statement::Assignment { segments, value } => self.assignment(segments, value),
             Statement::AddValue { segments, value } => {

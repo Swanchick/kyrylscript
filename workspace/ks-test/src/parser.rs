@@ -2,6 +2,7 @@ use ks_core::parser::data_type::DataType;
 use ks_core::parser::expression::Expression;
 use ks_core::parser::identifier_tail::IdentifierTail;
 use ks_core::parser::operator::Operator;
+use ks_core::parser::parameter::Parameter;
 use ks_core::parser::statement::Statement;
 use ks_global::utils::ks_result::KsResult;
 
@@ -194,10 +195,70 @@ fn callback() -> KsResult<()> {
             parameters: Vec::new(),
             return_type: DataType::void(),
             block: Vec::new(),
+            captured: Vec::new(),
         }),
     });
 
     assert_eq!(statement, test_statement);
+
+    Ok(())
+}
+
+#[test]
+fn function_curring() -> KsResult<()> {
+    let test_statement = vec![
+        Statement::Function {
+            name: String::from("curry"),
+            public: false,
+            return_type: DataType::Function {
+                parameters: vec![DataType::Int],
+                return_type: Box::new(DataType::Int),
+            },
+            parameters: vec![Parameter {
+                name: String::from("a"),
+                data_type: DataType::Int,
+            }],
+            body: vec![Statement::ReturnStatement {
+                value: Some(Expression::FunctionLiteral {
+                    parameters: vec![Parameter {
+                        name: String::from("b"),
+                        data_type: DataType::Int,
+                    }],
+                    return_type: DataType::Int,
+                    block: vec![Statement::ReturnStatement {
+                        value: Some(Expression::BinaryOp {
+                            left: Box::new(Expression::Identifier(vec![IdentifierTail::Name(
+                                String::from("a"),
+                            )])),
+                            operator: Operator::Plus,
+                            right: Box::new(Expression::Identifier(vec![IdentifierTail::Name(
+                                String::from("b"),
+                            )])),
+                        }),
+                    }],
+                    captured: vec![String::from("a")],
+                }),
+            }],
+            captured: Vec::new(),
+        },
+        Statement::VariableDeclaration {
+            name: String::from("result"),
+            public: false,
+            data_type: None,
+            value: Some(Expression::Identifier(vec![
+                IdentifierTail::Name(String::from("curry")),
+                IdentifierTail::Call(vec![Expression::IntegerLiteral(10)]),
+                IdentifierTail::Call(vec![Expression::IntegerLiteral(20)]),
+                IdentifierTail::Call(vec![Expression::IntegerLiteral(30)]),
+            ])),
+        },
+    ];
+
+    let driver = KsDriver::new("parser/function_curring.ks");
+    let mut parser = driver.parser_with_parser()?;
+    let statements = parser.start()?;
+
+    assert_eq!(test_statement, statements);
 
     Ok(())
 }
