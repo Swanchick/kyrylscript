@@ -1,6 +1,6 @@
 let stupid_var = 783;
 
-function foo(): int {
+function foo(): function(): int {
     let var1 = 10;
 
     function bar(): int {

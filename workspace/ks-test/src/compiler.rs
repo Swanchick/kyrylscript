@@ -789,7 +789,7 @@ fn multiple_function_scoping() -> KsResult<()> {
         Instruction::Free(2),
         Instruction::Return,
         Instruction::LoadConst(Constant::Integer(5)),
-        Instruction::Capture(0),
+        Instruction::LoadVar(0),
         Instruction::LoadFunction(1),
         Instruction::Store(1),
         Instruction::LoadVar(1),

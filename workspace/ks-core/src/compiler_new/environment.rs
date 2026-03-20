@@ -91,6 +91,19 @@ impl Environment {
         self.functions.insert(name.to_string(), pointer);
     }
 
+    pub fn variable_id(&self, name: &str) -> KsResult<VariableId> {
+        for scope in &self.variables {
+            if let Some(slot) = scope.get(name) {
+                return Ok(*slot.variable_id());
+            }
+        }
+
+        Err(KsError::parse(&format!(
+            "Cannot find variable by this name: {}",
+            name
+        )))
+    }
+
     pub fn slot(&self, name: &str) -> KsResult<&Slot> {
         for scope in &self.variables {
             if let Some(slot) = scope.get(name) {

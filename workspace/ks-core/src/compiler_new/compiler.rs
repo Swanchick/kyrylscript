@@ -191,7 +191,15 @@ impl CompilerNew {
         self.scope_append(final_scope)?;
 
         self.insert_constant(Constant::Integer(pointer as i32))?;
-        self.insert(Instruction::LoadFunction(0))?;
+
+        let captured_len = captured.len();
+
+        for capture in captured {
+            let variable_id = self.environment.variable_id(&capture)?;
+            self.insert(Instruction::LoadVar(variable_id))?;
+        }
+
+        self.insert(Instruction::LoadFunction(captured_len))?;
         self.insert_store(variable_id, public)?;
 
         Ok(())
