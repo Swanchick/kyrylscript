@@ -234,8 +234,6 @@ impl Parser {
                         segments.push(IdentifierTail::Name(name.clone()));
 
                         let context = self.last_function_context_mut()?;
-                        println!("NAME Captured: {}", name);
-                        println!("Variables: {:?}", context.variables);
 
                         if !context.variables.contains(&name) {
                             context.captured_variables.push(name);

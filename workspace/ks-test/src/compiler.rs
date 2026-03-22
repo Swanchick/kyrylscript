@@ -4,7 +4,6 @@ use ks_core::compiler_new::constant::Constant;
 use ks_core::compiler_new::instructions::Instruction;
 use ks_core::compiler_new::program::Program;
 use ks_global::utils::ks_result::KsResult;
-use ks_vm::function;
 
 use crate::drivers::KsDriver;
 
@@ -746,15 +745,15 @@ fn function_scope_store_name_register() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Store(0),
-        Instruction::Jump(5),
+        Instruction::Jump(7),
         Instruction::LoadCapture(0),
         Instruction::Store(0),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Store(1),
         Instruction::LoadVar(0),
-        Instruction::Free(1),
+        Instruction::Free(2),
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(1)),
+        Instruction::LoadConst(Constant::Integer(3)),
         Instruction::LoadVar(0),
         Instruction::LoadFunction(1),
         Instruction::Store(1),
@@ -763,7 +762,10 @@ fn function_scope_store_name_register() -> KsResult<()> {
         Instruction::ClearAcc,
     ];
 
-    let test_program = Program::new(instructions, HashMap::new());
+    let mut functions = HashMap::<String, usize>::new();
+    functions.insert(String::from("return_the_variable"), 3);
+
+    let test_program = Program::new(instructions, functions);
 
     let driver = KsDriver::new("compiler/function_scope_store_name_register.ks");
     let compiler = driver.compiler_new()?;

@@ -49,8 +49,6 @@ impl Environment {
 
     pub fn set_temp_collection(&mut self, collection_id: CollectionId) {
         self.temp_collection = Some(collection_id);
-
-        println!("{:?}", self.temp_collection);
     }
 
     fn last_function(&self) -> KsResult<&[HashMap<String, Slot>]> {
@@ -126,12 +124,6 @@ impl Environment {
         } else {
             Slot::Variable(variable_id)
         };
-
-        println!("Variable declaration");
-        println!("NAME: {name}");
-
-        println!("Scopes: {:?}", self.variables);
-        println!("Scopes: {:?}", self.last_function_mut());
 
         let current_scope = self.current_scope_mut()?;
         current_scope.insert(name, slot);

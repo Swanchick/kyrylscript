@@ -143,9 +143,6 @@ impl CompilerNew {
             self.insert_constant(Constant::Null)
         }?;
 
-        println!("Compiler Variable Declaration");
-        println!("Name for the variable: {name}");
-
         let variable_id = self.environment.define_variable(name)?;
         self.insert_store(variable_id, public)?;
 
@@ -191,8 +188,9 @@ impl CompilerNew {
         let mut body_scope = self.scope_pop()?;
         final_scope.append(&mut body_scope);
 
+        let variables = self.environment.exit_function()?;
+
         if !matches!(final_scope.last(), Some(Instruction::Return)) {
-            let variables = self.environment.exit_function()?;
             final_scope.push(Instruction::Free(variables));
             final_scope.push(Instruction::Return);
         }
