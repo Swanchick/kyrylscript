@@ -668,6 +668,22 @@ impl CompilerNew {
         Ok(())
     }
 
+    fn function_literal(
+        &mut self,
+        parameters: Vec<Parameter>,
+        body: Vec<Statement>,
+        captured: Vec<String>,
+    ) -> KsResult<()> {
+        println!("Scopes: {:?}", self.scopes);
+        println!("Instructions: {:?}", self.instructions);
+
+        let pointer = self.current_pc() + 1;
+        println!("Pointer: {pointer}");
+        self.function(pointer, parameters, body, captured)?;
+
+        Ok(())
+    }
+
     fn compile_expression(&mut self, expression: Expression) -> KsResult<()> {
         match expression {
             Expression::NullLiteral => self.insert_constant(Constant::Null),
@@ -692,6 +708,12 @@ impl CompilerNew {
                 expression,
                 operator,
             } => self.unary_operator(*expression, operator),
+            Expression::FunctionLiteral {
+                parameters,
+                return_type: _,
+                block: body,
+                captured,
+            } => self.function_literal(parameters, body, captured),
             _ => todo!(),
         }?;
 
