@@ -366,6 +366,44 @@ impl SemanticAnalyzer {
                 Ok(DataType::List(Box::new(first)))
             }
 
+            Expression::TupleIndex { left, indeces } => {
+                let left = self.get_data_type(&left)?;
+
+                self.tuple_index(left, indeces)
+            }
+
+            Expression::FunctionCall(name, call_parameters) => {
+                let function = self.get_variable(name)?;
+
+                match function {
+                    DataType::RustFunction { return_type } => Ok(*return_type),
+
+                    DataType::Function {
+                        parameters,
+                        return_type,
+                    } => {
+                        for (call_parameter, parameter) in call_parameters.iter().zip(parameters) {
+                            let call_parameter = self.get_data_type(call_parameter)?;
+
+                            if call_parameter != parameter && !DataType::is_void(&call_parameter) {
+                                return Err(KsError::ks_type("Function signature mismatch"));
+                            }
+                        }
+
+                        Ok(*return_type)
+                    }
+                    DataType::Void(_) => Err(KsError::ks_type("Ти далбайоб?")),
+                    _ => Err(KsError::ks_type(&format!("Function {} not found!", name))),
+                }
+            }
+
+            Expression::ListIndex { left, index } => {
+                let left = self.get_data_type(left)?;
+                let index_type = self.get_data_type(index)?;
+
+                self.identifier_index(left, index_type)
+            }
+
             Expression::TupleLiteral(expressions) => {
                 let mut data_types: Vec<DataType> = Vec::new();
 
