@@ -135,21 +135,6 @@ impl Environment {
         self.functions.insert(name.to_string(), pointer);
     }
 
-    pub fn variable_id(&self, name: &str) -> KsResult<VariableId> {
-        let variables = self.last_function()?;
-
-        for scope in variables {
-            if let Some(slot) = scope.get(name) {
-                return Ok(*slot.variable_id());
-            }
-        }
-
-        Err(KsError::parse(&format!(
-            "Cannot find variable by this name: {}",
-            name
-        )))
-    }
-
     pub fn slot(&self, name: &str) -> KsResult<&Slot> {
         let variables = self.last_function()?;
 
@@ -163,6 +148,12 @@ impl Environment {
             "Cannot find variable by this name: {}",
             name
         )))
+    }
+
+    pub fn variable_id(&self, name: &str) -> KsResult<VariableId> {
+        let slot = self.slot(name)?;
+
+        Ok(*slot.variable_id())
     }
 
     pub fn collection(&self, collection_id: CollectionId) -> KsResult<&Collection> {
