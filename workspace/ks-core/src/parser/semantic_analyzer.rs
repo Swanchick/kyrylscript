@@ -211,33 +211,6 @@ impl SemanticAnalyzer {
         }
     }
 
-    fn identifier_index(&self, left: DataType, index: DataType) -> KsResult<DataType> {
-        match (left, index) {
-            (DataType::List(children_type), DataType::Int) => Ok(*children_type),
-            _ => Err(KsError::ks_type("Invalid data in list indexing operation!")),
-        }
-    }
-
-    fn tuple_index(&self, mut left: DataType, indeces: &[i32]) -> KsResult<DataType> {
-        for index in indeces {
-            let index = *index as usize;
-
-            if let DataType::Tuple(children) = &left {
-                if index > children.len() {
-                    return Err(KsError::ks_type("Tuple out of index!"));
-                }
-
-                left = children[index].clone();
-            } else {
-                return Err(KsError::ks_type(
-                    "Invalid data in tuple indexing operation!",
-                ));
-            }
-        }
-
-        Ok(left)
-    }
-
     pub fn get_data_type_from_segments(&self, segments: &[IdentifierTail]) -> KsResult<DataType> {
         let mut last_segment: Option<DataType> = None;
 
