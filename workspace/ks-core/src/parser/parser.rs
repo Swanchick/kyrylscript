@@ -326,11 +326,11 @@ impl Parser {
         }
     }
 
-    fn enter_fucntion(&mut self, return_type: DataType) {
+    fn enter_function(&mut self, return_type: DataType) {
         self.function_context.push(Context::new(return_type));
     }
 
-    fn exit_fucntion(&mut self) -> KsResult<Context> {
+    fn exit_function(&mut self) -> KsResult<Context> {
         if let Some(context) = self.function_context.pop() {
             Ok(context)
         } else {
@@ -358,7 +358,7 @@ impl Parser {
             return_type: Box::new(return_type.clone()),
         };
 
-        self.enter_fucntion(return_type.clone());
+        self.enter_function(return_type.clone());
 
         if public {
             self.semantic_analyzer
@@ -379,7 +379,7 @@ impl Parser {
         }
 
         let body = self.parse_block_statement()?;
-        let mut context = self.exit_fucntion()?;
+        let mut context = self.exit_function()?;
         let last_context = self.last_function_context_mut()?;
         last_context.variables.push(function_name.clone());
 
@@ -948,7 +948,7 @@ impl Parser {
                     };
 
                     self.consume_token(Token::LeftBrace)?;
-                    self.enter_fucntion(return_type.clone());
+                    self.enter_function(return_type.clone());
 
                     for parameter in &parameters {
                         self.semantic_analyzer
@@ -960,7 +960,7 @@ impl Parser {
 
                     let block = self.parse_block_statement()?;
 
-                    let mut context = self.exit_fucntion()?;
+                    let mut context = self.exit_function()?;
                     let last_context = self.last_function_context_mut()?;
 
                     for capture in &mut context.captured_variables {
@@ -1011,7 +1011,7 @@ impl Parser {
         };
 
         self.consume_token(Token::LeftBrace)?;
-        self.enter_fucntion(return_type.clone());
+        self.enter_function(return_type.clone());
 
         for parameter in &parameters {
             self.semantic_analyzer
@@ -1023,7 +1023,7 @@ impl Parser {
 
         let block = self.parse_block_statement()?;
 
-        let mut context = self.exit_fucntion()?;
+        let mut context = self.exit_function()?;
         let last_context = self.last_function_context_mut()?;
 
         for capture in &mut context.captured_variables {
