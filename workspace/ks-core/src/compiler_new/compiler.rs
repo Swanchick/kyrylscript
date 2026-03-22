@@ -191,7 +191,10 @@ impl CompilerNew {
         let variables = self.environment.exit_function()?;
 
         if !matches!(final_scope.last(), Some(Instruction::Return)) {
-            final_scope.push(Instruction::Free(variables));
+            if variables != 0 {
+                final_scope.push(Instruction::Free(variables));
+            }
+
             final_scope.push(Instruction::Return);
         }
 
@@ -235,7 +238,10 @@ impl CompilerNew {
 
         let variables = self.environment.current()?;
 
-        self.insert(Instruction::Free(variables))?;
+        if variables != 0 {
+            self.insert(Instruction::Free(variables))?;
+        }
+
         self.insert(Instruction::Return)?;
 
         Ok(())

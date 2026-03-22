@@ -219,19 +219,20 @@ fn function_call() -> KsResult<()> {
 #[test]
 fn function_call_with_parameters() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(6),                         // Skiping function to store it
-        Instruction::Store(2),                        // Storing parameter b
-        Instruction::Store(1),                        // Storing parameter a
+        Instruction::Jump(7),                         // Skiping function to store it
+        Instruction::Store(0),                        // Storing parameter a
+        Instruction::Store(1),                        // Storing parameter b
         Instruction::LoadVar(1),                      // Loading var a to variable stack
         Instruction::LoadVar(2),                      // Loading var b to variable stack
         Instruction::Add,                             // Sum them
+        Instruction::Free(2),                         // Free ownership of the local variables
         Instruction::Return,                          // And return
         Instruction::LoadConst(Constant::Integer(1)), // Defining function pointer as variable and save to variable stack
         Instruction::LoadFunction(0),
         Instruction::Store(0),   // Saving function from variable stack
         Instruction::LoadVar(0), // Loading variable stored on variable_id. It's a function
-        Instruction::LoadConst(Constant::Integer(10)), // Loading constant 10
         Instruction::LoadConst(Constant::Integer(20)), // Loading constant 20
+        Instruction::LoadConst(Constant::Integer(10)), // Loading constant 10
         Instruction::Call(2),    // Calling function with 2 arguments stored in variable stack
         Instruction::ClearAcc,   // Ending an expression
     ];
@@ -852,6 +853,54 @@ fn multiple_function_scoping() -> KsResult<()> {
     let test_program = Program::new(instructions, functions);
 
     let driver = KsDriver::new("compiler/multiple_function_scoping.ks");
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
+
+#[test]
+fn function_curring() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::Integer(783)),
+        Instruction::Store(0),
+        Instruction::Jump(19),
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::Store(0),
+        Instruction::Jump(9),
+        Instruction::LoadCapture(0),
+        Instruction::Store(0),
+        Instruction::LoadConst(Constant::Integer(20)),
+        Instruction::Store(1),
+        Instruction::LoadVar(0),
+        Instruction::LoadVar(1),
+        Instruction::Add,
+        Instruction::Free(2),
+        Instruction::Return,
+        Instruction::LoadConst(Constant::Integer(5)),
+        Instruction::LoadVar(0),
+        Instruction::LoadFunction(1),
+        Instruction::Store(1),
+        Instruction::LoadVar(1),
+        Instruction::Free(2),
+        Instruction::Return,
+        Instruction::LoadConst(Constant::Integer(3)),
+        Instruction::LoadFunction(0),
+        Instruction::Store(1),
+        Instruction::LoadVar(1),
+        Instruction::Call(0),
+        Instruction::Call(0),
+        Instruction::Store(2),
+    ];
+
+    let mut functions = HashMap::<String, usize>::new();
+    functions.insert(String::from("curry"), 1);
+
+    let test_program = Program::new(instructions, functions);
+
+    let driver = KsDriver::new("compiler/function_curring.ks");
     let compiler = driver.compiler_new()?;
     let program = compiler.program();
 
