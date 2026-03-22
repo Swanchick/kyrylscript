@@ -172,8 +172,6 @@ impl CompilerNew {
             final_scope.push(Instruction::Store(parameter_id));
         }
 
-        final_scope.reverse();
-
         for index in 0..captured.len() {
             final_scope.push(Instruction::LoadCapture(index));
 
@@ -479,14 +477,13 @@ impl CompilerNew {
         Ok(())
     }
 
-    fn identifier_call(&mut self, expressions: Vec<Expression>, assign: bool) -> KsResult<()> {
+    fn identifier_call(&mut self, mut expressions: Vec<Expression>, assign: bool) -> KsResult<()> {
         if assign {
             return Err(KsError::parse("Cannot call in assign statement"));
         }
 
         let arguments = expressions.len();
-
-        for expression in expressions {
+        while let Some(expression) = expressions.pop() {
             self.compile_expression(expression)?;
         }
 

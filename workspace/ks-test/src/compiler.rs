@@ -222,8 +222,8 @@ fn function_call_with_parameters() -> KsResult<()> {
         Instruction::Jump(7),                         // Skiping function to store it
         Instruction::Store(0),                        // Storing parameter a
         Instruction::Store(1),                        // Storing parameter b
-        Instruction::LoadVar(1),                      // Loading var a to variable stack
-        Instruction::LoadVar(2),                      // Loading var b to variable stack
+        Instruction::LoadVar(0),                      // Loading var a to variable stack
+        Instruction::LoadVar(1),                      // Loading var b to variable stack
         Instruction::Add,                             // Sum them
         Instruction::Free(2),                         // Free ownership of the local variables
         Instruction::Return,                          // And return
