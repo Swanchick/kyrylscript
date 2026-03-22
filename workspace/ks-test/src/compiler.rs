@@ -816,10 +816,10 @@ fn multiple_function_scoping() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(783)),
         Instruction::Store(0),
-        Instruction::Jump(15),
+        Instruction::Jump(19),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Store(0),
-        Instruction::Jump(5),
+        Instruction::Jump(9),
         Instruction::LoadCapture(0),
         Instruction::Store(0),
         Instruction::LoadConst(Constant::Integer(20)),
@@ -834,19 +834,22 @@ fn multiple_function_scoping() -> KsResult<()> {
         Instruction::LoadFunction(1),
         Instruction::Store(1),
         Instruction::LoadVar(1),
-        Instruction::Call(0),
-        Instruction::LoadVar(0),
-        Instruction::Add,
+        Instruction::Free(2),
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(2)),
+        Instruction::LoadConst(Constant::Integer(3)),
         Instruction::LoadFunction(0),
         Instruction::Store(1),
         Instruction::LoadVar(1),
         Instruction::Call(0),
+        Instruction::Call(0),
         Instruction::Store(2),
     ];
 
-    let test_program = Program::new(instructions, HashMap::new());
+    let mut functions = HashMap::<String, usize>::new();
+    functions.insert(String::from("foo"), 3);
+    functions.insert(String::from("bar"), 5);
+
+    let test_program = Program::new(instructions, functions);
 
     let driver = KsDriver::new("compiler/multiple_function_scoping.ks");
     let compiler = driver.compiler_new()?;
