@@ -735,7 +735,6 @@ impl CompilerNew {
                 block: body,
                 captured,
             } => self.function_literal(parameters, body, captured),
-            _ => todo!(),
         }?;
 
         Ok(())
