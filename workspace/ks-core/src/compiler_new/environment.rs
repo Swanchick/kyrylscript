@@ -8,7 +8,7 @@ use super::types::{CollectionId, Pointer, VariableId};
 
 pub struct Environment {
     functions: HashMap<String, Pointer>,
-    variables: Vec<HashMap<String, Slot>>,
+    variables: Vec<Vec<HashMap<String, Slot>>>,
     collections: Vec<Collection>,
     temp_collection: Option<CollectionId>,
 }
@@ -17,14 +17,20 @@ impl Environment {
     pub fn new() -> Self {
         Environment {
             functions: HashMap::new(),
-            variables: Vec::new(),
+            variables: vec![Vec::new()],
             collections: Vec::new(),
             temp_collection: None,
         }
     }
 
-    fn current(&self) -> VariableId {
-        self.variables.iter().map(|scope| scope.len()).sum()
+    fn function_variables_len(&self, variables: &[HashMap<String, Slot>]) -> usize {
+        variables.iter().map(|scope| scope.len()).sum()
+    }
+
+    pub fn current(&self) -> KsResult<VariableId> {
+        let variables = self.last_function()?;
+
+        Ok(self.function_variables_len(variables))
     }
 
     pub fn functions(self) -> HashMap<String, Pointer> {
@@ -47,20 +53,60 @@ impl Environment {
         println!("{:?}", self.temp_collection);
     }
 
-    pub fn enter(&mut self) {
-        self.variables.push(HashMap::new());
+    fn last_function(&self) -> KsResult<&[HashMap<String, Slot>]> {
+        if let Some(function_scope) = self.variables.last() {
+            Ok(function_scope)
+        } else {
+            Err(KsError::parse("No function scope declared"))
+        }
+    }
+
+    fn last_function_mut(&mut self) -> KsResult<&mut Vec<HashMap<String, Slot>>> {
+        if let Some(function_scope) = self.variables.last_mut() {
+            Ok(function_scope)
+        } else {
+            Err(KsError::parse("No function scope declared"))
+        }
+    }
+
+    pub fn enter_function(&mut self) -> KsResult<()> {
+        self.variables.push(Vec::new());
+        self.enter()?;
+
+        Ok(())
+    }
+
+    pub fn exit_function(&mut self) -> KsResult<usize> {
+        if let Some(function_scope) = self.variables.pop() {
+            let function_variables_len = self.function_variables_len(&function_scope);
+
+            Ok(function_variables_len)
+        } else {
+            Err(KsError::parse("No function environment to exit"))
+        }
+    }
+
+    pub fn enter(&mut self) -> KsResult<()> {
+        let variables = self.last_function_mut()?;
+        variables.push(HashMap::new());
+
+        Ok(())
     }
 
     pub fn exit(&mut self) -> KsResult<HashMap<String, Slot>> {
-        if let Some(scope) = self.variables.pop() {
+        let variables = self.last_function_mut()?;
+
+        if let Some(scope) = variables.pop() {
             Ok(scope)
         } else {
             Err(KsError::parse("No scope to exit"))
         }
     }
 
-    pub fn current_scope_mut(&mut self) -> KsResult<&mut HashMap<String, Slot>> {
-        if let Some(scope) = self.variables.last_mut() {
+    fn current_scope_mut(&mut self) -> KsResult<&mut HashMap<String, Slot>> {
+        let variables = self.last_function_mut()?;
+
+        if let Some(scope) = variables.last_mut() {
             Ok(scope)
         } else {
             Err(KsError::parse("Cannot get last scope"))
@@ -68,7 +114,7 @@ impl Environment {
     }
 
     pub fn define_variable(&mut self, name: String) -> KsResult<VariableId> {
-        let variable_id = self.current();
+        let variable_id = self.current()?;
 
         let temp_collection = self.temp_collection();
 
@@ -81,6 +127,12 @@ impl Environment {
             Slot::Variable(variable_id)
         };
 
+        println!("Variable declaration");
+        println!("NAME: {name}");
+
+        println!("Scopes: {:?}", self.variables);
+        println!("Scopes: {:?}", self.last_function_mut());
+
         let current_scope = self.current_scope_mut()?;
         current_scope.insert(name, slot);
 
@@ -92,7 +144,9 @@ impl Environment {
     }
 
     pub fn variable_id(&self, name: &str) -> KsResult<VariableId> {
-        for scope in &self.variables {
+        let variables = self.last_function()?;
+
+        for scope in variables {
             if let Some(slot) = scope.get(name) {
                 return Ok(*slot.variable_id());
             }
@@ -105,7 +159,9 @@ impl Environment {
     }
 
     pub fn slot(&self, name: &str) -> KsResult<&Slot> {
-        for scope in &self.variables {
+        let variables = self.last_function()?;
+
+        for scope in variables {
             if let Some(slot) = scope.get(name) {
                 return Ok(slot);
             }

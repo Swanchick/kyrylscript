@@ -38,7 +38,7 @@ impl CompilerNew {
 
     pub fn compile(&mut self, statements: Vec<Statement>) -> KsResult<()> {
         self.scope_enter();
-        self.environment.enter();
+        self.environment.enter()?;
 
         self.compile_statements(statements)?;
 
@@ -66,7 +66,7 @@ impl CompilerNew {
     }
 
     fn compile_statements_free(&mut self, statements: Vec<Statement>) -> KsResult<()> {
-        self.environment.enter();
+        self.environment.enter()?;
 
         self.compile_statements(statements)?;
 
@@ -143,8 +143,10 @@ impl CompilerNew {
             self.insert_constant(Constant::Null)
         }?;
 
-        let variable_id = self.environment.define_variable(name)?;
+        println!("Compiler Variable Declaration");
+        println!("Name for the variable: {name}");
 
+        let variable_id = self.environment.define_variable(name)?;
         self.insert_store(variable_id, public)?;
 
         Ok(())
@@ -153,6 +155,58 @@ impl CompilerNew {
     fn expression_statement(&mut self, expression: Expression) -> KsResult<()> {
         self.compile_expression(expression)?;
         self.insert(Instruction::ClearAcc)?;
+
+        Ok(())
+    }
+
+    fn function(
+        &mut self,
+        pointer: Pointer,
+        parameters: Vec<Parameter>,
+        body: Vec<Statement>,
+        captured: Vec<String>,
+    ) -> KsResult<()> {
+        self.environment.enter_function()?;
+
+        let mut final_scope = Vec::<Instruction>::new();
+
+        for parameter in parameters {
+            let parameter_id = self.environment.define_variable(parameter.name)?;
+            final_scope.push(Instruction::Store(parameter_id));
+        }
+
+        final_scope.reverse();
+
+        for index in 0..captured.len() {
+            final_scope.push(Instruction::LoadCapture(index));
+
+            let variable_id = self.environment.define_variable(captured[index].clone())?;
+            final_scope.push(Instruction::Store(variable_id));
+        }
+
+        self.scope_enter();
+
+        self.compile_statements(body)?;
+
+        let mut body_scope = self.scope_pop()?;
+        final_scope.append(&mut body_scope);
+
+        if !matches!(final_scope.last(), Some(Instruction::Return)) {
+            let variables = self.environment.exit_function()?;
+            final_scope.push(Instruction::Free(variables));
+            final_scope.push(Instruction::Return);
+        }
+
+        self.insert(Instruction::Jump(final_scope.len() as i32))?;
+        self.scope_append(final_scope)?;
+
+        self.insert_constant(Constant::Integer(pointer as i32))?;
+        let captured_len = captured.len();
+        for capture in captured {
+            let variable_id = self.environment.variable_id(&capture)?;
+            self.insert(Instruction::LoadVar(variable_id))?;
+        }
+        self.insert(Instruction::LoadFunction(captured_len))?;
 
         Ok(())
     }
@@ -167,39 +221,10 @@ impl CompilerNew {
     ) -> KsResult<()> {
         let pointer = self.current_pc() + 1;
         self.environment.define_function(&name, pointer);
+
+        self.function(pointer, parameters, body, captured)?;
+
         let variable_id = self.environment.define_variable(name)?;
-
-        let mut final_scope = Vec::<Instruction>::new();
-        for parameter in parameters {
-            let parameter_id = self.environment.define_variable(parameter.name)?;
-            final_scope.push(Instruction::Store(parameter_id));
-        }
-
-        final_scope.reverse();
-
-        self.scope_enter();
-        self.compile_statements(body)?;
-
-        let mut body_scope = self.scope_pop()?;
-        final_scope.append(&mut body_scope);
-
-        if !matches!(final_scope.last(), Some(Instruction::Return)) {
-            final_scope.push(Instruction::Return);
-        }
-
-        self.insert(Instruction::Jump(final_scope.len() as i32))?;
-        self.scope_append(final_scope)?;
-
-        self.insert_constant(Constant::Integer(pointer as i32))?;
-
-        let captured_len = captured.len();
-
-        for capture in captured {
-            let variable_id = self.environment.variable_id(&capture)?;
-            self.insert(Instruction::LoadVar(variable_id))?;
-        }
-
-        self.insert(Instruction::LoadFunction(captured_len))?;
         self.insert_store(variable_id, public)?;
 
         Ok(())
@@ -210,6 +235,9 @@ impl CompilerNew {
             self.compile_expression(expression)?;
         }
 
+        let variables = self.environment.current()?;
+
+        self.insert(Instruction::Free(variables))?;
         self.insert(Instruction::Return)?;
 
         Ok(())
@@ -302,7 +330,7 @@ impl CompilerNew {
         list: Expression,
         body: Vec<Statement>,
     ) -> KsResult<()> {
-        self.environment.enter();
+        self.environment.enter()?;
 
         let iter_list = self
             .environment
@@ -326,7 +354,7 @@ impl CompilerNew {
         self.insert(Instruction::LoadFromCollection)?;
         self.insert(Instruction::Assign)?;
 
-        self.environment.enter();
+        self.environment.enter()?;
 
         self.compile_statements(body)?;
         self.free()?;

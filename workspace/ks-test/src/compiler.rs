@@ -4,6 +4,7 @@ use ks_core::compiler_new::constant::Constant;
 use ks_core::compiler_new::instructions::Instruction;
 use ks_core::compiler_new::program::Program;
 use ks_global::utils::ks_result::KsResult;
+use ks_vm::function;
 
 use crate::drivers::KsDriver;
 
@@ -746,13 +747,16 @@ fn function_scope_store_name_register() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Store(0),
         Instruction::Jump(5),
-        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::LoadCapture(0),
         Instruction::Store(0),
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::Store(1),
         Instruction::LoadVar(0),
         Instruction::Free(1),
         Instruction::Return,
         Instruction::LoadConst(Constant::Integer(1)),
-        Instruction::LoadFunction(0),
+        Instruction::LoadVar(0),
+        Instruction::LoadFunction(1),
         Instruction::Store(1),
         Instruction::LoadVar(1),
         Instruction::Call(0),
@@ -762,6 +766,41 @@ fn function_scope_store_name_register() -> KsResult<()> {
     let test_program = Program::new(instructions, HashMap::new());
 
     let driver = KsDriver::new("compiler/function_scope_store_name_register.ks");
+    let compiler = driver.compiler_new()?;
+    let program = compiler.program();
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
+
+#[test]
+fn function_return_in_if_statement() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::Jump(12),
+        Instruction::Store(0),
+        Instruction::LoadVar(0),
+        Instruction::LoadConst(Constant::Integer(20)),
+        Instruction::Eq,
+        Instruction::JumpIfFalse(3),
+        Instruction::LoadConst(Constant::Null),
+        Instruction::Free(1),
+        Instruction::Return,
+        Instruction::LoadConst(Constant::Integer(20)),
+        Instruction::Store(1),
+        Instruction::Free(2),
+        Instruction::Return,
+        Instruction::LoadConst(Constant::Integer(1)),
+        Instruction::LoadFunction(0),
+        Instruction::Store(0),
+    ];
+
+    let mut functions = HashMap::<String, usize>::new();
+    functions.insert(String::from("test"), 1);
+
+    let test_program = Program::new(instructions, functions);
+
+    let driver = KsDriver::new("compiler/function_return_in_if_statement.ks");
     let compiler = driver.compiler_new()?;
     let program = compiler.program();
 

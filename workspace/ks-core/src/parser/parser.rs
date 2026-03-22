@@ -381,9 +381,9 @@ impl Parser {
         }
 
         let body = self.parse_block_statement()?;
-
         let mut context = self.exit_fucntion()?;
         let last_context = self.last_function_context_mut()?;
+        last_context.variables.push(function_name.clone());
 
         for capture in &mut context.captured_variables {
             if last_context.variables.contains(&capture) {
