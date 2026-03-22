@@ -21,6 +21,7 @@ pub struct CompilerNew {
     scopes: Vec<Vec<Instruction>>,
     instructions: Vec<Instruction>,
     environment: Environment,
+    function_depth: usize,
 }
 
 impl CompilerNew {
@@ -29,6 +30,7 @@ impl CompilerNew {
             scopes: Vec::new(),
             instructions: Vec::new(),
             environment: Environment::new(),
+            function_depth: 0,
         }
     }
 
@@ -77,9 +79,9 @@ impl CompilerNew {
 
     fn current_pc(&self) -> Pointer {
         let saved_insctructions = self.instructions.len();
-        let scope_instructions: usize = self.scopes.iter().map(|scope| scope.len()).sum();
+        let in_scopes: usize = self.scopes.iter().map(|scope| scope.len()).sum();
 
-        saved_insctructions + scope_instructions
+        saved_insctructions + in_scopes
     }
 
     fn scope_enter(&mut self) {
@@ -91,6 +93,23 @@ impl CompilerNew {
             Ok(scope)
         } else {
             Err(KsError::parse("Cannot get ownership of last scope"))
+        }
+    }
+
+    fn scope_last(&self) -> KsResult<&[Instruction]> {
+        if let Some(scope) = self.scopes.last() {
+            Ok(scope)
+        } else {
+            Err(KsError::parse("Cannot get last mutable scope"))
+        }
+    }
+
+    fn scope_last_instruction(&self) -> KsResult<&Instruction> {
+        let scope = self.scope_last()?;
+        if let Some(instruction) = scope.last() {
+            Ok(instruction)
+        } else {
+            Err(KsError::parse("Cannot get last instruction"))
         }
     }
 
@@ -158,45 +177,51 @@ impl CompilerNew {
 
     fn function(
         &mut self,
-        pointer: Pointer,
         parameters: Vec<Parameter>,
         body: Vec<Statement>,
         captured: Vec<String>,
-    ) -> KsResult<()> {
+    ) -> KsResult<Pointer> {
+        self.function_depth += 1;
+
         self.environment.enter_function()?;
 
-        let mut final_scope = Vec::<Instruction>::new();
+        self.scope_enter();
 
         for parameter in parameters {
             let parameter_id = self.environment.define_variable(parameter.name)?;
-            final_scope.push(Instruction::Store(parameter_id));
+            self.insert(Instruction::Store(parameter_id))?;
         }
 
         for index in 0..captured.len() {
-            final_scope.push(Instruction::LoadCapture(index));
+            self.insert(Instruction::LoadCapture(index))?;
 
             let variable_id = self.environment.define_variable(captured[index].clone())?;
-            final_scope.push(Instruction::Store(variable_id));
+            self.insert(Instruction::Store(variable_id))?;
         }
 
         self.scope_enter();
 
         self.compile_statements(body)?;
 
-        let mut body_scope = self.scope_pop()?;
-        final_scope.append(&mut body_scope);
+        let body_scope = self.scope_pop()?;
+        self.scope_append(body_scope)?;
 
         let variables = self.environment.exit_function()?;
 
-        if !matches!(final_scope.last(), Some(Instruction::Return)) {
+        let last_instruction = self.scope_last_instruction();
+        if !matches!(last_instruction, Ok(&Instruction::Return)) {
             if variables != 0 {
-                final_scope.push(Instruction::Free(variables));
+                self.insert(Instruction::Free(variables))?;
             }
 
-            final_scope.push(Instruction::Return);
+            self.insert(Instruction::Return)?;
         }
 
+        let final_scope = self.scope_pop()?;
+
         self.insert(Instruction::Jump(final_scope.len() as i32))?;
+        let pointer = self.current_pc() + self.function_depth - 1;
+
         self.scope_append(final_scope)?;
 
         self.insert_constant(Constant::Integer(pointer as i32))?;
@@ -207,7 +232,9 @@ impl CompilerNew {
         }
         self.insert(Instruction::LoadFunction(captured_len))?;
 
-        Ok(())
+        self.function_depth -= 1;
+
+        Ok(pointer)
     }
 
     fn function_declaration(
@@ -218,10 +245,9 @@ impl CompilerNew {
         body: Vec<Statement>,
         captured: Vec<String>,
     ) -> KsResult<()> {
-        let pointer = self.current_pc() + 1;
-        self.environment.define_function(&name, pointer);
+        let pointer = self.function(parameters, body, captured)?;
 
-        self.function(pointer, parameters, body, captured)?;
+        self.environment.define_function(&name, pointer);
 
         let variable_id = self.environment.define_variable(name)?;
         self.insert_store(variable_id, public)?;
@@ -674,12 +700,7 @@ impl CompilerNew {
         body: Vec<Statement>,
         captured: Vec<String>,
     ) -> KsResult<()> {
-        println!("Scopes: {:?}", self.scopes);
-        println!("Instructions: {:?}", self.instructions);
-
-        let pointer = self.current_pc() + 1;
-        println!("Pointer: {pointer}");
-        self.function(pointer, parameters, body, captured)?;
+        self.function(parameters, body, captured)?;
 
         Ok(())
     }
