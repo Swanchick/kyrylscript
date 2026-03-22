@@ -849,7 +849,7 @@ fn multiple_function_scoping() -> KsResult<()> {
 
     let mut functions = HashMap::<String, usize>::new();
     functions.insert(String::from("foo"), 3);
-    functions.insert(String::from("bar"), 5);
+    functions.insert(String::from("bar"), 6);
 
     let test_program = Program::new(instructions, functions);
 
