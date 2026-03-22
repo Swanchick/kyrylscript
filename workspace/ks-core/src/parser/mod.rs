@@ -1,5 +1,5 @@
 pub mod analyzer_environment;
-mod context;
+pub mod context;
 pub mod data_type;
 pub mod expression;
 pub mod identifier_tail;

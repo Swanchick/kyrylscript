@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::rc::Rc;
 
 use ks_global::utils::ks_error::KsError;
@@ -211,33 +211,6 @@ impl SemanticAnalyzer {
         }
     }
 
-    fn identifier_index(&self, left: DataType, index: DataType) -> KsResult<DataType> {
-        match (left, index) {
-            (DataType::List(children_type), DataType::Int) => Ok(*children_type),
-            _ => Err(KsError::ks_type("Invalid data in list indexing operation!")),
-        }
-    }
-
-    fn tuple_index(&self, mut left: DataType, indeces: &[i32]) -> KsResult<DataType> {
-        for index in indeces {
-            let index = *index as usize;
-
-            if let DataType::Tuple(children) = &left {
-                if index > children.len() {
-                    return Err(KsError::ks_type("Tuple out of index!"));
-                }
-
-                left = children[index].clone();
-            } else {
-                return Err(KsError::ks_type(
-                    "Invalid data in tuple indexing operation!",
-                ));
-            }
-        }
-
-        Ok(left)
-    }
-
     pub fn get_data_type_from_segments(&self, segments: &[IdentifierTail]) -> KsResult<DataType> {
         let mut last_segment: Option<DataType> = None;
 
@@ -366,44 +339,6 @@ impl SemanticAnalyzer {
                 Ok(DataType::List(Box::new(first)))
             }
 
-            Expression::TupleIndex { left, indeces } => {
-                let left = self.get_data_type(&left)?;
-
-                self.tuple_index(left, indeces)
-            }
-
-            Expression::FunctionCall(name, call_parameters) => {
-                let function = self.get_variable(name)?;
-
-                match function {
-                    DataType::RustFunction { return_type } => Ok(*return_type),
-
-                    DataType::Function {
-                        parameters,
-                        return_type,
-                    } => {
-                        for (call_parameter, parameter) in call_parameters.iter().zip(parameters) {
-                            let call_parameter = self.get_data_type(call_parameter)?;
-
-                            if call_parameter != parameter && !DataType::is_void(&call_parameter) {
-                                return Err(KsError::ks_type("Function signature mismatch"));
-                            }
-                        }
-
-                        Ok(*return_type)
-                    }
-                    DataType::Void(_) => Err(KsError::ks_type("Ти далбайоб?")),
-                    _ => Err(KsError::ks_type(&format!("Function {} not found!", name))),
-                }
-            }
-
-            Expression::ListIndex { left, index } => {
-                let left = self.get_data_type(left)?;
-                let index_type = self.get_data_type(index)?;
-
-                self.identifier_index(left, index_type)
-            }
-
             Expression::TupleLiteral(expressions) => {
                 let mut data_types: Vec<DataType> = Vec::new();
 
@@ -418,6 +353,7 @@ impl SemanticAnalyzer {
                 parameters,
                 return_type,
                 block: _,
+                captured: _,
             } => {
                 let mut data_types: Vec<DataType> = Vec::new();
 
@@ -431,7 +367,7 @@ impl SemanticAnalyzer {
                 })
             }
             Expression::Module(module) => {
-                let mut module_type: HashMap<String, DataType> = HashMap::new();
+                let mut module_type: BTreeMap<String, DataType> = BTreeMap::new();
 
                 for (field_name, expression) in module {
                     let data_type = self.get_data_type(expression)?;

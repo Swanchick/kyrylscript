@@ -1195,7 +1195,27 @@ impl VirtualMachine {
         Ok(())
     }
 
-    pub fn call(&mut self, name: &str) -> KsResult<()> {
+    pub fn call(&mut self, name: &str) -> KsResult<Variable> {
+        let function_name = &format!("{}{}", FUNCTION_ENCAPSULATION, name);
+
+        self.enter_function(function_name)?;
+
+        while self.call_stack.len() > MIN_SCOPES {
+            self.interpret()?;
+        }
+
+        match self.variable_stack.pop() {
+            Some(VariableStack::Reference(reference)) => {
+                let variable = self.environment.variable(&reference)?;
+                let variable = variable.clone();
+                Ok(variable)
+            }
+            Some(VariableStack::Variable(variable)) => Ok(variable),
+            None => Ok(Variable::null()),
+        }
+    }
+
+    pub fn call_null(&mut self, name: &str) -> KsResult<()> {
         let function_name = &format!("{}{}", FUNCTION_ENCAPSULATION, name);
 
         self.enter_function(function_name)?;

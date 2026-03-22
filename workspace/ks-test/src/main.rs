@@ -1,3 +1,4 @@
+#[cfg(test)]
 mod drivers;
 
 #[cfg(test)]
@@ -8,6 +9,9 @@ mod parser;
 
 #[cfg(test)]
 mod semantic_analyzer;
+
+#[cfg(test)]
+mod compiler;
 
 #[cfg(test)]
 mod vm;

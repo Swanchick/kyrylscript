@@ -1,8 +1,8 @@
-use ks_vm::instruction::Instruction;
 use std::collections::HashMap;
 
 use ks_vm::constant::Constant;
 use ks_vm::function::Function;
+use ks_vm::instruction::Instruction;
 
 use super::constants::{
     ANONYNOUS_FUNCTION_ENCAPSULATION, FUNCTION_ENCAPSULATION, ITERATOR_LIST_NAME, ITERATOR_NAME,
@@ -310,6 +310,7 @@ impl Compiler {
                 return_type: _,
                 parameters,
                 body,
+                captured: _,
             } => {
                 let name = name.clone();
 
@@ -410,15 +411,6 @@ impl Compiler {
                 instructions = self.compile_identity(segments, instructions, false);
             }
 
-            Expression::FunctionCall(name, arguments) => {
-                for argument in arguments {
-                    instructions = self.compile_expression(argument, instructions);
-                }
-
-                instructions.push(Instruction::LoadVar(name.clone()));
-                instructions.push(Instruction::Call(arguments.len()));
-            }
-
             Expression::ListLiteral(elements) => {
                 for element in elements {
                     instructions = self.compile_expression(element, instructions);
@@ -447,6 +439,7 @@ impl Compiler {
                 parameters,
                 return_type: _,
                 block,
+                captured: _,
             } => {
                 let function_name = format!(
                     "{}{}",
@@ -479,21 +472,6 @@ impl Compiler {
                 expression,
                 operator,
             } => instructions = self.compile_front_unary_op(expression, operator, instructions),
-
-            Expression::ListIndex { left, index } => {
-                instructions = self.compile_expression(&left, instructions);
-                instructions = self.compile_expression(&index, instructions);
-
-                instructions.push(Instruction::LoadFromList);
-            }
-
-            Expression::TupleIndex { left, indeces } => {
-                instructions = self.compile_expression(&left, instructions);
-
-                for index in indeces {
-                    instructions.push(Instruction::LoadFromTuple(*index as usize));
-                }
-            }
 
             Expression::Module(module) => {
                 for (name, expression) in module {

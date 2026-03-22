@@ -16,7 +16,7 @@ pub enum Instruction {
     And,
     Or,
     Not,
-    
+
     // Statements
     End,
     Return,
@@ -31,7 +31,7 @@ pub enum Instruction {
     LoadVarSave(String),
     Closure(String),
     Call(usize),
-    
+
     // List & Tuple & Module
     LoadModule(usize),
     LoadList(usize),
@@ -44,7 +44,7 @@ pub enum Instruction {
     LoadFromModule(String),
     LoadFromModuleSave(String),
     AssignModule(String),
-    
+
     // System
     Enter,
     Exit,

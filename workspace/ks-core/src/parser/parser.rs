@@ -13,14 +13,14 @@ use super::parameter::Parameter;
 use super::semantic_analyzer::SemanticAnalyzer;
 use super::statement::Statement;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 pub struct Parser {
     tokens: Vec<Token>,
     token_pos: Vec<TokenPos>,
     semantic_analyzer: SemanticAnalyzer,
     current_token: usize,
-    function_context: Context,
+    function_context: Vec<Context>,
 }
 
 impl Parser {
@@ -30,7 +30,7 @@ impl Parser {
             token_pos: Vec::new(),
             semantic_analyzer: SemanticAnalyzer::new(),
             current_token: 0,
-            function_context: Context::None,
+            function_context: vec![Context::process()],
         }
     }
 
@@ -44,7 +44,7 @@ impl Parser {
             token_pos,
             semantic_analyzer: semantic_analyzer,
             current_token: 0,
-            function_context: Context::None,
+            function_context: vec![Context::process()],
         }
     }
 
@@ -53,10 +53,30 @@ impl Parser {
         self.token_pos = token_pos;
     }
 
+    pub fn function_context(&self) -> &[Context] {
+        &self.function_context
+    }
+
+    fn last_function_context(&self) -> KsResult<&Context> {
+        if let Some(context) = self.function_context.last() {
+            Ok(context)
+        } else {
+            Err(KsError::parse("Cannot get the last function context"))
+        }
+    }
+
+    fn last_function_context_mut(&mut self) -> KsResult<&mut Context> {
+        if let Some(context) = self.function_context.last_mut() {
+            Ok(context)
+        } else {
+            Err(KsError::parse("Cannot get the last function context"))
+        }
+    }
+
     pub fn start(&mut self) -> KsResult<Vec<Statement>> {
         let result = self.parse_block_statement();
 
-        match result {
+        let statements = match result {
             Ok(statements) => Ok(statements),
 
             Err(e) => {
@@ -76,7 +96,9 @@ impl Parser {
 
                 Err(KsError::parse(&error))
             }
-        }
+        }?;
+
+        Ok(statements)
     }
 
     pub fn register_variable(&mut self, name: &str, data_type: DataType, public: bool) {
@@ -145,10 +167,8 @@ impl Parser {
     pub fn parse_statement(&mut self) -> KsResult<Option<Statement>> {
         let public = self.match_token(&Token::Pub);
 
-        if let Context::Function { return_data: _ } = self.function_context {
-            if public {
-                return Err(KsError::parse("Invalid context for public visibility!"));
-            }
+        if self.function_context.len() > 1 && public {
+            return Err(KsError::parse("Invalid context for public visibility!"));
         }
 
         match self.advance() {
@@ -211,7 +231,14 @@ impl Parser {
                     if segments.is_empty() {
                         let current_data_type = self.semantic_analyzer.get_variable(&name)?;
                         segment_data_type = Some(current_data_type);
-                        segments.push(IdentifierTail::Name(name));
+                        segments.push(IdentifierTail::Name(name.clone()));
+
+                        let context = self.last_function_context_mut()?;
+
+                        if !context.variables.contains(&name) {
+                            context.captured_variables.push(name);
+                        }
+
                         continue;
                     }
                 }
@@ -299,6 +326,18 @@ impl Parser {
         }
     }
 
+    fn enter_function(&mut self, return_type: DataType) {
+        self.function_context.push(Context::new(return_type));
+    }
+
+    fn exit_function(&mut self) -> KsResult<Context> {
+        if let Some(context) = self.function_context.pop() {
+            Ok(context)
+        } else {
+            Err(KsError::parse("No Function to exit!"))
+        }
+    }
+
     pub fn parse_function(&mut self, public: bool) -> KsResult<Statement> {
         let function_name = self.consume_identifier()?;
 
@@ -306,7 +345,7 @@ impl Parser {
 
         let parameters = self.parse_parameters()?;
 
-        let function_type = if self.match_token(&Token::Colon) {
+        let return_type = if self.match_token(&Token::Colon) {
             self.parse_data_type()?
         } else {
             DataType::void()
@@ -316,12 +355,10 @@ impl Parser {
 
         let function_data_type = DataType::Function {
             parameters: DataType::from_parameters(&parameters),
-            return_type: Box::new(function_type.clone()),
+            return_type: Box::new(return_type.clone()),
         };
 
-        self.function_context = Context::Function {
-            return_data: function_data_type.clone(),
-        };
+        self.enter_function(return_type.clone());
 
         if public {
             self.semantic_analyzer
@@ -336,19 +373,33 @@ impl Parser {
         for parameter in &parameters {
             self.semantic_analyzer
                 .save_variable(parameter.name.clone(), parameter.data_type.clone());
+
+            let context = self.last_function_context_mut()?;
+            context.variables.push(parameter.name.clone());
         }
 
         let body = self.parse_block_statement()?;
+        let mut context = self.exit_function()?;
+        let last_context = self.last_function_context_mut()?;
+        last_context.variables.push(function_name.clone());
 
-        self.function_context = Context::None;
+        for capture in &mut context.captured_variables {
+            if last_context.variables.contains(&capture) {
+                continue;
+            }
+
+            last_context.captured_variables.push(capture.clone());
+        }
+
         self.semantic_analyzer.exit_function_environment()?;
 
         Ok(Statement::Function {
             name: function_name,
             public,
-            return_type: function_type,
+            return_type,
             parameters,
             body,
+            captured: context.captured_variables,
         })
     }
 
@@ -442,6 +493,9 @@ impl Parser {
     fn parse_variable_declaration_statement(&mut self, public: bool) -> KsResult<Statement> {
         let name = self.consume_identifier()?;
 
+        let context = self.last_function_context_mut()?;
+        context.variables.push(name.clone());
+
         let data_type = if self.match_token(&Token::Colon) {
             Some(self.parse_data_type()?)
         } else {
@@ -480,27 +534,24 @@ impl Parser {
     }
 
     fn parse_return_statement(&mut self) -> KsResult<Statement> {
-        if let Context::Function { return_data } = self.function_context.clone() {
-            let expression = self.parse_expression()?;
-            let data_type = self.semantic_analyzer.get_data_type(&expression)?;
-
-            if let DataType::Function {
-                parameters: _,
-                return_type,
-            } = return_data
-            {
-                if *return_type != data_type {
-                    return Err(KsError::parse("Mismatch return and function return types!"));
-                }
-
-                self.consume_token(Token::Semicolon)?;
-                return Ok(Statement::ReturnStatement {
-                    value: Some(expression),
-                });
-            }
+        if self.function_context.len() == 1 {
+            return Err(KsError::parse("No function context to return!"));
         }
 
-        Err(KsError::parse("No function context for return!"))
+        let last = self.last_function_context()?;
+        let return_type = last.return_type.clone();
+
+        let expression = self.parse_expression()?;
+        let data_type = self.semantic_analyzer.get_data_type(&expression)?;
+
+        if return_type != data_type {
+            return Err(KsError::parse("Mismatch return and function return types!"));
+        }
+
+        self.consume_token(Token::Semicolon)?;
+        Ok(Statement::ReturnStatement {
+            value: Some(expression),
+        })
     }
 
     fn parse_assignment_statement(
@@ -877,7 +928,7 @@ impl Parser {
     }
 
     fn parse_module(&mut self) -> KsResult<Expression> {
-        let mut module: HashMap<String, Expression> = HashMap::new();
+        let mut module: BTreeMap<String, Expression> = BTreeMap::new();
 
         loop {
             let field_name: String = self.consume_identifier()?;
@@ -889,10 +940,6 @@ impl Parser {
                 Some(Token::LeftParenthesis) => {
                     self.semantic_analyzer.enter_function_environment();
                     let parameters = self.parse_parameters()?;
-                    for parameter in &parameters {
-                        self.semantic_analyzer
-                            .save_variable(parameter.name.clone(), parameter.data_type.clone());
-                    }
 
                     let return_type = if self.match_token(&Token::Colon) {
                         self.parse_data_type()?
@@ -901,17 +948,28 @@ impl Parser {
                     };
 
                     self.consume_token(Token::LeftBrace)?;
+                    self.enter_function(return_type.clone());
 
-                    let function_data_type = DataType::Function {
-                        parameters: DataType::from_parameters(&parameters),
-                        return_type: Box::new(return_type.clone()),
-                    };
+                    for parameter in &parameters {
+                        self.semantic_analyzer
+                            .save_variable(parameter.name.clone(), parameter.data_type.clone());
 
-                    self.function_context = Context::Function {
-                        return_data: function_data_type,
-                    };
+                        let context = self.last_function_context_mut()?;
+                        context.variables.push(parameter.name.clone());
+                    }
+
                     let block = self.parse_block_statement()?;
-                    self.function_context = Context::None;
+
+                    let mut context = self.exit_function()?;
+                    let last_context = self.last_function_context_mut()?;
+
+                    for capture in &mut context.captured_variables {
+                        if last_context.variables.contains(&capture) {
+                            continue;
+                        }
+
+                        last_context.captured_variables.push(capture.clone());
+                    }
 
                     self.semantic_analyzer.exit_function_environment()?;
 
@@ -921,6 +979,7 @@ impl Parser {
                             parameters,
                             return_type,
                             block,
+                            captured: context.captured_variables,
                         },
                     );
                 }
@@ -940,11 +999,8 @@ impl Parser {
     fn parse_expression_function(&mut self) -> KsResult<Expression> {
         self.consume_token(Token::LeftParenthesis)?;
         self.semantic_analyzer.enter_function_environment();
+
         let parameters = self.parse_parameters()?;
-        for parameter in &parameters {
-            self.semantic_analyzer
-                .save_variable(parameter.name.clone(), parameter.data_type.clone());
-        }
 
         let return_type = if self.match_token(&Token::Colon) {
             let data_type = self.parse_data_type()?;
@@ -955,17 +1011,28 @@ impl Parser {
         };
 
         self.consume_token(Token::LeftBrace)?;
+        self.enter_function(return_type.clone());
 
-        let function_data_type = DataType::Function {
-            parameters: DataType::from_parameters(&parameters),
-            return_type: Box::new(return_type.clone()),
-        };
+        for parameter in &parameters {
+            self.semantic_analyzer
+                .save_variable(parameter.name.clone(), parameter.data_type.clone());
 
-        self.function_context = Context::Function {
-            return_data: function_data_type.clone(),
-        };
+            let context = self.last_function_context_mut()?;
+            context.variables.push(parameter.name.clone());
+        }
+
         let block = self.parse_block_statement()?;
-        self.function_context = Context::None;
+
+        let mut context = self.exit_function()?;
+        let last_context = self.last_function_context_mut()?;
+
+        for capture in &mut context.captured_variables {
+            if last_context.variables.contains(&capture) {
+                continue;
+            }
+
+            last_context.captured_variables.push(capture.clone());
+        }
 
         self.semantic_analyzer.exit_function_environment()?;
 
@@ -973,6 +1040,7 @@ impl Parser {
             parameters,
             return_type,
             block,
+            captured: context.captured_variables,
         })
     }
 
@@ -1042,7 +1110,7 @@ impl Parser {
                 Ok(DataType::Tuple(data_types))
             }
             Some(Token::LeftBrace) => {
-                let mut module: HashMap<String, DataType> = HashMap::new();
+                let mut module: BTreeMap<String, DataType> = BTreeMap::new();
                 loop {
                     let field_name = self.consume_identifier()?;
                     self.consume_token(Token::Colon)?;
