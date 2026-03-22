@@ -160,12 +160,13 @@ fn should_create_return_at_the_end() -> KsResult<()> {
 #[test]
 fn function_with_parameters() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(6),                         // Skiping function to store it
-        Instruction::Store(2),                        // Storing parameter b
-        Instruction::Store(1),                        // Storing parameter a
-        Instruction::LoadVar(1),                      // Loading var a to variable stack
-        Instruction::LoadVar(2),                      // Loading var b to variable stack
+        Instruction::Jump(7),                         // Skiping function to store it
+        Instruction::Store(0),                        // Storing parameter a
+        Instruction::Store(1),                        // Storing parameter b
+        Instruction::LoadVar(0),                      // Loading var a to variable stack
+        Instruction::LoadVar(1),                      // Loading var b to variable stack
         Instruction::Add,                             // Sum them
+        Instruction::Free(2),                         // Free local variables
         Instruction::Return,                          // And return
         Instruction::LoadConst(Constant::Integer(1)), // Defining function pointer
         Instruction::LoadFunction(0),                 // Save function with function pointer
