@@ -27,6 +27,10 @@ impl Environment {
         variables.iter().map(|scope| scope.len()).sum()
     }
 
+    pub fn clear_temp_collection(&mut self) {
+        self.temp_collection = None;
+    }
+
     pub fn current(&self) -> KsResult<VariableId> {
         let variables = self.last_function()?;
 

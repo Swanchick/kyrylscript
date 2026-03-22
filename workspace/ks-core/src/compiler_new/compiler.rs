@@ -172,6 +172,8 @@ impl CompilerNew {
         self.compile_expression(expression)?;
         self.insert(Instruction::ClearAcc)?;
 
+        self.environment.clear_temp_collection();
+
         Ok(())
     }
 
