@@ -18,6 +18,7 @@ version = "0.5.0"
 dependencies = [
  "ks-global",
  "ks-vm",
+ "ks-vm-new",
 ]
 
 [[package]]

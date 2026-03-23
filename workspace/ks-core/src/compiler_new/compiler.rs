@@ -2,6 +2,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
+use ks_vm_new::{Constant, Instruction, Program};
 
 use crate::parser::expression::Expression;
 use crate::parser::identifier_tail::IdentifierTail;
@@ -10,10 +11,7 @@ use crate::parser::parameter::Parameter;
 use crate::parser::statement::Statement;
 
 use super::collection::Collection;
-use super::constant::Constant;
 use super::environment::Environment;
-use super::instructions::Instruction;
-use super::program::Program;
 use super::slot::Slot;
 use super::types::{CollectionId, Pointer, VariableId};
 
