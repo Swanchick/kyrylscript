@@ -1,5 +1,6 @@
-use crate::types::Pointer;
 use std::collections::HashMap;
+
+use crate::types::Pointer;
 
 use super::instructions::Instruction;
 
