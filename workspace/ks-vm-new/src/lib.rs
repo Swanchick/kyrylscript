@@ -2,6 +2,7 @@ mod ir;
 mod runner;
 mod stats;
 mod types;
+mod utils;
 mod vgs;
 mod vm;
 
