@@ -71,22 +71,4 @@ impl KsDriver {
 
         Ok(())
     }
-
-    pub fn call_null(&self, function_name: &str) -> KsResult<()> {
-        let comiler_output = self.compiler()?;
-        let mut vm = VirtualMachine::from(comiler_output);
-        vm.initialize()?;
-        vm.call_null(function_name)?;
-        Ok(())
-    }
-
-    pub fn call(&self, function_name: &str) -> KsResult<Variable> {
-        let comiler_output = self.compiler()?;
-        let mut vm = VirtualMachine::from(comiler_output);
-        vm.initialize()?;
-
-        let result = vm.call(function_name)?;
-
-        Ok(result)
-    }
 }

@@ -1,15 +1,27 @@
+use std::collections::HashMap;
+
 use ks_global::utils::ks_result::KsResult;
 
+use crate::Instruction;
+
 use super::Program;
+use super::gvs::GVS;
 use super::runner::Runner;
-use super::types::Stack;
-use super::vgs::VGS;
 
 pub struct VM {
     program: Program,
-    runners: Vec<Runner>,
-    vgs: VGS,
-    stacks: Vec<Stack>,
+    pub runners: Vec<Runner>,
+    pub vgs: GVS,
+}
+
+impl From<Vec<Instruction>> for VM {
+    fn from(instructions: Vec<Instruction>) -> Self {
+        Self {
+            program: Program::new(instructions, HashMap::new()),
+            runners: Vec::new(),
+            vgs: GVS::new(),
+        }
+    }
 }
 
 impl From<Program> for VM {
@@ -17,8 +29,7 @@ impl From<Program> for VM {
         Self {
             program,
             runners: Vec::new(),
-            vgs: VGS {},
-            stacks: Vec::new(),
+            vgs: GVS::new(),
         }
     }
 }
@@ -29,10 +40,11 @@ impl VM {
         self.runners.push(runner);
     }
 
-    fn runner_loop(&mut self) -> KsResult<()> {
+    pub fn step(&mut self) -> KsResult<()> {
         let instructions = self.program.instructions();
 
-        for runner in &mut self.runners {
+        for index in 0..self.runners.len() {
+            let runner = &mut self.runners[index];
             let pc = runner.program_counter();
 
             if let Some(instruction) = instructions.get(pc) {

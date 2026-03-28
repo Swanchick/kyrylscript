@@ -224,7 +224,7 @@ impl CompilerNew {
 
         self.scope_append(final_scope)?;
 
-        self.insert_constant(Constant::Integer(pointer as i32))?;
+        self.insert_constant(Constant::Integer(pointer as i64))?;
         let captured_len = captured.len();
         for capture in captured {
             let variable_id = self.environment.variable_id(&capture)?;
@@ -477,7 +477,7 @@ impl CompilerNew {
                         *last_collection_id = collection_id.clone();
                     }
 
-                    self.insert_constant(Constant::Integer(*variable_id as i32))?;
+                    self.insert_constant(Constant::Integer(*variable_id as i64))?;
                     self.insert_collection(assign)?;
                 }
             }
@@ -553,7 +553,7 @@ impl CompilerNew {
                     *last_collection_id = collection_id.clone();
                 }
 
-                self.insert_constant(Constant::Integer(index))?;
+                self.insert_constant(Constant::Integer(index as i64))?;
                 self.insert_collection(assign)?;
             }
 
@@ -709,7 +709,9 @@ impl CompilerNew {
         match expression {
             Expression::NullLiteral => self.insert_constant(Constant::Null),
             Expression::BooleanLiteral(boolean) => self.insert_constant(Constant::Boolean(boolean)),
-            Expression::IntegerLiteral(integer) => self.insert_constant(Constant::Integer(integer)),
+            Expression::IntegerLiteral(integer) => {
+                self.insert_constant(Constant::Integer(integer as i64))
+            }
             Expression::FloatLiteral(float) => self.insert_constant(Constant::Float(float)),
             Expression::StringLiteral(string) => self.insert_constant(Constant::String(string)),
             Expression::Identifier(identifier) => self.identifier(identifier, false),

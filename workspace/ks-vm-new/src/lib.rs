@@ -1,11 +1,12 @@
+mod gvs;
 mod ir;
 mod runner;
 mod stats;
 mod types;
 mod utils;
-mod vgs;
 mod vm;
 
+pub use gvs::Variable;
 pub use ir::constant::Constant;
 pub use ir::instructions::Instruction;
 pub use ir::program::Program;
