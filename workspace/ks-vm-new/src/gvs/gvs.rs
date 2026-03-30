@@ -16,7 +16,7 @@ impl GVS {
     }
 
     pub fn store(&mut self, variable: Variable) -> StorageId {
-        let storage_id = self.storage.len();
+        let storage_id = self.storage.len() as StorageId;
         self.storage.push(Some(variable));
 
         storage_id

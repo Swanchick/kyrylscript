@@ -55,6 +55,15 @@ fn load_const_float() -> KsResult<()> {
 fn load_const_string() -> KsResult<()> {
     let string = String::from("Hello World");
     let instructions = vec![Instruction::LoadConst(Constant::String(string.clone()))];
+    let mut vm = VM::from(instructions);
+    vm.init();
+    vm.step()?;
+
+    let runner = &vm.runners[0];
+    let vgs = vm.vgs;
+
+    // assert_eq!(runner.acc[0], 0);
+    // assert_eq!(vgs.storage[0], Some(Variable::from(float)));
 
     todo!()
 }

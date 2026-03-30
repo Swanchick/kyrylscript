@@ -8,7 +8,6 @@ use ks_core::parser::statement::Statement;
 use ks_global::utils::ks_result::KsResult;
 use ks_std::ks_register_std;
 use ks_vm::function::Function;
-use ks_vm::variable::Variable;
 use ks_vm::virtual_machine::VirtualMachine;
 
 pub struct KsDriver {
