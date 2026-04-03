@@ -122,6 +122,7 @@ fn jump_positive() -> KsResult<()> {
     let driver = KsDriver::runner_configured(runner, None, Instruction::Jump(jump_offset))?;
 
     assert_eq!(driver.runner.program_counter(), jump_offset as usize);
+    assert_eq!(driver.runner.prevent_step, false);
 
     Ok(())
 }
@@ -138,6 +139,7 @@ fn jump_negative() -> KsResult<()> {
         driver.runner.program_counter(),
         initial_pc.saturating_add_signed(jump_offset as isize)
     );
+    assert_eq!(driver.runner.prevent_step, false);
 
     Ok(())
 }

@@ -40,6 +40,8 @@ impl Runner {
         if !self.prevent_step {
             self.program_counter += 1;
         }
+
+        self.prevent_step = false;
     }
 
     fn load_const_string(&mut self, gvs: &mut GVS, string: String) -> Variable {
@@ -72,13 +74,13 @@ impl Runner {
     }
 
     fn jump(&mut self, offset: Offset) -> KsResult<()> {
-        let offset = offset - 1;
-
         self.program_counter = if offset < 0 {
             self.program_counter.saturating_sub(offset.neg() as usize)
         } else {
             self.program_counter.saturating_add(offset as usize)
         };
+
+        self.prevent_step = true;
 
         Ok(())
     }
