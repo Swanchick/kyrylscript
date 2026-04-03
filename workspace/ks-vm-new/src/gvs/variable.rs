@@ -1,4 +1,4 @@
-use crate::types::CollectionId;
+use crate::types::{CollectionId, Owners};
 
 pub const NULL_TYPE: u8 = 0;
 pub const INT_TYPE: u8 = 1;
@@ -6,9 +6,9 @@ pub const FLOAT_TYPE: u8 = 2;
 pub const STRING_TYPE: u8 = 3;
 pub const BOOLEAN_TYPE: u8 = 4;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Variable {
-    owners: u32,
+    pub owners: Owners,
     value_type: u8,
     value: u64,
 }

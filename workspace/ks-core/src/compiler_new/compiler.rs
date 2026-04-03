@@ -193,7 +193,7 @@ impl CompilerNew {
         }
 
         for index in 0..captured.len() {
-            self.insert(Instruction::LoadCapture(index))?;
+            self.insert(Instruction::LoadCapture(index as u64))?;
 
             let variable_id = self.environment.define_variable(captured[index].clone())?;
             self.insert(Instruction::Store(variable_id))?;
@@ -263,7 +263,7 @@ impl CompilerNew {
         let variables = self.environment.current()?;
 
         if variables != 0 {
-            self.insert(Instruction::Free(variables))?;
+            self.insert(Instruction::Free(variables as usize))?;
         }
 
         self.insert(Instruction::Return)?;
@@ -473,7 +473,7 @@ impl CompilerNew {
             let collection = self.environment.collection(*collection_id)?;
             if let Collection::Module { children, indeces } = collection {
                 if let Some(variable_id) = indeces.get(&name) {
-                    if let Some(collection_id) = children.get(*variable_id) {
+                    if let Some(collection_id) = children.get(*variable_id as usize) {
                         *last_collection_id = collection_id.clone();
                     }
 

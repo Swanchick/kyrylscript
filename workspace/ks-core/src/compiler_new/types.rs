@@ -1,3 +1,3 @@
-pub type VariableId = usize;
+pub type VariableId = u64;
 pub type Pointer = usize;
 pub type CollectionId = usize;

@@ -1,7 +1,7 @@
 use ks_global::utils::ks_result::KsResult;
 use ks_vm_new::{Collection, Constant, Instruction, Variable};
 
-use crate::drivers::KsDriver;
+use crate::{drivers::KsDriver, vm::runner};
 
 #[test]
 fn load_const_null() -> KsResult<()> {
@@ -63,6 +63,26 @@ fn load_const_boolean() -> KsResult<()> {
     assert_eq!(driver.runner.program_counter(), 1);
     assert_eq!(driver.runner.acc[0], 0);
     assert_eq!(driver.gvs.storage[0], Some(Variable::from(boolean)));
+
+    Ok(())
+}
+
+#[test]
+fn load_var() -> KsResult<()> {
+    let mut int = Variable::from(67);
+    int.owners += 1;
+    let slot_id = 0;
+
+    let gvs = KsDriver::gvs_storage(vec![Some(int)]);
+    let runner = KsDriver::runner_stack(None, Some(vec![slot_id]));
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::LoadVar(0))?;
+
+    let variable = driver.gvs.storage[0].clone().unwrap();
+
+    assert_eq!(variable.owners, 2);
+    assert_eq!(driver.runner.program_counter(), 1);
+    assert_eq!(driver.runner.acc, vec![0]);
 
     Ok(())
 }

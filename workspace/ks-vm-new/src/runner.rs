@@ -1,12 +1,13 @@
 use ks_global::utils::ks_result::KsResult;
 
-use super::types::{CollectionId, Pointer, Stack};
+use super::types::{Pointer, Slot, Stack};
 use super::{Constant, Instruction};
 use crate::gvs::{GVS, Variable};
 
 pub struct Runner {
-    program_counter: Pointer,
+    pub program_counter: Pointer,
     pub acc: Stack,
+    pub stack: Stack,
 }
 
 impl Runner {
@@ -14,6 +15,7 @@ impl Runner {
         Self {
             program_counter: 0,
             acc: Vec::new(),
+            stack: Vec::new(),
         }
     }
 
@@ -21,7 +23,7 @@ impl Runner {
         self.program_counter += 1;
     }
 
-    fn load_const_string(&mut self, string: String, gvs: &mut GVS) -> Variable {
+    fn load_const_string(&mut self, gvs: &mut GVS, string: String) -> Variable {
         let collection_id = gvs.collection_store_string(string);
 
         Variable::string(collection_id)
@@ -33,7 +35,7 @@ impl Runner {
             Constant::Integer(value) => Variable::from(value),
             Constant::Float(value) => Variable::from(value),
             Constant::Boolean(value) => Variable::from(value),
-            Constant::String(string) => self.load_const_string(string, gvs),
+            Constant::String(string) => self.load_const_string(gvs, string),
         };
 
         let storage_id = gvs.store(variable);
@@ -44,9 +46,14 @@ impl Runner {
         Ok(())
     }
 
+    fn load_var(&mut self, gvs: &mut GVS, slot: Slot) -> KsResult<()> {
+        Ok(())
+    }
+
     pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
         match instruction {
             Instruction::LoadConst(constant) => self.load_const(gvs, constant),
+            Instruction::LoadVar(slot) => self.load_var(gvs, slot),
             _ => todo!(),
         }?;
 

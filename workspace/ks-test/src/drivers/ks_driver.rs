@@ -8,7 +8,7 @@ use ks_core::parser::statement::Statement;
 use ks_global::utils::ks_result::KsResult;
 use ks_std::ks_register_std;
 use ks_vm::function::Function;
-use ks_vm_new::{GVS, Instruction, Runner};
+use ks_vm_new::{GVS, Instruction, Runner, Variable};
 
 use super::runner_driver::RunnerDriver;
 
@@ -70,6 +70,44 @@ impl KsDriver {
 
         runner.run(instruction, &mut gvs)?;
 
+        Ok(RunnerDriver::new(runner, gvs))
+    }
+
+    pub fn gvs_storage(storage: Vec<Option<Variable>>) -> Option<GVS> {
+        Some(GVS {
+            storage,
+            collections: Vec::new(),
+        })
+    }
+
+    pub fn runner_stack(acc: Option<Vec<u64>>, stack: Option<Vec<u64>>) -> Option<Runner> {
+        let acc = if let Some(acc) = acc { acc } else { Vec::new() };
+        let stack = if let Some(stack) = stack {
+            stack
+        } else {
+            Vec::new()
+        };
+
+        Some(Runner {
+            program_counter: 0,
+            acc,
+            stack,
+        })
+    }
+
+    pub fn runner_configured(
+        runner: Option<Runner>,
+        gvs: Option<GVS>,
+        instruction: Instruction,
+    ) -> KsResult<RunnerDriver> {
+        let mut gvs = if let Some(gvs) = gvs { gvs } else { GVS::new() };
+        let mut runner = if let Some(runner) = runner {
+            runner
+        } else {
+            Runner::new()
+        };
+
+        runner.run(instruction, &mut gvs)?;
         Ok(RunnerDriver::new(runner, gvs))
     }
 }

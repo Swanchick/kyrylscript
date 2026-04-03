@@ -1,4 +1,4 @@
-use crate::types::{ArgumentSize, CaptureSize, Offset, VariableId};
+use crate::types::{ArgumentSize, CaptureSize, Offset, Slot, VariableId};
 
 use super::constant::Constant;
 
