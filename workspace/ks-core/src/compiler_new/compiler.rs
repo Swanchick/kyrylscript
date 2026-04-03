@@ -661,7 +661,7 @@ impl CompilerNew {
         for (name, expression) in module {
             self.compile_expression(expression)?;
 
-            indeces.insert(name, children.len());
+            indeces.insert(name, children.len() as u64);
             let temp_collection = self.environment.temp_collection();
             children.push(temp_collection);
         }
