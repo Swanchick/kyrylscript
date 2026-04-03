@@ -1,7 +1,9 @@
+use std::ops::Neg;
+
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
-use super::types::{Pointer, Slot, Stack, StorageId};
+use super::types::{Offset, Pointer, Slot, Stack, StorageId};
 use super::{Constant, Instruction};
 use crate::gvs::{GVS, Variable};
 
@@ -69,10 +71,23 @@ impl Runner {
         Ok(())
     }
 
+    fn jump(&mut self, offset: Offset) -> KsResult<()> {
+        let offset = offset - 1;
+
+        self.program_counter = if offset < 0 {
+            self.program_counter.saturating_sub(offset.neg() as usize)
+        } else {
+            self.program_counter.saturating_add(offset as usize)
+        };
+
+        Ok(())
+    }
+
     pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
         match instruction {
             Instruction::LoadConst(constant) => self.load_const(gvs, constant),
             Instruction::LoadVar(slot) => self.load_var(gvs, slot),
+            Instruction::Jump(offset) => self.jump(offset),
             _ => todo!(),
         }?;
 
