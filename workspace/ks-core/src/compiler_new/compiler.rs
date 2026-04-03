@@ -138,11 +138,11 @@ impl CompilerNew {
         Ok(())
     }
 
-    fn insert_store(&mut self, variable_id: VariableId, public: bool) -> KsResult<()> {
+    fn insert_store(&mut self, public: bool) -> KsResult<()> {
         if public {
-            self.insert(Instruction::PubStore(variable_id))?;
+            self.insert(Instruction::PubStore)?;
         } else {
-            self.insert(Instruction::Store(variable_id))?;
+            self.insert(Instruction::Store)?;
         }
 
         Ok(())
@@ -160,8 +160,8 @@ impl CompilerNew {
             self.insert_constant(Constant::Null)
         }?;
 
-        let variable_id = self.environment.define_variable(name)?;
-        self.insert_store(variable_id, public)?;
+        self.environment.define_variable(name)?;
+        self.insert_store(public)?;
 
         Ok(())
     }
@@ -188,15 +188,15 @@ impl CompilerNew {
         self.scope_enter();
 
         for parameter in parameters {
-            let parameter_id = self.environment.define_variable(parameter.name)?;
-            self.insert(Instruction::Store(parameter_id))?;
+            self.environment.define_variable(parameter.name)?;
+            self.insert(Instruction::Store)?;
         }
 
         for index in 0..captured.len() {
             self.insert(Instruction::LoadCapture(index as u64))?;
 
-            let variable_id = self.environment.define_variable(captured[index].clone())?;
-            self.insert(Instruction::Store(variable_id))?;
+            self.environment.define_variable(captured[index].clone())?;
+            self.insert(Instruction::Store)?;
         }
 
         self.scope_enter();
@@ -248,9 +248,8 @@ impl CompilerNew {
         let pointer = self.function(parameters, body, captured)?;
 
         self.environment.define_function(&name, pointer);
-
-        let variable_id = self.environment.define_variable(name)?;
-        self.insert_store(variable_id, public)?;
+        self.environment.define_variable(name)?;
+        self.insert_store(public)?;
 
         Ok(())
     }
@@ -369,11 +368,11 @@ impl CompilerNew {
         let iter_variable_id = self.environment.define_variable(name)?;
 
         self.compile_expression(list)?;
-        self.insert(Instruction::Store(iter_list))?;
+        self.insert(Instruction::Store)?;
         self.insert_constant(Constant::Integer(0))?;
-        self.insert(Instruction::Store(iter))?;
+        self.insert(Instruction::Store)?;
         self.insert_constant(Constant::Null)?;
-        self.insert(Instruction::Store(iter_variable_id))?;
+        self.insert(Instruction::Store)?;
 
         self.scope_enter();
         self.insert(Instruction::AssignVar(iter_variable_id))?;
