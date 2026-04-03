@@ -1,3 +1,5 @@
+use std::fmt::Pointer;
+
 use ks_core::compiler_new::compiler::CompilerNew;
 use ks_core::lexer::lexer::Lexer;
 use ks_core::parser::parser::Parser;
@@ -68,18 +70,29 @@ impl KsDriver {
         })
     }
 
-    pub fn runner_stack(acc: Option<Vec<u64>>, stack: Option<Vec<u64>>) -> Option<Runner> {
+    pub fn runner_default(
+        acc: Option<Vec<u64>>,
+        stack: Option<Vec<u64>>,
+        prevent_step: bool,
+        program_counter: Option<usize>,
+    ) -> Option<Runner> {
         let acc = if let Some(acc) = acc { acc } else { Vec::new() };
         let stack = if let Some(stack) = stack {
             stack
         } else {
             Vec::new()
         };
+        let program_counter = if let Some(program_counter) = program_counter {
+            program_counter
+        } else {
+            0
+        };
 
         Some(Runner {
-            program_counter: 0,
+            program_counter,
             acc,
             stack,
+            prevent_step,
         })
     }
 

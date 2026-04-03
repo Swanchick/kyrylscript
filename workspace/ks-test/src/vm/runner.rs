@@ -74,7 +74,7 @@ fn load_var() -> KsResult<()> {
     let storage_id = 0;
 
     let gvs = KsDriver::gvs_storage(vec![Some(int)]);
-    let runner = KsDriver::runner_stack(None, Some(vec![storage_id]));
+    let runner = KsDriver::runner_default(None, Some(vec![storage_id]), false, None);
 
     let driver = KsDriver::runner_configured(runner, gvs, Instruction::LoadVar(0))?;
 
@@ -90,7 +90,7 @@ fn load_var() -> KsResult<()> {
 #[test]
 fn load_var_invalid_storage_id() -> KsResult<()> {
     let storage_id = 5;
-    let runner = KsDriver::runner_stack(None, Some(vec![storage_id]));
+    let runner = KsDriver::runner_default(None, Some(vec![storage_id]), false, None);
 
     let err = KsDriver::runner_configured(runner, None, Instruction::LoadVar(0)).unwrap_err();
     assert_eq!(
@@ -109,6 +109,34 @@ fn load_var_invalid_slot() -> KsResult<()> {
     assert_eq!(
         err,
         KsError::runtime(&format!("Cannot get storage_id by slot {}", slot))
+    );
+
+    Ok(())
+}
+
+#[test]
+fn jump_positive() -> KsResult<()> {
+    let runner = KsDriver::runner_default(None, None, false, None);
+    let jump_offset = 32;
+
+    let driver = KsDriver::runner_configured(runner, None, Instruction::Jump(jump_offset))?;
+
+    assert_eq!(driver.runner.program_counter(), jump_offset as usize);
+
+    Ok(())
+}
+
+#[test]
+fn jump_negative() -> KsResult<()> {
+    let initial_pc = 64;
+    let jump_offset = -5;
+
+    let runner = KsDriver::runner_default(None, None, false, Some(initial_pc));
+    let driver = KsDriver::runner_configured(runner, None, Instruction::Jump(jump_offset))?;
+
+    assert_eq!(
+        driver.runner.program_counter(),
+        initial_pc.saturating_add_signed(jump_offset as isize)
     );
 
     Ok(())

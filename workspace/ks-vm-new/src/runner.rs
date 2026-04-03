@@ -10,6 +10,7 @@ pub struct Runner {
     pub program_counter: Pointer,
     pub acc: Stack,
     pub stack: Stack,
+    pub prevent_step: bool,
 }
 
 impl Runner {
@@ -18,6 +19,7 @@ impl Runner {
             program_counter: 0,
             acc: Vec::new(),
             stack: Vec::new(),
+            prevent_step: false,
         }
     }
 
@@ -33,7 +35,9 @@ impl Runner {
     }
 
     fn step(&mut self) {
-        self.program_counter += 1;
+        if !self.prevent_step {
+            self.program_counter += 1;
+        }
     }
 
     fn load_const_string(&mut self, gvs: &mut GVS, string: String) -> Variable {
