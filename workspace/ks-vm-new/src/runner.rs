@@ -67,7 +67,7 @@ impl Runner {
 
     fn load_var(&mut self, gvs: &mut GVS, slot: Slot) -> KsResult<()> {
         let storage_id = self.storage_by_slot(slot)?;
-        gvs.storeage_add_owner(storage_id)?;
+        gvs.storage_add_owner(storage_id)?;
         self.acc.push(storage_id);
 
         Ok(())

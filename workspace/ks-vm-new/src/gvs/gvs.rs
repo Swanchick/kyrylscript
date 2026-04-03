@@ -31,7 +31,7 @@ impl GVS {
         }
     }
 
-    pub fn storeage_add_owner(&mut self, storage_id: StorageId) -> KsResult<()> {
+    pub fn storage_add_owner(&mut self, storage_id: StorageId) -> KsResult<()> {
         let variable = self.variable_mut(storage_id)?;
         variable.owners += 1;
         Ok(())
