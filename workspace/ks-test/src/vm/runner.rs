@@ -1,7 +1,7 @@
 use ks_global::utils::ks_result::KsResult;
 use ks_vm_new::{Collection, Constant, Instruction, Variable};
 
-use crate::{drivers::KsDriver, vm::runner};
+use crate::drivers::KsDriver;
 
 #[test]
 fn load_const_null() -> KsResult<()> {

@@ -1,6 +1,7 @@
+use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
-use super::types::{Pointer, Slot, Stack};
+use super::types::{Pointer, Slot, Stack, StorageId};
 use super::{Constant, Instruction};
 use crate::gvs::{GVS, Variable};
 
@@ -16,6 +17,17 @@ impl Runner {
             program_counter: 0,
             acc: Vec::new(),
             stack: Vec::new(),
+        }
+    }
+
+    fn storage_by_slot(&self, slot: Slot) -> KsResult<StorageId> {
+        if let Some(storage_id) = self.stack.get(slot as usize) {
+            Ok(*storage_id)
+        } else {
+            Err(KsError::runtime(&format!(
+                "Cannot get storage_id by slot {}",
+                slot
+            )))
         }
     }
 
@@ -41,12 +53,14 @@ impl Runner {
         let storage_id = gvs.store(variable);
         self.acc.push(storage_id);
 
-        self.step();
-
         Ok(())
     }
 
     fn load_var(&mut self, gvs: &mut GVS, slot: Slot) -> KsResult<()> {
+        let storage_id = self.storage_by_slot(slot)?;
+        gvs.storeage_add_owner(storage_id)?;
+        self.acc.push(storage_id);
+
         Ok(())
     }
 
@@ -56,6 +70,8 @@ impl Runner {
             Instruction::LoadVar(slot) => self.load_var(gvs, slot),
             _ => todo!(),
         }?;
+
+        self.step();
 
         Ok(())
     }
