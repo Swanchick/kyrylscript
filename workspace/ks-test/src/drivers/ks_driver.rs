@@ -8,7 +8,9 @@ use ks_core::parser::statement::Statement;
 use ks_global::utils::ks_result::KsResult;
 use ks_std::ks_register_std;
 use ks_vm::function::Function;
-use ks_vm::virtual_machine::VirtualMachine;
+use ks_vm_new::{GVS, Instruction, Runner};
+
+use super::runner_driver::RunnerDriver;
 
 pub struct KsDriver {
     path: String,
@@ -62,12 +64,12 @@ impl KsDriver {
         Ok(compiler)
     }
 
-    pub fn run(&self) -> KsResult<()> {
-        let comiler_output = self.compiler()?;
-        let mut vm = VirtualMachine::from(comiler_output);
+    pub fn runner(instruction: Instruction) -> KsResult<RunnerDriver> {
+        let mut gvs = GVS::new();
+        let mut runner = Runner::new();
 
-        vm.initialize()?;
+        runner.run(instruction, &mut gvs)?;
 
-        Ok(())
+        Ok(RunnerDriver::new(runner, gvs))
     }
 }

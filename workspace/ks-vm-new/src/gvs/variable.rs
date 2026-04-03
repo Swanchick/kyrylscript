@@ -1,3 +1,5 @@
+use crate::types::CollectionId;
+
 pub const NULL_TYPE: u8 = 0;
 pub const INT_TYPE: u8 = 1;
 pub const FLOAT_TYPE: u8 = 2;
@@ -39,10 +41,10 @@ impl Variable {
     }
 
     pub fn null() -> Self {
-        Self {
-            owners: 0,
-            value_type: NULL_TYPE,
-            value: 0,
-        }
+        Self::new(NULL_TYPE, 0)
+    }
+
+    pub fn string(collection_id: CollectionId) -> Self {
+        Self::new(STRING_TYPE, collection_id)
     }
 }

@@ -6,6 +6,8 @@ mod types;
 mod utils;
 mod vm;
 
+pub use gvs::Collection;
+pub use gvs::GVS;
 pub use gvs::Variable;
 pub use ir::constant::Constant;
 pub use ir::instructions::Instruction;

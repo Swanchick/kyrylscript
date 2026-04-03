@@ -49,7 +49,7 @@ impl VM {
 
             if let Some(instruction) = instructions.get(pc) {
                 let instruction = instruction.clone();
-                runner.step(instruction, &mut self.vgs)?;
+                runner.run(instruction, &mut self.vgs)?;
             }
         }
 
