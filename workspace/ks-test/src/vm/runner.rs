@@ -1,4 +1,4 @@
-use ks_global::utils::ks_result::KsResult;
+use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
 use ks_vm_new::{Collection, Constant, Instruction, Variable};
 
 use crate::drivers::KsDriver;
@@ -71,10 +71,10 @@ fn load_const_boolean() -> KsResult<()> {
 fn load_var() -> KsResult<()> {
     let mut int = Variable::from(67);
     int.owners += 1;
-    let slot_id = 0;
+    let storage_id = 0;
 
     let gvs = KsDriver::gvs_storage(vec![Some(int)]);
-    let runner = KsDriver::runner_stack(None, Some(vec![slot_id]));
+    let runner = KsDriver::runner_stack(None, Some(vec![storage_id]));
 
     let driver = KsDriver::runner_configured(runner, gvs, Instruction::LoadVar(0))?;
 
@@ -83,6 +83,33 @@ fn load_var() -> KsResult<()> {
     assert_eq!(variable.owners, 2);
     assert_eq!(driver.runner.program_counter(), 1);
     assert_eq!(driver.runner.acc, vec![0]);
+
+    Ok(())
+}
+
+#[test]
+fn load_var_invalid_storage_id() -> KsResult<()> {
+    let storage_id = 5;
+    let runner = KsDriver::runner_stack(None, Some(vec![storage_id]));
+
+    let err = KsDriver::runner_configured(runner, None, Instruction::LoadVar(0)).unwrap_err();
+    assert_eq!(
+        err,
+        KsError::runtime(&format!("Cannot access variable {}", storage_id))
+    );
+
+    Ok(())
+}
+
+#[test]
+fn load_var_invalid_slot() -> KsResult<()> {
+    let slot = 10;
+
+    let err = KsDriver::runner(Instruction::LoadVar(slot)).unwrap_err();
+    assert_eq!(
+        err,
+        KsError::runtime(&format!("Cannot get storage_id by slot {}", slot))
+    );
 
     Ok(())
 }

@@ -1,6 +1,6 @@
 use super::ks_error_type::KsErrorType;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct KsError {
     error_type: KsErrorType,
     message: String,

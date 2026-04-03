@@ -5,6 +5,7 @@ use super::types::{Pointer, Slot, Stack, StorageId};
 use super::{Constant, Instruction};
 use crate::gvs::{GVS, Variable};
 
+#[derive(Debug)]
 pub struct Runner {
     pub program_counter: Pointer,
     pub acc: Stack,

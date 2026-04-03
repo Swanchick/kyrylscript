@@ -6,6 +6,7 @@ use crate::types::{CollectionId, StorageId};
 
 use super::Variable;
 
+#[derive(Debug)]
 pub struct GVS {
     pub storage: Vec<Option<Variable>>,
     pub collections: Vec<Collection>,

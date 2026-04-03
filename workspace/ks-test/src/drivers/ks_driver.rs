@@ -1,13 +1,9 @@
-use std::collections::HashMap;
-
-use ks_core::compiler::compiler::Compiler;
 use ks_core::compiler_new::compiler::CompilerNew;
 use ks_core::lexer::lexer::Lexer;
 use ks_core::parser::parser::Parser;
 use ks_core::parser::statement::Statement;
 use ks_global::utils::ks_result::KsResult;
 use ks_std::ks_register_std;
-use ks_vm::function::Function;
 use ks_vm_new::{GVS, Instruction, Runner, Variable};
 
 use super::runner_driver::RunnerDriver;
@@ -46,14 +42,6 @@ impl KsDriver {
         ks_register_std(&mut parser);
 
         Ok(parser)
-    }
-
-    pub fn compiler(&self) -> KsResult<HashMap<String, Function>> {
-        let statements = self.parser()?;
-        let mut compiler = Compiler::new();
-        compiler.start_compile(&statements);
-
-        Ok(compiler.to_functions())
     }
 
     pub fn compiler_new(&self) -> KsResult<CompilerNew> {
