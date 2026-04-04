@@ -36,6 +36,15 @@ impl Runner {
         }
     }
 
+    fn acc_push(&mut self, gvs: &mut GVS, variable: Variable) -> KsResult<()> {
+        let storage_id = gvs.store(variable);
+        gvs.storage_add_owner(storage_id)?;
+
+        self.acc.push(storage_id);
+
+        Ok(())
+    }
+
     fn acc_pop<'a>(&mut self, gvs: &'a mut GVS) -> KsResult<&'a Variable> {
         if let Some(storage_id) = self.acc.pop() {
             gvs.storage_remove_owner(storage_id)?;
@@ -70,8 +79,7 @@ impl Runner {
             Constant::String(string) => Self::load_const_string(gvs, string),
         };
 
-        let storage_id = gvs.store(variable);
-        self.acc.push(storage_id);
+        self.acc_push(gvs, variable)?;
 
         Ok(())
     }
@@ -111,10 +119,16 @@ impl Runner {
         let right = self.acc_pop(gvs)?.clone();
         let left = self.acc_pop(gvs)?.clone();
 
-        let result = match (left.value_type, right.value_type) {
+        let variable = match (left.value_type, right.value_type) {
             (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 + right.value as i64),
-            (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
-                Variable::from(left.value as f64 + right.value as f64)
+            (INT_TYPE, FLOAT_TYPE) => {
+                Variable::from(left.value as f64 + f64::from_bits(right.value))
+            }
+            (FLOAT_TYPE, INT_TYPE) => {
+                Variable::from(f64::from_bits(left.value) + right.value as f64)
+            }
+            (FLOAT_TYPE, FLOAT_TYPE) => {
+                Variable::from(f64::from_bits(left.value) + f64::from_bits(right.value))
             }
             (STRING_TYPE, STRING_TYPE) => {
                 let collection_id = Self::add_strings(gvs, left.value, right.value)?;
@@ -123,9 +137,30 @@ impl Runner {
             _ => unreachable!(),
         };
 
-        let storage_id = gvs.store(result);
-        self.acc.push(storage_id);
-        gvs.storage_add_owner(storage_id)?;
+        self.acc_push(gvs, variable)?;
+
+        Ok(())
+    }
+
+    fn minus(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        let right = self.acc_pop(gvs)?.clone();
+        let left = self.acc_pop(gvs)?.clone();
+
+        let variable = match (left.value_type, right.value_type) {
+            (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 - right.value as i64),
+            (INT_TYPE, FLOAT_TYPE) => {
+                Variable::from(left.value as f64 - f64::from_bits(right.value))
+            }
+            (FLOAT_TYPE, INT_TYPE) => {
+                Variable::from(f64::from_bits(left.value) - right.value as f64)
+            }
+            (FLOAT_TYPE, FLOAT_TYPE) => {
+                Variable::from(f64::from_bits(left.value) - f64::from_bits(right.value))
+            }
+            _ => unreachable!(),
+        };
+
+        self.acc_push(gvs, variable)?;
 
         Ok(())
     }
@@ -136,6 +171,7 @@ impl Runner {
             Instruction::LoadVar(slot) => self.load_var(gvs, slot),
             Instruction::Jump(offset) => self.jump(offset),
             Instruction::Add => self.add(gvs),
+            Instruction::Minus => self.minus(gvs),
             _ => todo!(),
         }?;
 

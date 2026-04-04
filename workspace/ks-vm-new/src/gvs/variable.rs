@@ -21,13 +21,13 @@ impl From<i64> for Variable {
 
 impl From<f64> for Variable {
     fn from(value: f64) -> Self {
-        Self::new(FLOAT_TYPE, value as u64)
+        Self::new(FLOAT_TYPE, value.to_bits())
     }
 }
 
 impl From<bool> for Variable {
     fn from(value: bool) -> Self {
-        Self::new(BOOLEAN_TYPE, value as u64)
+        Self::new(BOOLEAN_TYPE, if value { 1 } else { 0 })
     }
 }
 
@@ -46,5 +46,9 @@ impl Variable {
 
     pub fn string(collection_id: CollectionId) -> Self {
         Self::new(STRING_TYPE, collection_id)
+    }
+
+    pub fn as_boolean(&self) -> bool {
+        self.value == 1
     }
 }

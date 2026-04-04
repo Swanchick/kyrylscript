@@ -5,11 +5,14 @@ use crate::drivers::KsDriver;
 
 #[test]
 fn load_const_null() -> KsResult<()> {
+    let mut variable = Variable::null();
+    variable.owners = 1;
+
     let driver = KsDriver::runner(Instruction::LoadConst(Constant::Null))?;
 
     assert_eq!(driver.runner.program_counter(), 1);
     assert_eq!(driver.runner.acc[0], 0);
-    assert_eq!(driver.gvs.storage[0], Some(Variable::null()));
+    assert_eq!(driver.gvs.storage[0], Some(variable));
 
     Ok(())
 }
@@ -17,12 +20,14 @@ fn load_const_null() -> KsResult<()> {
 #[test]
 fn load_const_int() -> KsResult<()> {
     let int = 10i64;
+    let mut variable = Variable::from(int);
+    variable.owners = 1;
 
     let driver = KsDriver::runner(Instruction::LoadConst(Constant::Integer(int)))?;
 
     assert_eq!(driver.runner.program_counter(), 1);
     assert_eq!(driver.runner.acc[0], 0);
-    assert_eq!(driver.gvs.storage[0], Some(Variable::from(int)));
+    assert_eq!(driver.gvs.storage[0], Some(variable));
 
     Ok(())
 }
@@ -30,12 +35,14 @@ fn load_const_int() -> KsResult<()> {
 #[test]
 fn load_const_float() -> KsResult<()> {
     let float = 3.14;
+    let mut variable = Variable::from(float);
+    variable.owners = 1;
 
     let driver = KsDriver::runner(Instruction::LoadConst(Constant::Float(float)))?;
 
     assert_eq!(driver.runner.program_counter(), 1);
     assert_eq!(driver.runner.acc[0], 0);
-    assert_eq!(driver.gvs.storage[0], Some(Variable::from(float)));
+    assert_eq!(driver.gvs.storage[0], Some(variable));
 
     Ok(())
 }
@@ -43,12 +50,14 @@ fn load_const_float() -> KsResult<()> {
 #[test]
 fn load_const_string() -> KsResult<()> {
     let string = String::from("Hello World");
+    let mut variable = Variable::string(0);
+    variable.owners = 1;
 
     let driver = KsDriver::runner(Instruction::LoadConst(Constant::String(string.clone())))?;
 
     assert_eq!(driver.runner.program_counter(), 1);
     assert_eq!(driver.runner.acc[0], 0);
-    assert_eq!(driver.gvs.storage[0], Some(Variable::string(0)));
+    assert_eq!(driver.gvs.storage[0], Some(variable));
     assert_eq!(driver.gvs.collections[0], Collection::String(string));
 
     Ok(())
@@ -57,12 +66,14 @@ fn load_const_string() -> KsResult<()> {
 #[test]
 fn load_const_boolean() -> KsResult<()> {
     let boolean = false;
+    let mut variable = Variable::from(boolean);
+    variable.owners = 1;
 
     let driver = KsDriver::runner(Instruction::LoadConst(Constant::Boolean(boolean)))?;
 
     assert_eq!(driver.runner.program_counter(), 1);
     assert_eq!(driver.runner.acc[0], 0);
-    assert_eq!(driver.gvs.storage[0], Some(Variable::from(boolean)));
+    assert_eq!(driver.gvs.storage[0], Some(variable));
 
     Ok(())
 }
