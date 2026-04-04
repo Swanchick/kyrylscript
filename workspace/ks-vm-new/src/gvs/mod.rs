@@ -1,6 +1,6 @@
 mod collection;
 mod gvs;
-mod variable;
+pub mod variable;
 
 pub use collection::Collection;
 pub use gvs::GVS;

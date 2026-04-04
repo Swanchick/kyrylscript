@@ -20,7 +20,18 @@ impl GVS {
         }
     }
 
-    fn variable_mut(&mut self, storage_id: StorageId) -> KsResult<&mut Variable> {
+    pub fn variable(&self, storage_id: StorageId) -> KsResult<&Variable> {
+        if let Some(Some(variable)) = self.storage.get(storage_id as usize) {
+            Ok(variable)
+        } else {
+            Err(KsError::runtime(&format!(
+                "Cannot access variable {}",
+                storage_id
+            )))
+        }
+    }
+
+    pub fn variable_mut(&mut self, storage_id: StorageId) -> KsResult<&mut Variable> {
         if let Some(Some(variable)) = self.storage.get_mut(storage_id as usize) {
             Ok(variable)
         } else {
@@ -34,6 +45,17 @@ impl GVS {
     pub fn storage_add_owner(&mut self, storage_id: StorageId) -> KsResult<()> {
         let variable = self.variable_mut(storage_id)?;
         variable.owners += 1;
+        Ok(())
+    }
+
+    pub fn storage_remove_owner(&mut self, storage_id: StorageId) -> KsResult<()> {
+        let variable = self.variable_mut(storage_id)?;
+        variable.owners = variable.owners.saturating_sub(1);
+
+        if variable.owners == 0 {
+            todo!("Free the variable")
+        }
+
         Ok(())
     }
 

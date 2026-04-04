@@ -9,8 +9,8 @@ pub const BOOLEAN_TYPE: u8 = 4;
 #[derive(Debug, PartialEq, Clone)]
 pub struct Variable {
     pub owners: Owners,
-    value_type: u8,
-    value: u64,
+    pub value_type: u8,
+    pub value: u64,
 }
 
 impl From<i64> for Variable {

@@ -1,10 +1,9 @@
-use std::ops::Neg;
-
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
 use super::types::{Offset, Pointer, Slot, Stack, StorageId};
 use super::{Constant, Instruction};
+use crate::gvs::variable::{FLOAT_TYPE, INT_TYPE, STRING_TYPE};
 use crate::gvs::{GVS, Variable};
 
 #[derive(Debug)]
@@ -25,7 +24,7 @@ impl Runner {
         }
     }
 
-    fn storage_by_slot(&self, slot: Slot) -> KsResult<StorageId> {
+    fn storage(&self, slot: Slot) -> KsResult<StorageId> {
         if let Some(storage_id) = self.stack.get(slot as usize) {
             Ok(*storage_id)
         } else {
@@ -33,6 +32,17 @@ impl Runner {
                 "Cannot get storage_id by slot {}",
                 slot
             )))
+        }
+    }
+
+    fn acc_pop<'a>(&mut self, gvs: &'a mut GVS) -> KsResult<&'a Variable> {
+        if let Some(storage_id) = self.acc.pop() {
+            gvs.storage_remove_owner(storage_id)?;
+            let variable = gvs.variable(storage_id)?;
+
+            Ok(variable)
+        } else {
+            Err(KsError::runtime("No Varialbe in ACC"))
         }
     }
 
@@ -44,7 +54,7 @@ impl Runner {
         self.prevent_step = false;
     }
 
-    fn load_const_string(&mut self, gvs: &mut GVS, string: String) -> Variable {
+    fn load_const_string(gvs: &mut GVS, string: String) -> Variable {
         let collection_id = gvs.collection_store_string(string);
 
         Variable::string(collection_id)
@@ -56,7 +66,7 @@ impl Runner {
             Constant::Integer(value) => Variable::from(value),
             Constant::Float(value) => Variable::from(value),
             Constant::Boolean(value) => Variable::from(value),
-            Constant::String(string) => self.load_const_string(gvs, string),
+            Constant::String(string) => Self::load_const_string(gvs, string),
         };
 
         let storage_id = gvs.store(variable);
@@ -66,7 +76,7 @@ impl Runner {
     }
 
     fn load_var(&mut self, gvs: &mut GVS, slot: Slot) -> KsResult<()> {
-        let storage_id = self.storage_by_slot(slot)?;
+        let storage_id = self.storage(slot)?;
         gvs.storage_add_owner(storage_id)?;
         self.acc.push(storage_id);
 
@@ -75,7 +85,8 @@ impl Runner {
 
     fn jump(&mut self, offset: Offset) -> KsResult<()> {
         self.program_counter = if offset < 0 {
-            self.program_counter.saturating_sub(offset.neg() as usize)
+            self.program_counter
+                .saturating_sub(offset.unsigned_abs() as usize)
         } else {
             self.program_counter.saturating_add(offset as usize)
         };
@@ -85,7 +96,25 @@ impl Runner {
         Ok(())
     }
 
-    fn add(&mut self) -> KsResult<()> {
+    fn add(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        let mut result = self.acc_pop(gvs)?.clone();
+        let left = self.acc_pop(gvs)?;
+
+        match (left.value_type, result.value_type) {
+            (INT_TYPE, INT_TYPE) => result.value = (left.value as i64 + result.value as i64) as u64,
+            (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
+                result.value = (left.value as f64 + result.value as f64) as u64;
+                result.value_type = FLOAT_TYPE;
+            }
+            (STRING_TYPE, STRING_TYPE) => {
+                // Ignore this for now
+            }
+            _ => unreachable!(),
+        }
+
+        let storage_id = gvs.store(result);
+        self.acc.push(storage_id);
+
         Ok(())
     }
 
@@ -94,7 +123,7 @@ impl Runner {
             Instruction::LoadConst(constant) => self.load_const(gvs, constant),
             Instruction::LoadVar(slot) => self.load_var(gvs, slot),
             Instruction::Jump(offset) => self.jump(offset),
-            Instruction::Add => self.add(),
+            Instruction::Add => self.add(gvs),
             _ => todo!(),
         }?;
 

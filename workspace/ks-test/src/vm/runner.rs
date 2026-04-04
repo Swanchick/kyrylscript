@@ -293,7 +293,6 @@ fn add_string_string() -> KsResult<()> {
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.runner.acc[0], 2);
-
     let gvs_variable1_left = driver.gvs.storage[0].clone().unwrap();
     let gvs_variable1_right = driver.gvs.storage[1].clone().unwrap();
     let gvs_variable1_result = driver.gvs.storage[2].clone().unwrap();
@@ -303,6 +302,5 @@ fn add_string_string() -> KsResult<()> {
 
     assert_eq!(driver.gvs.collections[0], Collection::String(string_result));
     assert_eq!(gvs_variable1_result, variable_result);
-
     Ok(())
 }
