@@ -1,3 +1,5 @@
+use std::collections;
+
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
@@ -5,6 +7,7 @@ use super::types::{Offset, Pointer, Slot, Stack, StorageId};
 use super::{Constant, Instruction};
 use crate::gvs::variable::{FLOAT_TYPE, INT_TYPE, STRING_TYPE};
 use crate::gvs::{GVS, Variable};
+use crate::types::CollectionId;
 
 #[derive(Debug)]
 pub struct Runner {
@@ -96,24 +99,35 @@ impl Runner {
         Ok(())
     }
 
-    fn add(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let mut result = self.acc_pop(gvs)?.clone();
-        let left = self.acc_pop(gvs)?;
+    fn add_strings(gvs: &mut GVS, left: CollectionId, right: CollectionId) -> KsResult<u64> {
+        let mut left = gvs.collection_string(left)?.to_string();
+        let right = gvs.collection_string(right)?;
 
-        match (left.value_type, result.value_type) {
-            (INT_TYPE, INT_TYPE) => result.value = (left.value as i64 + result.value as i64) as u64,
+        left.push_str(right);
+        let collection_id = gvs.collection_store_string(left);
+
+        Ok(collection_id)
+    }
+
+    fn add(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        let right = self.acc_pop(gvs)?.clone();
+        let left = self.acc_pop(gvs)?.clone();
+
+        let result = match (left.value_type, right.value_type) {
+            (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 + right.value as i64),
             (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
-                result.value = (left.value as f64 + result.value as f64) as u64;
-                result.value_type = FLOAT_TYPE;
+                Variable::from(left.value as f64 + right.value as f64)
             }
             (STRING_TYPE, STRING_TYPE) => {
-                // Ignore this for now
+                let collection_id = Self::add_strings(gvs, left.value, right.value)?;
+                Variable::string(collection_id)
             }
             _ => unreachable!(),
-        }
+        };
 
         let storage_id = gvs.store(result);
         self.acc.push(storage_id);
+        gvs.storage_add_owner(storage_id)?;
 
         Ok(())
     }

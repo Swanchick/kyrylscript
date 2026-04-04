@@ -59,6 +59,17 @@ impl GVS {
         Ok(())
     }
 
+    pub fn collection_string(&self, collection_id: CollectionId) -> KsResult<&str> {
+        if let Some(Collection::String(string)) = self.collections.get(collection_id as usize) {
+            Ok(string)
+        } else {
+            Err(KsError::runtime(&format!(
+                "Cannot get collection string {}",
+                collection_id
+            )))
+        }
+    }
+
     pub fn collection_store_string(&mut self, string: String) -> CollectionId {
         let collection_id = self.collections.len() as u64;
         self.collections.push(Collection::String(string));
