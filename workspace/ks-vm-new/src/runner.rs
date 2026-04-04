@@ -165,6 +165,29 @@ impl Runner {
         Ok(())
     }
 
+    fn mul(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        let right = self.acc_pop(gvs)?.clone();
+        let left = self.acc_pop(gvs)?.clone();
+
+        let variable = match (left.value_type, right.value_type) {
+            (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 * right.value as i64),
+            (INT_TYPE, FLOAT_TYPE) => {
+                Variable::from(left.value as f64 * f64::from_bits(right.value))
+            }
+            (FLOAT_TYPE, INT_TYPE) => {
+                Variable::from(f64::from_bits(left.value) * right.value as f64)
+            }
+            (FLOAT_TYPE, FLOAT_TYPE) => {
+                Variable::from(f64::from_bits(left.value) * f64::from_bits(right.value))
+            }
+            _ => unreachable!(),
+        };
+
+        self.acc_push(gvs, variable)?;
+
+        Ok(())
+    }
+
     pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
         match instruction {
             Instruction::LoadConst(constant) => self.load_const(gvs, constant),
@@ -172,6 +195,7 @@ impl Runner {
             Instruction::Jump(offset) => self.jump(offset),
             Instruction::Add => self.add(gvs),
             Instruction::Minus => self.minus(gvs),
+            Instruction::Mul => self.mul(gvs),
             _ => todo!(),
         }?;
 

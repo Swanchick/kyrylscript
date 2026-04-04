@@ -466,7 +466,7 @@ fn mul_int_int() -> KsResult<()> {
     let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
     let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Minus)?;
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Mul)?;
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.acc.len(), 1);
@@ -498,7 +498,7 @@ fn mul_int_float() -> KsResult<()> {
     let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
     let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Minus)?;
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Mul)?;
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.acc.len(), 1);
@@ -530,7 +530,7 @@ fn mul_float_int() -> KsResult<()> {
     let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
     let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Minus)?;
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Mul)?;
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.acc.len(), 1);
@@ -562,7 +562,7 @@ fn mul_float_float() -> KsResult<()> {
     let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
     let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Minus)?;
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Mul)?;
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.acc.len(), 1);
