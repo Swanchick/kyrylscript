@@ -4,7 +4,7 @@ use ks_core::parser::parser::Parser;
 use ks_core::parser::statement::Statement;
 use ks_global::utils::ks_result::KsResult;
 use ks_std::ks_register_std;
-use ks_vm_new::{GVS, Instruction, Runner, Variable};
+use ks_vm_new::{Collection, GVS, Instruction, Runner, Variable};
 
 use super::runner_driver::RunnerDriver;
 
@@ -61,10 +61,25 @@ impl KsDriver {
         Ok(RunnerDriver::new(runner, gvs))
     }
 
-    pub fn gvs_storage(storage: Vec<Option<Variable>>) -> Option<GVS> {
+    pub fn gvs_storage(
+        storage: Option<Vec<Option<Variable>>>,
+        collections: Option<Vec<Collection>>,
+    ) -> Option<GVS> {
+        let storage = if let Some(storage) = storage {
+            storage
+        } else {
+            Vec::new()
+        };
+
+        let collections = if let Some(collections) = collections {
+            collections
+        } else {
+            Vec::new()
+        };
+
         Some(GVS {
             storage,
-            collections: Vec::new(),
+            collections,
         })
     }
 

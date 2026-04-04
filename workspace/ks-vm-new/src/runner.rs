@@ -85,11 +85,16 @@ impl Runner {
         Ok(())
     }
 
+    fn add(&mut self) -> KsResult<()> {
+        Ok(())
+    }
+
     pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
         match instruction {
             Instruction::LoadConst(constant) => self.load_const(gvs, constant),
             Instruction::LoadVar(slot) => self.load_var(gvs, slot),
             Instruction::Jump(offset) => self.jump(offset),
+            Instruction::Add => self.add(),
             _ => todo!(),
         }?;
 
