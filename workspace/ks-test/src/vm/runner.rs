@@ -706,3 +706,23 @@ fn div_float_float() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn div_zero_division_error() -> KsResult<()> {
+    let float_left = 3.14;
+    let float_right = 0.0;
+
+    let mut variable_left = Variable::from(float_left);
+    variable_left.owners = 2;
+    let mut variable_right = Variable::from(float_right);
+    variable_right.owners = 2;
+
+    let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
+    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
+
+    let err = KsDriver::runner_configured(runner, gvs, Instruction::Div).unwrap_err();
+
+    assert_eq!(err, KsError::runtime("Zero division error"));
+
+    Ok(())
+}
