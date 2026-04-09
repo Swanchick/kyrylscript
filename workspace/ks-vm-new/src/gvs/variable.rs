@@ -1,3 +1,5 @@
+use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
+
 use crate::types::{CollectionId, Owners};
 
 pub const NULL_TYPE: u8 = 0;
@@ -50,5 +52,13 @@ impl Variable {
 
     pub fn as_boolean(&self) -> bool {
         self.value == 1
+    }
+
+    pub fn as_f64(&self) -> KsResult<f64> {
+        match self.value_type {
+            INT_TYPE => Ok(self.value as f64),
+            FLOAT_TYPE => Ok(f64::from_bits(self.value)),
+            _ => Err(KsError::runtime("Cannot convert to float")),
+        }
     }
 }

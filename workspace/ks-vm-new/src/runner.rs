@@ -121,14 +121,8 @@ impl Runner {
 
         let variable = match (left.value_type, right.value_type) {
             (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 + right.value as i64),
-            (INT_TYPE, FLOAT_TYPE) => {
-                Variable::from(left.value as f64 + f64::from_bits(right.value))
-            }
-            (FLOAT_TYPE, INT_TYPE) => {
-                Variable::from(f64::from_bits(left.value) + right.value as f64)
-            }
-            (FLOAT_TYPE, FLOAT_TYPE) => {
-                Variable::from(f64::from_bits(left.value) + f64::from_bits(right.value))
+            (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
+                Variable::from(left.as_f64()? + right.as_f64()?)
             }
             (STRING_TYPE, STRING_TYPE) => {
                 let collection_id = Self::add_strings(gvs, left.value, right.value)?;
@@ -148,14 +142,8 @@ impl Runner {
 
         let variable = match (left.value_type, right.value_type) {
             (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 - right.value as i64),
-            (INT_TYPE, FLOAT_TYPE) => {
-                Variable::from(left.value as f64 - f64::from_bits(right.value))
-            }
-            (FLOAT_TYPE, INT_TYPE) => {
-                Variable::from(f64::from_bits(left.value) - right.value as f64)
-            }
-            (FLOAT_TYPE, FLOAT_TYPE) => {
-                Variable::from(f64::from_bits(left.value) - f64::from_bits(right.value))
+            (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
+                Variable::from(left.as_f64()? - right.as_f64()?)
             }
             _ => unreachable!(),
         };
@@ -171,14 +159,8 @@ impl Runner {
 
         let variable = match (left.value_type, right.value_type) {
             (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 * right.value as i64),
-            (INT_TYPE, FLOAT_TYPE) => {
-                Variable::from(left.value as f64 * f64::from_bits(right.value))
-            }
-            (FLOAT_TYPE, INT_TYPE) => {
-                Variable::from(f64::from_bits(left.value) * right.value as f64)
-            }
-            (FLOAT_TYPE, FLOAT_TYPE) => {
-                Variable::from(f64::from_bits(left.value) * f64::from_bits(right.value))
+            (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
+                Variable::from(left.as_f64()? * right.as_f64()?)
             }
             _ => unreachable!(),
         };
@@ -198,14 +180,30 @@ impl Runner {
 
         let variable = match (left.value_type, right.value_type) {
             (INT_TYPE, INT_TYPE) => Variable::from(left.value as f64 / right.value as f64),
-            (INT_TYPE, FLOAT_TYPE) => {
-                Variable::from(left.value as f64 / f64::from_bits(right.value))
+            (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
+                Variable::from(left.as_f64()? / right.as_f64()?)
             }
-            (FLOAT_TYPE, INT_TYPE) => {
-                Variable::from(f64::from_bits(left.value) / right.value as f64)
+            _ => unreachable!(),
+        };
+
+        self.acc_push(gvs, variable)?;
+
+        Ok(())
+    }
+
+    fn eq(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        let right = self.acc_pop(gvs)?.clone();
+        let left = self.acc_pop(gvs)?.clone();
+
+        let variable = match (left.value_type, right.value_type) {
+            (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 == right.value as i64),
+            (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
+                Variable::from(left.as_f64()? == right.as_f64()?)
             }
-            (FLOAT_TYPE, FLOAT_TYPE) => {
-                Variable::from(f64::from_bits(left.value) / f64::from_bits(right.value))
+            (STRING_TYPE, STRING_TYPE) => {
+                let left_string = gvs.collection_string(left.value)?;
+                let right_string = gvs.collection_string(right.value)?;
+                Variable::from(left_string == right_string)
             }
             _ => unreachable!(),
         };
@@ -224,6 +222,7 @@ impl Runner {
             Instruction::Minus => self.minus(gvs),
             Instruction::Mul => self.mul(gvs),
             Instruction::Div => self.div(gvs),
+            Instruction::Eq => self.eq(gvs),
             _ => todo!(),
         }?;
 
