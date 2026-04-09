@@ -692,3 +692,91 @@ fn eq_string_string() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn greated_eq_int_int() -> KsResult<()> {
+    let int_left = 10;
+    let int_right = 10;
+
+    let mut variable_left = Variable::from(int_left);
+    variable_left.owners = 2;
+    let mut variable_right = Variable::from(int_right);
+    variable_right.owners = 2;
+    let mut variable_result = Variable::from(int_left >= int_right);
+    variable_result.owners = 1;
+
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::GreaterEq,
+    )?;
+
+    Ok(())
+}
+
+#[test]
+fn greated_eq_int_float() -> KsResult<()> {
+    let int_left = 10;
+    let float_right = 3.14;
+
+    let mut variable_left = Variable::from(int_left);
+    variable_left.owners = 2;
+    let mut variable_right = Variable::from(float_right);
+    variable_right.owners = 2;
+    let mut variable_result = Variable::from((int_left as f64) >= float_right);
+    variable_result.owners = 1;
+
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::GreaterEq,
+    )?;
+
+    Ok(())
+}
+
+#[test]
+fn greated_eq_float_int() -> KsResult<()> {
+    let float_left = 3.14;
+    let int_right = 10;
+
+    let mut variable_left = Variable::from(float_left);
+    variable_left.owners = 2;
+    let mut variable_right = Variable::from(int_right);
+    variable_right.owners = 2;
+    let mut variable_result = Variable::from(float_left >= (int_right as f64));
+    variable_result.owners = 1;
+
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::GreaterEq,
+    )?;
+
+    Ok(())
+}
+
+#[test]
+fn greated_eq_float_float() -> KsResult<()> {
+    let float_left = 3.14;
+    let float_right = 1.23;
+
+    let mut variable_left = Variable::from(float_left);
+    variable_left.owners = 2;
+    let mut variable_right = Variable::from(float_right);
+    variable_right.owners = 2;
+    let mut variable_result = Variable::from(float_left >= float_right);
+    variable_result.owners = 1;
+
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::GreaterEq,
+    )?;
+
+    Ok(())
+}
