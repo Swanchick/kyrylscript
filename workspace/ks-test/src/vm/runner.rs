@@ -167,22 +167,12 @@ fn add_int_int() -> KsResult<()> {
     let mut variable_result = Variable::from(int_left + int_right);
     variable_result.owners = 1;
 
-    let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
-
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Add)?;
-
-    assert_eq!(driver.runner.program_counter, 1);
-    assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc[0], 2);
-
-    let gvs_variable1_left = driver.gvs.storage[0].clone().unwrap();
-    let gvs_variable1_right = driver.gvs.storage[1].clone().unwrap();
-    let gvs_variable1_result = driver.gvs.storage[2].clone().unwrap();
-
-    assert_eq!(gvs_variable1_left.owners, 1);
-    assert_eq!(gvs_variable1_right.owners, 1);
-    assert_eq!(gvs_variable1_result, variable_result);
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::Add,
+    )?;
 
     Ok(())
 }
@@ -199,22 +189,12 @@ fn add_int_float() -> KsResult<()> {
     let mut variable_result = Variable::from((int_left as f64) + float_right);
     variable_result.owners = 1;
 
-    let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
-
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Add)?;
-
-    assert_eq!(driver.runner.program_counter, 1);
-    assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc[0], 2);
-
-    let gvs_variable1_left = driver.gvs.storage[0].clone().unwrap();
-    let gvs_variable1_right = driver.gvs.storage[1].clone().unwrap();
-    let gvs_variable1_result = driver.gvs.storage[2].clone().unwrap();
-
-    assert_eq!(gvs_variable1_left.owners, 1);
-    assert_eq!(gvs_variable1_right.owners, 1);
-    assert_eq!(gvs_variable1_result, variable_result);
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::Add,
+    )?;
 
     Ok(())
 }
@@ -231,22 +211,12 @@ fn add_float_int() -> KsResult<()> {
     let mut variable_result = Variable::from(float_left + (int_right as f64));
     variable_result.owners = 1;
 
-    let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
-
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Add)?;
-
-    assert_eq!(driver.runner.program_counter, 1);
-    assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc[0], 2);
-
-    let gvs_variable1_left = driver.gvs.storage[0].clone().unwrap();
-    let gvs_variable1_right = driver.gvs.storage[1].clone().unwrap();
-    let gvs_variable1_result = driver.gvs.storage[2].clone().unwrap();
-
-    assert_eq!(gvs_variable1_left.owners, 1);
-    assert_eq!(gvs_variable1_right.owners, 1);
-    assert_eq!(gvs_variable1_result, variable_result);
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::Add,
+    )?;
 
     Ok(())
 }
@@ -263,22 +233,12 @@ fn add_float_float() -> KsResult<()> {
     let mut variable_result = Variable::from(float_left + float_right);
     variable_result.owners = 1;
 
-    let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
-
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Add)?;
-
-    assert_eq!(driver.runner.program_counter, 1);
-    assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc[0], 2);
-
-    let gvs_variable1_left = driver.gvs.storage[0].clone().unwrap();
-    let gvs_variable1_right = driver.gvs.storage[1].clone().unwrap();
-    let gvs_variable1_result = driver.gvs.storage[2].clone().unwrap();
-
-    assert_eq!(gvs_variable1_left.owners, 1);
-    assert_eq!(gvs_variable1_right.owners, 1);
-    assert_eq!(gvs_variable1_result, variable_result);
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::Add,
+    )?;
 
     Ok(())
 }
@@ -335,22 +295,12 @@ fn minus_int_int() -> KsResult<()> {
     let mut variable_result = Variable::from(int_left - int_right);
     variable_result.owners = 1;
 
-    let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
-
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Minus)?;
-
-    assert_eq!(driver.runner.program_counter, 1);
-    assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc[0], 2);
-
-    let gvs_variable1_left = driver.gvs.storage[0].clone().unwrap();
-    let gvs_variable1_right = driver.gvs.storage[1].clone().unwrap();
-    let gvs_variable1_result = driver.gvs.storage[2].clone().unwrap();
-
-    assert_eq!(gvs_variable1_left.owners, 1);
-    assert_eq!(gvs_variable1_right.owners, 1);
-    assert_eq!(gvs_variable1_result, variable_result);
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::Minus,
+    )?;
 
     Ok(())
 }
@@ -367,22 +317,12 @@ fn minus_int_float() -> KsResult<()> {
     let mut variable_result = Variable::from((int_left as f64) - float_right);
     variable_result.owners = 1;
 
-    let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
-
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Minus)?;
-
-    assert_eq!(driver.runner.program_counter, 1);
-    assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc[0], 2);
-
-    let gvs_variable1_left = driver.gvs.storage[0].clone().unwrap();
-    let gvs_variable1_right = driver.gvs.storage[1].clone().unwrap();
-    let gvs_variable1_result = driver.gvs.storage[2].clone().unwrap();
-
-    assert_eq!(gvs_variable1_left.owners, 1);
-    assert_eq!(gvs_variable1_right.owners, 1);
-    assert_eq!(gvs_variable1_result, variable_result);
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::Minus,
+    )?;
 
     Ok(())
 }
@@ -399,22 +339,12 @@ fn minus_float_int() -> KsResult<()> {
     let mut variable_result = Variable::from(float_left - (int_right as f64));
     variable_result.owners = 1;
 
-    let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
-
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Minus)?;
-
-    assert_eq!(driver.runner.program_counter, 1);
-    assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc[0], 2);
-
-    let gvs_variable1_left = driver.gvs.storage[0].clone().unwrap();
-    let gvs_variable1_right = driver.gvs.storage[1].clone().unwrap();
-    let gvs_variable1_result = driver.gvs.storage[2].clone().unwrap();
-
-    assert_eq!(gvs_variable1_left.owners, 1);
-    assert_eq!(gvs_variable1_right.owners, 1);
-    assert_eq!(gvs_variable1_result, variable_result);
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::Minus,
+    )?;
 
     Ok(())
 }
@@ -431,22 +361,12 @@ fn minus_float_float() -> KsResult<()> {
     let mut variable_result = Variable::from(float_left - float_right);
     variable_result.owners = 1;
 
-    let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
-
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Minus)?;
-
-    assert_eq!(driver.runner.program_counter, 1);
-    assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc[0], 2);
-
-    let gvs_variable1_left = driver.gvs.storage[0].clone().unwrap();
-    let gvs_variable1_right = driver.gvs.storage[1].clone().unwrap();
-    let gvs_variable1_result = driver.gvs.storage[2].clone().unwrap();
-
-    assert_eq!(gvs_variable1_left.owners, 1);
-    assert_eq!(gvs_variable1_right.owners, 1);
-    assert_eq!(gvs_variable1_result, variable_result);
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::Minus,
+    )?;
 
     Ok(())
 }
@@ -463,22 +383,12 @@ fn mul_int_int() -> KsResult<()> {
     let mut variable_result = Variable::from(int_left * int_right);
     variable_result.owners = 1;
 
-    let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
-
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Mul)?;
-
-    assert_eq!(driver.runner.program_counter, 1);
-    assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc[0], 2);
-
-    let gvs_variable1_left = driver.gvs.storage[0].clone().unwrap();
-    let gvs_variable1_right = driver.gvs.storage[1].clone().unwrap();
-    let gvs_variable1_result = driver.gvs.storage[2].clone().unwrap();
-
-    assert_eq!(gvs_variable1_left.owners, 1);
-    assert_eq!(gvs_variable1_right.owners, 1);
-    assert_eq!(gvs_variable1_result, variable_result);
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::Mul,
+    )?;
 
     Ok(())
 }
@@ -495,22 +405,12 @@ fn mul_int_float() -> KsResult<()> {
     let mut variable_result = Variable::from((int_left as f64) * float_right);
     variable_result.owners = 1;
 
-    let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
-
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Mul)?;
-
-    assert_eq!(driver.runner.program_counter, 1);
-    assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc[0], 2);
-
-    let gvs_variable1_left = driver.gvs.storage[0].clone().unwrap();
-    let gvs_variable1_right = driver.gvs.storage[1].clone().unwrap();
-    let gvs_variable1_result = driver.gvs.storage[2].clone().unwrap();
-
-    assert_eq!(gvs_variable1_left.owners, 1);
-    assert_eq!(gvs_variable1_right.owners, 1);
-    assert_eq!(gvs_variable1_result, variable_result);
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::Mul,
+    )?;
 
     Ok(())
 }
@@ -527,22 +427,12 @@ fn mul_float_int() -> KsResult<()> {
     let mut variable_result = Variable::from(float_left * (int_right as f64));
     variable_result.owners = 1;
 
-    let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
-
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Mul)?;
-
-    assert_eq!(driver.runner.program_counter, 1);
-    assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc[0], 2);
-
-    let gvs_variable1_left = driver.gvs.storage[0].clone().unwrap();
-    let gvs_variable1_right = driver.gvs.storage[1].clone().unwrap();
-    let gvs_variable1_result = driver.gvs.storage[2].clone().unwrap();
-
-    assert_eq!(gvs_variable1_left.owners, 1);
-    assert_eq!(gvs_variable1_right.owners, 1);
-    assert_eq!(gvs_variable1_result, variable_result);
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::Mul,
+    )?;
 
     Ok(())
 }
@@ -559,22 +449,12 @@ fn mul_float_float() -> KsResult<()> {
     let mut variable_result = Variable::from(float_left * float_right);
     variable_result.owners = 1;
 
-    let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
-
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Mul)?;
-
-    assert_eq!(driver.runner.program_counter, 1);
-    assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc[0], 2);
-
-    let gvs_variable1_left = driver.gvs.storage[0].clone().unwrap();
-    let gvs_variable1_right = driver.gvs.storage[1].clone().unwrap();
-    let gvs_variable1_result = driver.gvs.storage[2].clone().unwrap();
-
-    assert_eq!(gvs_variable1_left.owners, 1);
-    assert_eq!(gvs_variable1_right.owners, 1);
-    assert_eq!(gvs_variable1_result, variable_result);
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::Mul,
+    )?;
 
     Ok(())
 }
@@ -591,22 +471,12 @@ fn div_int_int() -> KsResult<()> {
     let mut variable_result = Variable::from(int_left as f64 / int_right as f64);
     variable_result.owners = 1;
 
-    let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
-
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Div)?;
-
-    assert_eq!(driver.runner.program_counter, 1);
-    assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc[0], 2);
-
-    let gvs_variable1_left = driver.gvs.storage[0].clone().unwrap();
-    let gvs_variable1_right = driver.gvs.storage[1].clone().unwrap();
-    let gvs_variable1_result = driver.gvs.storage[2].clone().unwrap();
-
-    assert_eq!(gvs_variable1_left.owners, 1);
-    assert_eq!(gvs_variable1_right.owners, 1);
-    assert_eq!(gvs_variable1_result, variable_result);
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::Div,
+    )?;
 
     Ok(())
 }
@@ -623,22 +493,12 @@ fn div_int_float() -> KsResult<()> {
     let mut variable_result = Variable::from((int_left as f64) / float_right);
     variable_result.owners = 1;
 
-    let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
-
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Div)?;
-
-    assert_eq!(driver.runner.program_counter, 1);
-    assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc[0], 2);
-
-    let gvs_variable1_left = driver.gvs.storage[0].clone().unwrap();
-    let gvs_variable1_right = driver.gvs.storage[1].clone().unwrap();
-    let gvs_variable1_result = driver.gvs.storage[2].clone().unwrap();
-
-    assert_eq!(gvs_variable1_left.owners, 1);
-    assert_eq!(gvs_variable1_right.owners, 1);
-    assert_eq!(gvs_variable1_result, variable_result);
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::Div,
+    )?;
 
     Ok(())
 }
@@ -655,22 +515,12 @@ fn div_float_int() -> KsResult<()> {
     let mut variable_result = Variable::from(float_left / (int_right as f64));
     variable_result.owners = 1;
 
-    let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
-
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Div)?;
-
-    assert_eq!(driver.runner.program_counter, 1);
-    assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc[0], 2);
-
-    let gvs_variable1_left = driver.gvs.storage[0].clone().unwrap();
-    let gvs_variable1_right = driver.gvs.storage[1].clone().unwrap();
-    let gvs_variable1_result = driver.gvs.storage[2].clone().unwrap();
-
-    assert_eq!(gvs_variable1_left.owners, 1);
-    assert_eq!(gvs_variable1_right.owners, 1);
-    assert_eq!(gvs_variable1_result, variable_result);
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::Div,
+    )?;
 
     Ok(())
 }
@@ -687,22 +537,12 @@ fn div_float_float() -> KsResult<()> {
     let mut variable_result = Variable::from(float_left / float_right);
     variable_result.owners = 1;
 
-    let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
-
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Div)?;
-
-    assert_eq!(driver.runner.program_counter, 1);
-    assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc[0], 2);
-
-    let gvs_variable1_left = driver.gvs.storage[0].clone().unwrap();
-    let gvs_variable1_right = driver.gvs.storage[1].clone().unwrap();
-    let gvs_variable1_result = driver.gvs.storage[2].clone().unwrap();
-
-    assert_eq!(gvs_variable1_left.owners, 1);
-    assert_eq!(gvs_variable1_right.owners, 1);
-    assert_eq!(gvs_variable1_result, variable_result);
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::Div,
+    )?;
 
     Ok(())
 }
