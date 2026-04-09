@@ -213,6 +213,23 @@ impl Runner {
         Ok(())
     }
 
+    fn greater_eq(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        let right = self.acc_pop(gvs)?.clone();
+        let left = self.acc_pop(gvs)?.clone();
+
+        let variable = match (left.value_type, right.value_type) {
+            (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 >= right.value as i64),
+            (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
+                Variable::from(left.as_f64()? >= right.as_f64()?)
+            }
+            _ => unreachable!(),
+        };
+
+        self.acc_push(gvs, variable)?;
+
+        Ok(())
+    }
+
     pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
         match instruction {
             Instruction::LoadConst(constant) => self.load_const(gvs, constant),
@@ -223,6 +240,7 @@ impl Runner {
             Instruction::Mul => self.mul(gvs),
             Instruction::Div => self.div(gvs),
             Instruction::Eq => self.eq(gvs),
+            Instruction::GreaterEq => self.greater_eq(gvs),
             _ => todo!(),
         }?;
 
