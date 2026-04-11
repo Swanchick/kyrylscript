@@ -252,7 +252,7 @@ impl Runner {
         let left = self.acc_pop(gvs)?.clone();
 
         let variable = match (left.value_type, right.value_type) {
-            (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 > right.value as i64),
+            (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 <= right.value as i64),
             (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
                 Variable::from(left.as_f64()? <= right.as_f64()?)
             }
@@ -269,7 +269,7 @@ impl Runner {
         let left = self.acc_pop(gvs)?.clone();
 
         let variable = match (left.value_type, right.value_type) {
-            (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 > right.value as i64),
+            (INT_TYPE, INT_TYPE) => Variable::from((left.value as i64) < (right.value as i64)),
             (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
                 Variable::from(left.as_f64()? < right.as_f64()?)
             }
