@@ -352,3 +352,5 @@ fn eq_string_string() -> KsResult<()> {
 
 operation!(greater_eq, Instruction::GreaterEq, >=);
 operation!(greater, Instruction::Greater, >);
+operation!(less_eq, Instruction::LessEq, <=);
+operation!(less, Instruction::Less, <=);
