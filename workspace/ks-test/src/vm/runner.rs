@@ -642,7 +642,7 @@ fn clone_primitive() -> KsResult<()> {
         None,
     );
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Decrement)?;
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Clone)?;
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.acc.len(), 1);
@@ -678,7 +678,7 @@ fn clone_collection() -> KsResult<()> {
         None,
     );
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Decrement)?;
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Clone)?;
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.acc.len(), 1);
