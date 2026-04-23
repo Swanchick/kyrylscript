@@ -89,16 +89,44 @@ impl Runner {
         let left = self.acc.pop(gvs)?;
 
         let variable = match (left.value_type, right.value_type) {
-            (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 + right.value as i64),
+            (INT_TYPE, INT_TYPE) => Ok(Variable::from(left.value as i64 + right.value as i64)),
             (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
-                Variable::from(left.as_f64()? + right.as_f64()?)
+                Ok(Variable::from(left.as_f64()? + right.as_f64()?))
             }
             (STRING_TYPE, STRING_TYPE) => {
                 let collection_id = Self::add_strings(gvs, left.value, right.value)?;
-                Variable::string(collection_id)
+                Ok(Variable::string(collection_id))
             }
-            _ => unreachable!(),
-        };
+            _ => Err(KsError::runtime("Invalid type")),
+        }?;
+
+        self.acc.push(gvs, variable)?;
+
+        Ok(())
+    }
+
+    fn binary_op<RI, RF>(
+        &mut self,
+        gvs: &mut GVS,
+        operation_int: impl Fn(i64, i64) -> RI,
+        operation_float: impl Fn(f64, f64) -> RF,
+    ) -> KsResult<()>
+    where
+        Variable: From<RI> + From<RF>,
+    {
+        let right = self.acc.pop(gvs)?;
+        let left = self.acc.pop(gvs)?;
+
+        let variable = match (left.value_type, right.value_type) {
+            (INT_TYPE, INT_TYPE) => Ok(Variable::from(operation_int(
+                left.value as i64,
+                right.value as i64,
+            ))),
+            (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => Ok(
+                Variable::from(operation_float(left.as_f64()?, right.as_f64()?)),
+            ),
+            _ => Err(KsError::runtime("Invalid type")),
+        }?;
 
         self.acc.push(gvs, variable)?;
 
@@ -106,76 +134,40 @@ impl Runner {
     }
 
     fn minus(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let right = self.acc.pop(gvs)?;
-        let left = self.acc.pop(gvs)?;
-
-        let variable = match (left.value_type, right.value_type) {
-            (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 - right.value as i64),
-            (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
-                Variable::from(left.as_f64()? - right.as_f64()?)
-            }
-            _ => unreachable!(),
-        };
-
-        self.acc.push(gvs, variable)?;
-
+        self.binary_op(gvs, |l, r| l - r, |l, r| l - r)?;
         Ok(())
     }
 
     fn mul(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let right = self.acc.pop(gvs)?;
-        let left = self.acc.pop(gvs)?;
+        self.binary_op(gvs, |l, r| l * r, |l, r| l * r)?;
+        Ok(())
+    }
 
-        let variable = match (left.value_type, right.value_type) {
-            (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 * right.value as i64),
-            (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
-                Variable::from(left.as_f64()? * right.as_f64()?)
-            }
-            _ => unreachable!(),
-        };
+    fn check_zero_division(&self, gvs: &mut GVS) -> KsResult<()> {
+        let variable = self.acc.last(gvs)?;
+        let float_value = variable.as_f64()?;
 
-        self.acc.push(gvs, variable)?;
+        if (variable.value_type == INT_TYPE || variable.value_type == FLOAT_TYPE)
+            && float_value == 0.0
+        {
+            return Err(KsError::runtime("Zero division error"));
+        }
 
         Ok(())
     }
 
     fn div(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let right = self.acc.pop(gvs)?;
-        if (right.value_type == INT_TYPE || right.value_type == FLOAT_TYPE) && right.value == 0 {
-            return Err(KsError::runtime("Zero division error"));
-        }
-
-        let left = self.acc.pop(gvs)?;
-
-        let variable = match (left.value_type, right.value_type) {
-            (INT_TYPE, INT_TYPE) => Variable::from(left.value as f64 / right.value as f64),
-            (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
-                Variable::from(left.as_f64()? / right.as_f64()?)
-            }
-            _ => unreachable!(),
-        };
-
-        self.acc.push(gvs, variable)?;
-
-        Ok(())
-    }
-
-    fn eq(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        self.check_zero_division(gvs)?;
         let right = self.acc.pop(gvs)?;
         let left = self.acc.pop(gvs)?;
 
         let variable = match (left.value_type, right.value_type) {
-            (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 == right.value as i64),
+            (INT_TYPE, INT_TYPE) => Ok(Variable::from(left.value as f64 / right.value as f64)),
             (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
-                Variable::from(left.as_f64()? == right.as_f64()?)
+                Ok(Variable::from(left.as_f64()? / right.as_f64()?))
             }
-            (STRING_TYPE, STRING_TYPE) => {
-                let left_string = gvs.collection_string(left.value)?;
-                let right_string = gvs.collection_string(right.value)?;
-                Variable::from(left_string == right_string)
-            }
-            _ => unreachable!(),
-        };
+            _ => Err(KsError::runtime("Invalid type")),
+        }?;
 
         self.acc.push(gvs, variable)?;
 
@@ -183,89 +175,70 @@ impl Runner {
     }
 
     fn greater_eq(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let right = self.acc.pop(gvs)?;
-        let left = self.acc.pop(gvs)?;
-
-        let variable = match (left.value_type, right.value_type) {
-            (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 >= right.value as i64),
-            (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
-                Variable::from(left.as_f64()? >= right.as_f64()?)
-            }
-            _ => unreachable!(),
-        };
-
-        self.acc.push(gvs, variable)?;
-
+        self.binary_op(gvs, |l, r| l >= r, |l, r| l >= r)?;
         Ok(())
     }
 
     fn greater(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let right = self.acc.pop(gvs)?;
-        let left = self.acc.pop(gvs)?;
-
-        let variable = match (left.value_type, right.value_type) {
-            (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 > right.value as i64),
-            (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
-                Variable::from(left.as_f64()? > right.as_f64()?)
-            }
-            _ => unreachable!(),
-        };
-
-        self.acc.push(gvs, variable)?;
-
+        self.binary_op(gvs, |l, r| l > r, |l, r| l > r)?;
         Ok(())
     }
 
     fn less_eq(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let right = self.acc.pop(gvs)?;
-        let left = self.acc.pop(gvs)?;
-
-        let variable = match (left.value_type, right.value_type) {
-            (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 <= right.value as i64),
-            (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
-                Variable::from(left.as_f64()? <= right.as_f64()?)
-            }
-            _ => unreachable!(),
-        };
-
-        self.acc.push(gvs, variable)?;
-
+        self.binary_op(gvs, |l, r| l <= r, |l, r| l <= r)?;
         Ok(())
     }
 
     fn less(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        self.binary_op(gvs, |l, r| l < r, |l, r| l < r)?;
+        Ok(())
+    }
+
+    fn equal(&mut self, gvs: &mut GVS) -> KsResult<Variable> {
         let right = self.acc.pop(gvs)?;
         let left = self.acc.pop(gvs)?;
 
         let variable = match (left.value_type, right.value_type) {
-            (INT_TYPE, INT_TYPE) => Variable::from((left.value as i64) < (right.value as i64)),
+            (INT_TYPE, INT_TYPE) => Ok(Variable::from(left.value as i64 == right.value as i64)),
             (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
-                Variable::from(left.as_f64()? < right.as_f64()?)
+                Ok(Variable::from(left.as_f64()? == right.as_f64()?))
             }
-            _ => unreachable!(),
-        };
+            (STRING_TYPE, STRING_TYPE) => {
+                let left_string = gvs.collection_string(left.value)?;
+                let right_string = gvs.collection_string(right.value)?;
+                Ok(Variable::from(left_string == right_string))
+            }
+            _ => Err(KsError::runtime("Invalid type")),
+        }?;
 
+        Ok(variable)
+    }
+
+    fn eq(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        let variable = self.equal(gvs)?;
+        self.acc.push(gvs, variable)?;
+        Ok(())
+    }
+
+    fn not_eq(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        let variable = self.equal(gvs)?;
+        let variable = Variable::from(!variable.as_boolean());
         self.acc.push(gvs, variable)?;
 
         Ok(())
     }
 
-    fn not_eq(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn bool_op(&mut self, gvs: &mut GVS, operation: impl Fn(bool, bool) -> bool) -> KsResult<()> {
         let right = self.acc.pop(gvs)?;
         let left = self.acc.pop(gvs)?;
 
         let variable = match (left.value_type, right.value_type) {
-            (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 != right.value as i64),
-            (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
-                Variable::from(left.as_f64()? != right.as_f64()?)
-            }
-            (STRING_TYPE, STRING_TYPE) => {
-                let left_string = gvs.collection_string(left.value)?;
-                let right_string = gvs.collection_string(right.value)?;
-                Variable::from(left_string != right_string)
-            }
-            _ => unreachable!(),
-        };
+            (BOOLEAN_TYPE, BOOLEAN_TYPE) => Ok(Variable::from(operation(
+                left.as_boolean(),
+                right.as_boolean(),
+            ))),
+            _ => Err(KsError::runtime("Invalid type")),
+        }?;
 
         self.acc.push(gvs, variable)?;
 
@@ -273,30 +246,12 @@ impl Runner {
     }
 
     fn and(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let right = self.acc.pop(gvs)?;
-        let left = self.acc.pop(gvs)?;
-
-        let variable = match (left.value_type, right.value_type) {
-            (BOOLEAN_TYPE, BOOLEAN_TYPE) => Variable::from(left.as_boolean() && right.as_boolean()),
-            _ => unreachable!(),
-        };
-
-        self.acc.push(gvs, variable)?;
-
+        self.bool_op(gvs, |l, r| l && r)?;
         Ok(())
     }
 
     fn or(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let right = self.acc.pop(gvs)?;
-        let left = self.acc.pop(gvs)?;
-
-        let variable = match (left.value_type, right.value_type) {
-            (BOOLEAN_TYPE, BOOLEAN_TYPE) => Variable::from(left.as_boolean() || right.as_boolean()),
-            _ => unreachable!(),
-        };
-
-        self.acc.push(gvs, variable)?;
-
+        self.bool_op(gvs, |l, r| l || r)?;
         Ok(())
     }
 
