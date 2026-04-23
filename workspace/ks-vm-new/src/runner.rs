@@ -162,10 +162,10 @@ impl Runner {
         let left = self.acc.pop(gvs)?;
 
         let variable = match (left.value_type, right.value_type) {
-            (INT_TYPE, INT_TYPE) => Ok(Variable::from(left.as_f64()? / right.as_f64()?)),
-            (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
-                Ok(Variable::from(left.as_f64()? / right.as_f64()?))
-            }
+            (INT_TYPE, INT_TYPE)
+            | (INT_TYPE, FLOAT_TYPE)
+            | (FLOAT_TYPE, INT_TYPE)
+            | (FLOAT_TYPE, FLOAT_TYPE) => Ok(Variable::from(left.as_f64()? / right.as_f64()?)),
             _ => Err(KsError::runtime("Invalid type")),
         }?;
 
@@ -258,15 +258,9 @@ impl Runner {
     fn not(&mut self, gvs: &mut GVS) -> KsResult<()> {
         let variable = self.acc.pop(gvs)?;
 
-        if variable.value_type == BOOLEAN_TYPE {
-            let value = variable.as_boolean();
-            let new_variable = Variable::from(!value);
-
-            self.acc.push(gvs, new_variable)?;
-
-            Ok(())
-        } else {
-            Err(KsError::runtime("Invalid value_type for not operator"))
+        match variable.value_type {
+            BOOLEAN_TYPE => self.acc.push(gvs, Variable::from(!variable.as_boolean())),
+            _ => Err(KsError::runtime("Invalid value_type for not operator")),
         }
     }
 
