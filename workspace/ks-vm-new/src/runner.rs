@@ -162,7 +162,7 @@ impl Runner {
         let left = self.acc.pop(gvs)?;
 
         let variable = match (left.value_type, right.value_type) {
-            (INT_TYPE, INT_TYPE) => Ok(Variable::from(left.value as f64 / right.value as f64)),
+            (INT_TYPE, INT_TYPE) => Ok(Variable::from(left.as_f64()? / right.as_f64()?)),
             (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => {
                 Ok(Variable::from(left.as_f64()? / right.as_f64()?))
             }

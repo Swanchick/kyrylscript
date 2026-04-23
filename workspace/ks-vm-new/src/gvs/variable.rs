@@ -56,7 +56,7 @@ impl Variable {
 
     pub fn as_f64(&self) -> KsResult<f64> {
         match self.value_type {
-            INT_TYPE => Ok(self.value as f64),
+            INT_TYPE => Ok(self.value as i64 as f64),
             FLOAT_TYPE => Ok(f64::from_bits(self.value)),
             _ => Err(KsError::runtime("Cannot convert to float")),
         }
