@@ -1,5 +1,5 @@
 use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
-use ks_vm_new::{Collection, Constant, Instruction, Variable};
+use ks_vm_new::{Collection, Constant, Instruction, Stack, Variable};
 
 use crate::drivers::KsDriver;
 use crate::drivers::utils::operation;
@@ -13,7 +13,7 @@ fn load_const_null() -> KsResult<()> {
     let driver = KsDriver::runner(Instruction::LoadConst(Constant::Null))?;
 
     assert_eq!(driver.runner.program_counter(), 1);
-    assert_eq!(driver.runner.acc[0], 0);
+    assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
 
     Ok(())
@@ -28,7 +28,7 @@ fn load_const_int() -> KsResult<()> {
     let driver = KsDriver::runner(Instruction::LoadConst(Constant::Integer(int)))?;
 
     assert_eq!(driver.runner.program_counter(), 1);
-    assert_eq!(driver.runner.acc[0], 0);
+    assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
 
     Ok(())
@@ -43,7 +43,7 @@ fn load_const_float() -> KsResult<()> {
     let driver = KsDriver::runner(Instruction::LoadConst(Constant::Float(float)))?;
 
     assert_eq!(driver.runner.program_counter(), 1);
-    assert_eq!(driver.runner.acc[0], 0);
+    assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
 
     Ok(())
@@ -58,7 +58,7 @@ fn load_const_string() -> KsResult<()> {
     let driver = KsDriver::runner(Instruction::LoadConst(Constant::String(string.clone())))?;
 
     assert_eq!(driver.runner.program_counter(), 1);
-    assert_eq!(driver.runner.acc[0], 0);
+    assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
     assert_eq!(driver.gvs.collections[0], Collection::String(string));
 
@@ -74,7 +74,7 @@ fn load_const_boolean() -> KsResult<()> {
     let driver = KsDriver::runner(Instruction::LoadConst(Constant::Boolean(boolean)))?;
 
     assert_eq!(driver.runner.program_counter(), 1);
-    assert_eq!(driver.runner.acc[0], 0);
+    assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
 
     Ok(())
@@ -87,7 +87,7 @@ fn load_var() -> KsResult<()> {
     let storage_id = 0;
 
     let gvs = KsDriver::gvs_storage(Some(vec![Some(int)]), None);
-    let runner = KsDriver::runner_default(None, Some(vec![storage_id]), false, None);
+    let runner = KsDriver::runner_default(None, Some(Stack::from(vec![storage_id])), false, None);
 
     let driver = KsDriver::runner_configured(runner, gvs, Instruction::LoadVar(0))?;
 
@@ -95,7 +95,7 @@ fn load_var() -> KsResult<()> {
 
     assert_eq!(variable.owners, 2);
     assert_eq!(driver.runner.program_counter(), 1);
-    assert_eq!(driver.runner.acc, vec![0]);
+    assert_eq!(driver.runner.acc.get(0), Some(&0));
 
     Ok(())
 }
@@ -103,7 +103,7 @@ fn load_var() -> KsResult<()> {
 #[test]
 fn load_var_invalid_storage_id() -> KsResult<()> {
     let storage_id = 5;
-    let runner = KsDriver::runner_default(None, Some(vec![storage_id]), false, None);
+    let runner = KsDriver::runner_default(None, Some(Stack::from(vec![storage_id])), false, None);
 
     let err = KsDriver::runner_configured(runner, None, Instruction::LoadVar(0)).unwrap_err();
     assert_eq!(
@@ -172,7 +172,12 @@ fn add_string_string() -> KsResult<()> {
     let mut variable_result = Variable::string(2);
     variable_result.owners = 1;
 
-    let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
+    let runner = KsDriver::runner_default(
+        Some(Stack::from(vec![0, 1])),
+        Some(Stack::from(vec![0, 1])),
+        false,
+        None,
+    );
     let gvs = KsDriver::gvs_storage(
         Some(vec![Some(variable_left), Some(variable_right)]),
         Some(vec![
@@ -185,7 +190,7 @@ fn add_string_string() -> KsResult<()> {
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc[0], 2);
+    assert_eq!(driver.runner.acc.get(0), Some(&2));
 
     let gvs_variable1_left = driver.gvs.storage[0].clone().unwrap();
     let gvs_variable1_right = driver.gvs.storage[1].clone().unwrap();
@@ -300,7 +305,12 @@ fn div_zero_division_error() -> KsResult<()> {
     let mut variable_right = Variable::from(float_right);
     variable_right.owners = 2;
 
-    let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
+    let runner = KsDriver::runner_default(
+        Some(Stack::from(vec![0, 1])),
+        Some(Stack::from(vec![0, 1])),
+        false,
+        None,
+    );
     let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
 
     let err = KsDriver::runner_configured(runner, gvs, Instruction::Div).unwrap_err();
@@ -324,7 +334,12 @@ fn eq_string_string() -> KsResult<()> {
     let mut variable_result = Variable::from(string_left == string_right);
     variable_result.owners = 1;
 
-    let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
+    let runner = KsDriver::runner_default(
+        Some(Stack::from(vec![0, 1])),
+        Some(Stack::from(vec![0, 1])),
+        false,
+        None,
+    );
     let gvs = KsDriver::gvs_storage(
         Some(vec![Some(variable_left), Some(variable_right)]),
         Some(vec![
@@ -337,7 +352,7 @@ fn eq_string_string() -> KsResult<()> {
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc[0], 2);
+    assert_eq!(driver.runner.acc.get(0), Some(&2));
 
     let gvs_variable1_left = driver.gvs.storage[0].clone().unwrap();
     let gvs_variable1_right = driver.gvs.storage[1].clone().unwrap();
@@ -369,7 +384,12 @@ fn not_eq_string_string() -> KsResult<()> {
     let mut variable_result = Variable::from(string_left != string_right);
     variable_result.owners = 1;
 
-    let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
+    let runner = KsDriver::runner_default(
+        Some(Stack::from(vec![0, 1])),
+        Some(Stack::from(vec![0, 1])),
+        false,
+        None,
+    );
     let gvs = KsDriver::gvs_storage(
         Some(vec![Some(variable_left), Some(variable_right)]),
         Some(vec![
@@ -382,7 +402,7 @@ fn not_eq_string_string() -> KsResult<()> {
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc[0], 2);
+    assert_eq!(driver.runner.acc.get(0), Some(&2));
 
     let gvs_variable1_left = driver.gvs.storage[0].clone().unwrap();
     let gvs_variable1_right = driver.gvs.storage[1].clone().unwrap();
@@ -391,6 +411,94 @@ fn not_eq_string_string() -> KsResult<()> {
     assert_eq!(gvs_variable1_left.owners, 1);
     assert_eq!(gvs_variable1_right.owners, 1);
     assert_eq!(gvs_variable1_result, variable_result);
+
+    Ok(())
+}
+
+#[test]
+fn and_true() -> KsResult<()> {
+    let left = true;
+    let right = true;
+
+    let mut variable_left = Variable::from(left);
+    variable_left.owners = 2;
+    let mut variable_right = Variable::from(right);
+    variable_right.owners = 2;
+    let mut variable_result = Variable::from(left && right);
+    variable_result.owners = 1;
+
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::And,
+    )?;
+
+    Ok(())
+}
+
+#[test]
+fn and_false() -> KsResult<()> {
+    let left = true;
+    let right = false;
+
+    let mut variable_left = Variable::from(left);
+    variable_left.owners = 2;
+    let mut variable_right = Variable::from(right);
+    variable_right.owners = 2;
+    let mut variable_result = Variable::from(left && right);
+    variable_result.owners = 1;
+
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::And,
+    )?;
+
+    Ok(())
+}
+
+#[test]
+fn or_true() -> KsResult<()> {
+    let left = false;
+    let right = true;
+
+    let mut variable_left = Variable::from(left);
+    variable_left.owners = 2;
+    let mut variable_right = Variable::from(right);
+    variable_right.owners = 2;
+    let mut variable_result = Variable::from(left && right);
+    variable_result.owners = 1;
+
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::Or,
+    )?;
+
+    Ok(())
+}
+
+#[test]
+fn or_false() -> KsResult<()> {
+    let left = false;
+    let right = false;
+
+    let mut variable_left = Variable::from(left);
+    variable_left.owners = 2;
+    let mut variable_right = Variable::from(right);
+    variable_right.owners = 2;
+    let mut variable_result = Variable::from(left && right);
+    variable_result.owners = 1;
+
+    KsDriver::operation_test(
+        variable_left,
+        variable_right,
+        variable_result,
+        Instruction::Or,
+    )?;
 
     Ok(())
 }

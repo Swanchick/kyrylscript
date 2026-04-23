@@ -5,7 +5,7 @@ use ks_core::parser::statement::Statement;
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 use ks_std::ks_register_std;
-use ks_vm_new::{Collection, GVS, Instruction, Runner, Variable};
+use ks_vm_new::{Collection, GVS, Instruction, Runner, Stack, Variable};
 
 use super::runner_driver::RunnerDriver;
 
@@ -85,16 +85,20 @@ impl KsDriver {
     }
 
     pub fn runner_default(
-        acc: Option<Vec<u64>>,
-        stack: Option<Vec<u64>>,
+        acc: Option<Stack>,
+        stack: Option<Stack>,
         prevent_step: bool,
         program_counter: Option<usize>,
     ) -> Option<Runner> {
-        let acc = if let Some(acc) = acc { acc } else { Vec::new() };
+        let acc = if let Some(acc) = acc {
+            acc
+        } else {
+            Stack::new()
+        };
         let stack = if let Some(stack) = stack {
             stack
         } else {
-            Vec::new()
+            Stack::new()
         };
         let program_counter = if let Some(program_counter) = program_counter {
             program_counter
@@ -132,7 +136,12 @@ impl KsDriver {
         result: Variable,
         instruction: Instruction,
     ) -> KsResult<()> {
-        let runner = KsDriver::runner_default(Some(vec![0, 1]), Some(vec![0, 1]), false, None);
+        let runner = KsDriver::runner_default(
+            Some(Stack::from(vec![0, 1])),
+            Some(Stack::from(vec![0, 1])),
+            false,
+            None,
+        );
         let gvs = KsDriver::gvs_storage(Some(vec![Some(left), Some(right)]), None);
 
         let driver = KsDriver::runner_configured(runner, gvs, instruction)?;
@@ -145,7 +154,7 @@ impl KsDriver {
             return Err(KsError::runtime("Wrong acc size"));
         }
 
-        if driver.runner.acc[0] != 2 {
+        if driver.runner.acc.get(0).unwrap() != &2 {
             return Err(KsError::runtime("Acc doesn't have the variable"));
         }
 

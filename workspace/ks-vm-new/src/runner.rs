@@ -1,10 +1,11 @@
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
-use super::types::{Offset, Pointer, Slot, Stack, StorageId};
+use super::types::{Offset, Pointer, Slot};
 use super::{Constant, Instruction};
-use crate::gvs::variable::{FLOAT_TYPE, INT_TYPE, STRING_TYPE};
-use crate::gvs::{GVS, Variable};
+
+use crate::gvs::variable::{BOOLEAN_TYPE, FLOAT_TYPE, INT_TYPE, STRING_TYPE};
+use crate::gvs::{GVS, Stack, Variable};
 use crate::types::CollectionId;
 
 #[derive(Debug)]
@@ -19,40 +20,9 @@ impl Runner {
     pub fn new() -> Self {
         Self {
             program_counter: 0,
-            acc: Vec::new(),
-            stack: Vec::new(),
+            acc: Stack::new(),
+            stack: Stack::new(),
             prevent_step: false,
-        }
-    }
-
-    fn storage(&self, slot: Slot) -> KsResult<StorageId> {
-        if let Some(storage_id) = self.stack.get(slot as usize) {
-            Ok(*storage_id)
-        } else {
-            Err(KsError::runtime(&format!(
-                "Cannot get storage_id by slot {}",
-                slot
-            )))
-        }
-    }
-
-    fn acc_push(&mut self, gvs: &mut GVS, variable: Variable) -> KsResult<()> {
-        let storage_id = gvs.store(variable);
-        gvs.storage_add_owner(storage_id)?;
-
-        self.acc.push(storage_id);
-
-        Ok(())
-    }
-
-    fn acc_pop<'a>(&mut self, gvs: &'a mut GVS) -> KsResult<&'a Variable> {
-        if let Some(storage_id) = self.acc.pop() {
-            gvs.storage_remove_owner(storage_id)?;
-            let variable = gvs.variable(storage_id)?;
-
-            Ok(variable)
-        } else {
-            Err(KsError::runtime("No Varialbe in ACC"))
         }
     }
 
@@ -79,15 +49,14 @@ impl Runner {
             Constant::String(string) => Self::load_const_string(gvs, string),
         };
 
-        self.acc_push(gvs, variable)?;
+        self.acc.push(gvs, variable)?;
 
         Ok(())
     }
 
     fn load_var(&mut self, gvs: &mut GVS, slot: Slot) -> KsResult<()> {
-        let storage_id = self.storage(slot)?;
-        gvs.storage_add_owner(storage_id)?;
-        self.acc.push(storage_id);
+        let storage_id = self.stack.storage_id(slot)?;
+        self.acc.push_storage_id(gvs, storage_id)?;
 
         Ok(())
     }
@@ -116,8 +85,8 @@ impl Runner {
     }
 
     fn add(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let right = self.acc_pop(gvs)?.clone();
-        let left = self.acc_pop(gvs)?.clone();
+        let right = self.acc.pop(gvs)?;
+        let left = self.acc.pop(gvs)?;
 
         let variable = match (left.value_type, right.value_type) {
             (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 + right.value as i64),
@@ -131,14 +100,14 @@ impl Runner {
             _ => unreachable!(),
         };
 
-        self.acc_push(gvs, variable)?;
+        self.acc.push(gvs, variable)?;
 
         Ok(())
     }
 
     fn minus(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let right = self.acc_pop(gvs)?.clone();
-        let left = self.acc_pop(gvs)?.clone();
+        let right = self.acc.pop(gvs)?;
+        let left = self.acc.pop(gvs)?;
 
         let variable = match (left.value_type, right.value_type) {
             (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 - right.value as i64),
@@ -148,14 +117,14 @@ impl Runner {
             _ => unreachable!(),
         };
 
-        self.acc_push(gvs, variable)?;
+        self.acc.push(gvs, variable)?;
 
         Ok(())
     }
 
     fn mul(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let right = self.acc_pop(gvs)?.clone();
-        let left = self.acc_pop(gvs)?.clone();
+        let right = self.acc.pop(gvs)?;
+        let left = self.acc.pop(gvs)?;
 
         let variable = match (left.value_type, right.value_type) {
             (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 * right.value as i64),
@@ -165,18 +134,18 @@ impl Runner {
             _ => unreachable!(),
         };
 
-        self.acc_push(gvs, variable)?;
+        self.acc.push(gvs, variable)?;
 
         Ok(())
     }
 
     fn div(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let right = self.acc_pop(gvs)?.clone();
+        let right = self.acc.pop(gvs)?;
         if (right.value_type == INT_TYPE || right.value_type == FLOAT_TYPE) && right.value == 0 {
             return Err(KsError::runtime("Zero division error"));
         }
 
-        let left = self.acc_pop(gvs)?.clone();
+        let left = self.acc.pop(gvs)?;
 
         let variable = match (left.value_type, right.value_type) {
             (INT_TYPE, INT_TYPE) => Variable::from(left.value as f64 / right.value as f64),
@@ -186,14 +155,14 @@ impl Runner {
             _ => unreachable!(),
         };
 
-        self.acc_push(gvs, variable)?;
+        self.acc.push(gvs, variable)?;
 
         Ok(())
     }
 
     fn eq(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let right = self.acc_pop(gvs)?.clone();
-        let left = self.acc_pop(gvs)?.clone();
+        let right = self.acc.pop(gvs)?;
+        let left = self.acc.pop(gvs)?;
 
         let variable = match (left.value_type, right.value_type) {
             (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 == right.value as i64),
@@ -208,14 +177,14 @@ impl Runner {
             _ => unreachable!(),
         };
 
-        self.acc_push(gvs, variable)?;
+        self.acc.push(gvs, variable)?;
 
         Ok(())
     }
 
     fn greater_eq(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let right = self.acc_pop(gvs)?.clone();
-        let left = self.acc_pop(gvs)?.clone();
+        let right = self.acc.pop(gvs)?;
+        let left = self.acc.pop(gvs)?;
 
         let variable = match (left.value_type, right.value_type) {
             (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 >= right.value as i64),
@@ -225,14 +194,14 @@ impl Runner {
             _ => unreachable!(),
         };
 
-        self.acc_push(gvs, variable)?;
+        self.acc.push(gvs, variable)?;
 
         Ok(())
     }
 
     fn greater(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let right = self.acc_pop(gvs)?.clone();
-        let left = self.acc_pop(gvs)?.clone();
+        let right = self.acc.pop(gvs)?;
+        let left = self.acc.pop(gvs)?;
 
         let variable = match (left.value_type, right.value_type) {
             (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 > right.value as i64),
@@ -242,14 +211,14 @@ impl Runner {
             _ => unreachable!(),
         };
 
-        self.acc_push(gvs, variable)?;
+        self.acc.push(gvs, variable)?;
 
         Ok(())
     }
 
     fn less_eq(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let right = self.acc_pop(gvs)?.clone();
-        let left = self.acc_pop(gvs)?.clone();
+        let right = self.acc.pop(gvs)?;
+        let left = self.acc.pop(gvs)?;
 
         let variable = match (left.value_type, right.value_type) {
             (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 <= right.value as i64),
@@ -259,14 +228,14 @@ impl Runner {
             _ => unreachable!(),
         };
 
-        self.acc_push(gvs, variable)?;
+        self.acc.push(gvs, variable)?;
 
         Ok(())
     }
 
     fn less(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let right = self.acc_pop(gvs)?.clone();
-        let left = self.acc_pop(gvs)?.clone();
+        let right = self.acc.pop(gvs)?;
+        let left = self.acc.pop(gvs)?;
 
         let variable = match (left.value_type, right.value_type) {
             (INT_TYPE, INT_TYPE) => Variable::from((left.value as i64) < (right.value as i64)),
@@ -276,14 +245,14 @@ impl Runner {
             _ => unreachable!(),
         };
 
-        self.acc_push(gvs, variable)?;
+        self.acc.push(gvs, variable)?;
 
         Ok(())
     }
 
     fn not_eq(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let right = self.acc_pop(gvs)?.clone();
-        let left = self.acc_pop(gvs)?.clone();
+        let right = self.acc.pop(gvs)?;
+        let left = self.acc.pop(gvs)?;
 
         let variable = match (left.value_type, right.value_type) {
             (INT_TYPE, INT_TYPE) => Variable::from(left.value as i64 != right.value as i64),
@@ -298,8 +267,26 @@ impl Runner {
             _ => unreachable!(),
         };
 
-        self.acc_push(gvs, variable)?;
+        self.acc.push(gvs, variable)?;
 
+        Ok(())
+    }
+
+    fn and(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        let right = self.acc.pop(gvs)?;
+        let left = self.acc.pop(gvs)?;
+
+        let variable = match (left.value_type, right.value_type) {
+            (BOOLEAN_TYPE, BOOLEAN_TYPE) => Variable::from(left.as_boolean() && right.as_boolean()),
+            _ => unreachable!(),
+        };
+
+        self.acc.push(gvs, variable)?;
+
+        Ok(())
+    }
+
+    fn or(&mut self, gvs: &mut GVS) -> KsResult<()> {
         Ok(())
     }
 
@@ -318,6 +305,8 @@ impl Runner {
             Instruction::LessEq => self.less_eq(gvs),
             Instruction::Less => self.less(gvs),
             Instruction::NotEq => self.not_eq(gvs),
+            Instruction::And => self.and(gvs),
+            Instruction::Or => self.or(gvs),
             _ => todo!(),
         }?;
 
