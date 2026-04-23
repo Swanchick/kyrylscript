@@ -300,6 +300,21 @@ impl Runner {
         Ok(())
     }
 
+    fn not(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        let varible = self.acc.pop(gvs)?;
+
+        if varible.value_type == BOOLEAN_TYPE {
+            let value = varible.as_boolean();
+            let new_variable = Variable::from(!value);
+
+            self.acc.push(gvs, new_variable)?;
+
+            Ok(())
+        } else {
+            unreachable!()
+        }
+    }
+
     pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
         match instruction {
             Instruction::LoadConst(constant) => self.load_const(gvs, constant),
@@ -317,6 +332,7 @@ impl Runner {
             Instruction::NotEq => self.not_eq(gvs),
             Instruction::And => self.and(gvs),
             Instruction::Or => self.or(gvs),
+            Instruction::Not => self.not(gvs),
             _ => todo!(),
         }?;
 

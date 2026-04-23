@@ -502,3 +502,67 @@ fn or_false() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn not_true() -> KsResult<()> {
+    let value = true;
+
+    let mut variable_left = Variable::from(value);
+    variable_left.owners = 2;
+    let mut variable_result = Variable::from(!value);
+    variable_result.owners = 1;
+
+    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left)]), None);
+    let runner = KsDriver::runner_default(
+        Some(Stack::from(vec![0])),
+        Some(Stack::from(vec![0])),
+        false,
+        None,
+    );
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Not)?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.acc.len(), 1);
+    assert_eq!(driver.runner.acc.get(0).unwrap(), &1);
+
+    let gvs_variable_value = driver.gvs.storage[0].clone().unwrap();
+    let gvs_variable_result = driver.gvs.storage[1].clone().unwrap();
+
+    assert_eq!(gvs_variable_value.owners, 1);
+    assert_eq!(gvs_variable_result, variable_result);
+
+    Ok(())
+}
+
+#[test]
+fn not_false() -> KsResult<()> {
+    let value = false;
+
+    let mut variable_left = Variable::from(value);
+    variable_left.owners = 2;
+    let mut variable_result = Variable::from(!value);
+    variable_result.owners = 1;
+
+    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left)]), None);
+    let runner = KsDriver::runner_default(
+        Some(Stack::from(vec![0])),
+        Some(Stack::from(vec![0])),
+        false,
+        None,
+    );
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Not)?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.acc.len(), 1);
+    assert_eq!(driver.runner.acc.get(0).unwrap(), &1);
+
+    let gvs_variable_value = driver.gvs.storage[0].clone().unwrap();
+    let gvs_variable_result = driver.gvs.storage[1].clone().unwrap();
+
+    assert_eq!(gvs_variable_value.owners, 1);
+    assert_eq!(gvs_variable_result, variable_result);
+
+    Ok(())
+}
