@@ -566,3 +566,63 @@ fn not_false() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn increment() -> KsResult<()> {
+    let value = 10;
+
+    let mut variable_left = Variable::from(value);
+    variable_left.owners = 2;
+    let mut variable_result = Variable::from(value + 1);
+    variable_result.owners = 2;
+
+    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left)]), None);
+    let runner = KsDriver::runner_default(
+        Some(Stack::from(vec![0])),
+        Some(Stack::from(vec![0])),
+        false,
+        None,
+    );
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Increment)?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.acc.len(), 1);
+    assert_eq!(driver.runner.acc.get(0).unwrap(), &0);
+
+    let gvs_variable_result = driver.gvs.storage[0].clone().unwrap();
+
+    assert_eq!(gvs_variable_result, variable_result);
+
+    Ok(())
+}
+
+#[test]
+fn decrement() -> KsResult<()> {
+    let value = 10;
+
+    let mut variable_left = Variable::from(value);
+    variable_left.owners = 2;
+    let mut variable_result = Variable::from(value - 1);
+    variable_result.owners = 2;
+
+    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left)]), None);
+    let runner = KsDriver::runner_default(
+        Some(Stack::from(vec![0])),
+        Some(Stack::from(vec![0])),
+        false,
+        None,
+    );
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Decrement)?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.acc.len(), 1);
+    assert_eq!(driver.runner.acc.get(0).unwrap(), &0);
+
+    let gvs_variable_result = driver.gvs.storage[0].clone().unwrap();
+
+    assert_eq!(gvs_variable_result, variable_result);
+
+    Ok(())
+}

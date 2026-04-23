@@ -66,4 +66,13 @@ impl Stack {
     pub fn len(&self) -> usize {
         self.data.len()
     }
+
+    pub fn last_mut<'a>(&self, gvs: &'a mut GVS) -> KsResult<&'a mut Variable> {
+        if let Some(slot) = self.data.last() {
+            let variable = gvs.variable_mut(*slot)?;
+            Ok(variable)
+        } else {
+            Err(KsError::runtime("Cannot access last slot"))
+        }
+    }
 }

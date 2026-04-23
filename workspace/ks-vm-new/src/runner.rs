@@ -301,18 +301,64 @@ impl Runner {
     }
 
     fn not(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let varible = self.acc.pop(gvs)?;
+        let variable = self.acc.pop(gvs)?;
 
-        if varible.value_type == BOOLEAN_TYPE {
-            let value = varible.as_boolean();
+        if variable.value_type == BOOLEAN_TYPE {
+            let value = variable.as_boolean();
             let new_variable = Variable::from(!value);
 
             self.acc.push(gvs, new_variable)?;
 
             Ok(())
         } else {
-            unreachable!()
+            Err(KsError::runtime("Invalid value_type for not operator"))
         }
+    }
+
+    fn increment(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        let variable = self.acc.last_mut(gvs)?;
+
+        variable.value = match variable.value_type {
+            INT_TYPE => {
+                let mut value = variable.value as i64;
+                value += 1;
+
+                Ok(value as u64)
+            }
+            FLOAT_TYPE => {
+                let mut value = variable.as_f64()?;
+                value += 1.0;
+                Ok(value.to_bits())
+            }
+            _ => Err(KsError::runtime(
+                "Invalid value_type for increment operator",
+            )),
+        }?;
+
+        Ok(())
+    }
+
+    fn decrement(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        let variable = self.acc.last_mut(gvs)?;
+
+        variable.value = match variable.value_type {
+            INT_TYPE => {
+                let mut value = variable.value as i64;
+                value -= 1;
+
+                Ok(value as u64)
+            }
+            FLOAT_TYPE => {
+                let mut value = variable.as_f64()?;
+                value -= 1.0;
+                Ok(value.to_bits())
+            }
+            _ => Err(KsError::runtime(
+                "Invalid value_type for decrement operator",
+            )),
+        }?;
+
+        Ok(())
     }
 
     pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
@@ -333,6 +379,8 @@ impl Runner {
             Instruction::And => self.and(gvs),
             Instruction::Or => self.or(gvs),
             Instruction::Not => self.not(gvs),
+            Instruction::Increment => self.increment(gvs),
+            Instruction::Decrement => self.decrement(gvs),
             _ => todo!(),
         }?;
 
