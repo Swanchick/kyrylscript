@@ -468,7 +468,7 @@ fn or_true() -> KsResult<()> {
     variable_left.owners = 2;
     let mut variable_right = Variable::from(right);
     variable_right.owners = 2;
-    let mut variable_result = Variable::from(left && right);
+    let mut variable_result = Variable::from(left || right);
     variable_result.owners = 1;
 
     KsDriver::operation_test(
@@ -490,7 +490,7 @@ fn or_false() -> KsResult<()> {
     variable_left.owners = 2;
     let mut variable_right = Variable::from(right);
     variable_right.owners = 2;
-    let mut variable_result = Variable::from(left && right);
+    let mut variable_result = Variable::from(left || right);
     variable_result.owners = 1;
 
     KsDriver::operation_test(

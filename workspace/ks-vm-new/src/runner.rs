@@ -287,6 +287,16 @@ impl Runner {
     }
 
     fn or(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        let right = self.acc.pop(gvs)?;
+        let left = self.acc.pop(gvs)?;
+
+        let variable = match (left.value_type, right.value_type) {
+            (BOOLEAN_TYPE, BOOLEAN_TYPE) => Variable::from(left.as_boolean() || right.as_boolean()),
+            _ => unreachable!(),
+        };
+
+        self.acc.push(gvs, variable)?;
+
         Ok(())
     }
 
