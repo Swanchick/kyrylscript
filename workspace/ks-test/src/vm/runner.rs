@@ -626,3 +626,77 @@ fn decrement() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn clone_primitive() -> KsResult<()> {
+    let value = 10;
+
+    let mut variable = Variable::from(value);
+    variable.owners = 2;
+
+    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable.clone())]), None);
+    let runner = KsDriver::runner_default(
+        Some(Stack::from(vec![0])),
+        Some(Stack::from(vec![0])),
+        false,
+        None,
+    );
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Decrement)?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.acc.len(), 1);
+    assert_eq!(driver.runner.acc.get(0).unwrap(), &1);
+
+    let gvs_variable_original = driver.gvs.storage[0].clone().unwrap();
+    let gvs_variable_result = driver.gvs.storage[1].clone().unwrap();
+
+    assert_eq!(gvs_variable_original, variable);
+    assert_eq!(gvs_variable_result, variable);
+
+    Ok(())
+}
+
+#[test]
+fn clone_collection() -> KsResult<()> {
+    let value = String::from("Hello World");
+
+    let mut variable = Variable::string(0);
+    variable.owners = 2;
+
+    let mut variable_new = Variable::string(1);
+    variable_new.owners = 2;
+
+    let gvs = KsDriver::gvs_storage(
+        Some(vec![Some(variable.clone())]),
+        Some(vec![Collection::String(value.clone())]),
+    );
+    let runner = KsDriver::runner_default(
+        Some(Stack::from(vec![0])),
+        Some(Stack::from(vec![0])),
+        false,
+        None,
+    );
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Decrement)?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.acc.len(), 1);
+    assert_eq!(driver.runner.acc.get(0).unwrap(), &1);
+
+    let gvs_variable_original = driver.gvs.storage[0].clone().unwrap();
+    let gvs_variable_result = driver.gvs.storage[1].clone().unwrap();
+
+    let string_original = driver.gvs.collections.get(0).unwrap();
+    let string_new = driver.gvs.collections.get(1).unwrap();
+
+    assert_eq!(string_original, &Collection::String(value.clone()));
+    assert_eq!(string_new, &Collection::String(value));
+
+    assert_eq!(gvs_variable_original.owners, 1);
+
+    assert_eq!(gvs_variable_original, variable);
+    assert_eq!(gvs_variable_result, variable_new);
+
+    Ok(())
+}
