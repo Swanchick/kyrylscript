@@ -7,6 +7,7 @@ pub const INT_TYPE: u8 = 1;
 pub const FLOAT_TYPE: u8 = 2;
 pub const STRING_TYPE: u8 = 3;
 pub const BOOLEAN_TYPE: u8 = 4;
+pub const COLLECTION_TYPE: u8 = 5;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Variable {
@@ -48,6 +49,10 @@ impl Variable {
 
     pub fn string(collection_id: CollectionId) -> Self {
         Self::new(STRING_TYPE, collection_id)
+    }
+
+    pub fn collection(collection_id: CollectionId) -> Self {
+        Self::new(COLLECTION_TYPE, collection_id)
     }
 
     pub fn as_boolean(&self) -> bool {

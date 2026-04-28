@@ -709,3 +709,45 @@ fn clone_collection_string() -> KsResult<()> {
 fn clone_collection() -> KsResult<()> {
     todo!()
 }
+
+#[test]
+fn load_collection() -> KsResult<()> {
+    let collection = Collection::Stack(vec![0, 1, 2, 3]);
+    let mut storage = vec![
+        Some(Variable::from(1)),
+        Some(Variable::from(2)),
+        Some(Variable::from(3)),
+        Some(Variable::from(4)),
+    ];
+
+    let storage_len = storage.len();
+
+    for variable in &mut storage {
+        if let Some(variable) = variable {
+            variable.owners = 1;
+        }
+    }
+
+    let mut variable_collection = Variable::collection(0);
+    variable_collection.owners = 1;
+
+    let gvs = KsDriver::gvs_storage(Some(storage), None);
+
+    let acc = Stack::from(vec![3, 2, 1, 0]);
+
+    let runner = KsDriver::runner_default(Some(acc), None, false, None);
+    let driver =
+        KsDriver::runner_configured(runner, gvs, Instruction::LoadCollection(storage_len))?;
+
+    assert_eq!(driver.runner.acc.len(), 1);
+    assert_eq!(driver.gvs.storage.len(), 5);
+
+    let gvs_variable_collection = driver.gvs.storage[4].clone().unwrap();
+
+    assert_eq!(gvs_variable_collection, variable_collection);
+
+    let gvs_collection = &driver.gvs.collections[0];
+    assert_eq!(gvs_collection, &collection);
+
+    Ok(())
+}
