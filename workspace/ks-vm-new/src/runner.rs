@@ -4,7 +4,7 @@ use ks_global::utils::ks_result::KsResult;
 use super::types::{Offset, Pointer, Slot};
 use super::{Constant, Instruction};
 
-use crate::gvs::variable::{BOOLEAN_TYPE, FLOAT_TYPE, INT_TYPE, STRING_TYPE};
+use crate::gvs::variable::{BOOLEAN_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STRING_TYPE};
 use crate::gvs::{GVS, Stack, Variable};
 use crate::types::CollectionId;
 
@@ -310,6 +310,27 @@ impl Runner {
         Ok(())
     }
 
+    fn clone(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        let mut variable = self.acc.pop(gvs)?;
+        variable.owners = 0;
+
+        match variable.value_type {
+            INT_TYPE | FLOAT_TYPE | NULL_TYPE | BOOLEAN_TYPE => {}
+            STRING_TYPE => {
+                let collection_id = variable.value;
+                let string = gvs.collection_string(collection_id)?;
+                let new_collection_id = gvs.collection_store_string(string.to_string());
+
+                variable.value = new_collection_id;
+            }
+            _ => todo!(),
+        }
+
+        self.acc.push(gvs, variable)?;
+
+        Ok(())
+    }
+
     pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
         match instruction {
             Instruction::LoadConst(constant) => self.load_const(gvs, constant),
@@ -330,6 +351,7 @@ impl Runner {
             Instruction::Not => self.not(gvs),
             Instruction::Increment => self.increment(gvs),
             Instruction::Decrement => self.decrement(gvs),
+            Instruction::Clone => self.clone(gvs),
             _ => todo!(),
         }?;
 

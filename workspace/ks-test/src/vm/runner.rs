@@ -642,6 +642,8 @@ fn clone_primitive() -> KsResult<()> {
         None,
     );
 
+    variable.owners = 1;
+
     let driver = KsDriver::runner_configured(runner, gvs, Instruction::Clone)?;
 
     assert_eq!(driver.runner.program_counter, 1);
@@ -658,14 +660,14 @@ fn clone_primitive() -> KsResult<()> {
 }
 
 #[test]
-fn clone_collection() -> KsResult<()> {
+fn clone_collection_string() -> KsResult<()> {
     let value = String::from("Hello World");
 
     let mut variable = Variable::string(0);
     variable.owners = 2;
 
     let mut variable_new = Variable::string(1);
-    variable_new.owners = 2;
+    variable_new.owners = 1;
 
     let gvs = KsDriver::gvs_storage(
         Some(vec![Some(variable.clone())]),
@@ -677,6 +679,8 @@ fn clone_collection() -> KsResult<()> {
         false,
         None,
     );
+
+    variable.owners = 1;
 
     let driver = KsDriver::runner_configured(runner, gvs, Instruction::Clone)?;
 
@@ -699,4 +703,9 @@ fn clone_collection() -> KsResult<()> {
     assert_eq!(gvs_variable_result, variable_new);
 
     Ok(())
+}
+
+#[test]
+fn clone_collection() -> KsResult<()> {
+    todo!()
 }
