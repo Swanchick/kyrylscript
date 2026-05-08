@@ -11,8 +11,8 @@ use crate::types::CollectionId;
 #[derive(Debug)]
 pub struct Runner {
     pub program_counter: Pointer,
-    pub acc: Stack,
-    pub stack: Stack,
+    pub acc: Stack<16>,
+    pub stack: Stack<256>,
     pub prevent_step: bool,
 }
 
