@@ -1,6 +1,7 @@
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
+use super::constants::{ACC_SIZE, STACK_SIZE};
 use super::types::{Offset, Pointer, Slot};
 use super::{Constant, Instruction};
 
@@ -11,8 +12,8 @@ use crate::types::CollectionId;
 #[derive(Debug)]
 pub struct Runner {
     pub program_counter: Pointer,
-    pub acc: Stack<16>,
-    pub stack: Stack<256>,
+    pub acc: Stack<ACC_SIZE>,
+    pub stack: Stack<STACK_SIZE>,
     pub prevent_step: bool,
 }
 
