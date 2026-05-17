@@ -1,7 +1,6 @@
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
-use super::constants::{ACC_SIZE, STACK_SIZE};
 use super::types::{Offset, Pointer, Slot};
 use super::{Constant, Instruction};
 
