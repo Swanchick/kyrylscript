@@ -85,8 +85,8 @@ impl KsDriver {
     }
 
     pub fn runner_default(
-        acc: Option<Stack<16>>,
-        stack: Option<Stack<256>>,
+        acc: Option<Stack>,
+        stack: Option<Stack>,
         prevent_step: bool,
         program_counter: Option<usize>,
     ) -> Option<Runner> {
@@ -130,17 +130,6 @@ impl KsDriver {
         Ok(RunnerDriver::new(runner, gvs))
     }
 
-    pub fn stack<const SIZE: usize>(vec: Vec<u64>) -> Stack<SIZE> {
-        let mut data = [0u64; SIZE];
-
-        let len = vec.len().min(SIZE);
-        data[..len].copy_from_slice(&vec[..len]);
-
-        let len = vec.len();
-
-        Stack::from(data, len)
-    }
-
     pub fn operation_test(
         left: Variable,
         right: Variable,
@@ -148,8 +137,8 @@ impl KsDriver {
         instruction: Instruction,
     ) -> KsResult<()> {
         let runner = KsDriver::runner_default(
-            Some(Self::stack(vec![0, 1])),
-            Some(Self::stack(vec![0, 1])),
+            Some(Stack::from(vec![0, 1])),
+            Some(Stack::from(vec![0, 1])),
             false,
             None,
         );
@@ -160,8 +149,6 @@ impl KsDriver {
         if driver.runner.program_counter != 1 {
             return Err(KsError::runtime("Wrong program_counter"));
         }
-
-        println!("ACC: {:?}", driver.runner.acc);
 
         if driver.runner.acc.len() != 1 {
             return Err(KsError::runtime("Wrong acc size"));

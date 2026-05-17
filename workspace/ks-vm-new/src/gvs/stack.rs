@@ -6,66 +6,57 @@ use crate::types::{Slot, StorageId};
 use super::{GVS, Variable};
 
 #[derive(Debug)]
-pub struct Stack<const SIZE: usize> {
-    data: [Slot; SIZE],
-    len: usize,
+pub struct Stack {
+    data: Vec<Slot>,
 }
 
-impl<const SIZE: usize> Stack<SIZE> {
-    pub fn new() -> Self {
-        Self {
-            data: [0; SIZE],
-            len: 0,
-        }
+impl From<Vec<Slot>> for Stack {
+    fn from(value: Vec<Slot>) -> Self {
+        Self { data: value }
     }
+}
 
-    pub fn from(data: [Slot; SIZE], len: usize) -> Self {
-        Self { data, len }
+impl Stack {
+    pub fn new() -> Self {
+        Self { data: Vec::new() }
     }
 
     pub fn push(&mut self, gvs: &mut GVS, variable: Variable) -> KsResult<()> {
         let storage_id = gvs.store(variable);
         gvs.storage_add_owner(storage_id)?;
 
-        self.data[self.len] = storage_id;
-        self.len = self.len.saturating_add(1);
+        self.data.push(storage_id);
 
         Ok(())
     }
 
     pub fn push_storage_id(&mut self, gvs: &mut GVS, storage_id: StorageId) -> KsResult<()> {
         gvs.storage_add_owner(storage_id)?;
-
-        self.data[self.len] = storage_id;
-        self.len = self.len.saturating_add(1);
+        self.data.push(storage_id);
 
         Ok(())
     }
 
     pub fn pop(&mut self, gvs: &mut GVS) -> KsResult<Variable> {
-        let storage_id = self.data[self.len - 1];
+        if let Some(storage_id) = self.data.pop() {
+            gvs.storage_remove_owner(storage_id)?;
+            let variable = gvs.variable(storage_id)?;
 
-        gvs.storage_remove_owner(storage_id)?;
-        let variable = gvs.variable(storage_id)?;
-
-        self.len = self.len.saturating_sub(1);
-
-        Ok(variable.clone())
+            Ok(variable.clone())
+        } else {
+            Err(KsError::runtime("No Varialbe in ACC"))
+        }
     }
 
     pub fn storage_id(&mut self, slot: Slot) -> KsResult<StorageId> {
-        let slot = slot as usize;
-
-        if slot >= self.len {
-            return Err(KsError::runtime(&format!(
+        if let Some(storage_id) = self.data.get(slot as usize) {
+            Ok(*storage_id)
+        } else {
+            Err(KsError::runtime(&format!(
                 "Cannot get storage_id by slot {}",
                 slot
-            )));
+            )))
         }
-
-        let storage_id = self.data[slot];
-
-        Ok(storage_id)
     }
 
     pub fn get(&self, index: usize) -> Option<&Slot> {
@@ -73,24 +64,24 @@ impl<const SIZE: usize> Stack<SIZE> {
     }
 
     pub fn len(&self) -> usize {
-        self.len
+        self.data.len()
     }
 
     pub fn last<'a>(&self, gvs: &'a mut GVS) -> KsResult<&'a Variable> {
-        let top = self.len.saturating_sub(1);
-
-        let slot = self.data[top];
-
-        let variable = gvs.variable(slot)?;
-        Ok(variable)
+        if let Some(slot) = self.data.last() {
+            let variable = gvs.variable(*slot)?;
+            Ok(variable)
+        } else {
+            Err(KsError::runtime("Cannot access last slot"))
+        }
     }
 
     pub fn last_mut<'a>(&mut self, gvs: &'a mut GVS) -> KsResult<&'a mut Variable> {
-        let top = self.len.saturating_sub(1);
-
-        let slot = self.data[top];
-
-        let variable = gvs.variable_mut(slot)?;
-        Ok(variable)
+        if let Some(slot) = self.data.last() {
+            let variable = gvs.variable_mut(*slot)?;
+            Ok(variable)
+        } else {
+            Err(KsError::runtime("Cannot access last slot"))
+        }
     }
 }
