@@ -331,6 +331,15 @@ impl Runner {
         Ok(())
     }
 
+    fn load_collection(&mut self, gvs: &mut GVS, size: usize) -> KsResult<()> {
+        let stack = self.acc.take_pop_mut(size);
+        let collection_id = gvs.collection_store(stack);
+
+        self.acc.push(gvs, Variable::collection(collection_id))?;
+
+        Ok(())
+    }
+
     pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
         match instruction {
             Instruction::LoadConst(constant) => self.load_const(gvs, constant),
@@ -352,6 +361,7 @@ impl Runner {
             Instruction::Increment => self.increment(gvs),
             Instruction::Decrement => self.decrement(gvs),
             Instruction::Clone => self.clone(gvs),
+            Instruction::LoadCollection(size) => self.load_collection(gvs, size),
             _ => todo!(),
         }?;
 

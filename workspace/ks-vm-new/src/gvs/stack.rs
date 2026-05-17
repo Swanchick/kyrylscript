@@ -84,4 +84,16 @@ impl Stack {
             Err(KsError::runtime("Cannot access last slot"))
         }
     }
+
+    pub fn take_pop_mut(&mut self, size: usize) -> Vec<Slot> {
+        let mut data = Vec::<Slot>::with_capacity(size);
+
+        for _ in 0..size {
+            if let Some(slot) = self.data.pop() {
+                data.push(slot);
+            }
+        }
+
+        data
+    }
 }

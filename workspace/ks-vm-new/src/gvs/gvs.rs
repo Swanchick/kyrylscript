@@ -2,7 +2,7 @@ use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
 use crate::Collection;
-use crate::types::{CollectionId, StorageId};
+use crate::types::{CollectionId, Slot, StorageId};
 
 use super::Variable;
 
@@ -71,8 +71,15 @@ impl GVS {
     }
 
     pub fn collection_store_string(&mut self, string: String) -> CollectionId {
-        let collection_id = self.collections.len() as u64;
+        let collection_id = self.collections.len() as CollectionId;
         self.collections.push(Collection::String(string));
+
+        collection_id
+    }
+
+    pub fn collection_store(&mut self, stack: Vec<Slot>) -> CollectionId {
+        let collection_id = self.collections.len() as CollectionId;
+        self.collections.push(Collection::Stack(stack));
 
         collection_id
     }
