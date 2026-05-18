@@ -1,10 +1,15 @@
+use std::collections;
+
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
 use super::types::{Offset, Pointer, Slot};
 use super::{Constant, Instruction};
 
-use crate::gvs::variable::{BOOLEAN_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STRING_TYPE};
+use crate::Collection;
+use crate::gvs::variable::{
+    BOOLEAN_TYPE, COLLECTION_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STRING_TYPE,
+};
 use crate::gvs::{GVS, Stack, Variable};
 use crate::types::CollectionId;
 
@@ -323,7 +328,10 @@ impl Runner {
 
                 variable.value = new_collection_id;
             }
-            _ => todo!(),
+            COLLECTION_TYPE => {
+                todo!()
+            }
+            _ => unreachable!(),
         }
 
         self.acc.push(gvs, variable)?;
