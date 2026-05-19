@@ -812,3 +812,22 @@ fn load_collection() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn store() -> KsResult<()> {
+    let storage = vec![Some(Variable::from(10))];
+    let gvs = KsDriver::gvs_storage(Some(storage), None);
+
+    let acc = Stack::from(vec![3, 2, 1, 0]);
+    let runner = KsDriver::runner_default(Some(acc), None, false, None);
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Store)?;
+
+    assert_eq!(driver.runner.program_counter, 0);
+    assert_eq!(driver.runner.acc.len(), 0);
+
+    assert_eq!(driver.runner.stack.len(), 1);
+    assert_eq!(driver.runner.stack.get(0).unwrap(), &0);
+
+    Ok(())
+}

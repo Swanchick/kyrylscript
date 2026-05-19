@@ -366,6 +366,10 @@ impl Runner {
         Ok(())
     }
 
+    fn store(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        todo!()
+    }
+
     pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
         match instruction {
             Instruction::LoadConst(constant) => self.load_const(gvs, constant),
@@ -388,6 +392,7 @@ impl Runner {
             Instruction::Decrement => self.decrement(gvs),
             Instruction::Clone => self.clone(gvs),
             Instruction::LoadCollection(size) => self.load_collection(gvs, size),
+            Instruction::Store => self.store(gvs),
             _ => todo!(),
         }?;
 
