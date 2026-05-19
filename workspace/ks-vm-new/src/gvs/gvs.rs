@@ -2,6 +2,9 @@ use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
 use crate::Collection;
+use crate::gvs::variable::{
+    BOOLEAN_TYPE, COLLECTION_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STRING_TYPE,
+};
 use crate::types::{CollectionId, Slot, StorageId};
 
 use super::Variable;
@@ -10,6 +13,7 @@ use super::Variable;
 pub struct GVS {
     pub storage: Vec<Option<Variable>>,
     pub collections: Vec<Collection>,
+    pub free_storage: Vec<usize>,
 }
 
 impl GVS {
@@ -17,6 +21,7 @@ impl GVS {
         Self {
             storage: Vec::new(),
             collections: Vec::new(),
+            free_storage: Vec::new(),
         }
     }
 
@@ -48,12 +53,35 @@ impl GVS {
         Ok(())
     }
 
-    pub fn storage_remove_owner(&mut self, storage_id: StorageId) -> KsResult<()> {
-        let variable = self.variable_mut(storage_id)?;
-        variable.owners = variable.owners.saturating_sub(1);
+    fn free_primitive(&mut self, storage_id: StorageId) -> KsResult<()> {
+        let storage_id = storage_id as usize;
 
-        if variable.owners == 0 {
-            todo!("Free the variable")
+        self.storage[storage_id] = None;
+        self.free_storage.push(storage_id);
+
+        Ok(())
+    }
+
+    fn free(&mut self, storage_id: StorageId, value_type: u8) -> KsResult<()> {
+        match value_type {
+            INT_TYPE | FLOAT_TYPE | NULL_TYPE | BOOLEAN_TYPE => self.free_primitive(storage_id),
+            STRING_TYPE => todo!("Free string collection"),
+            COLLECTION_TYPE => todo!("Free stack collection"),
+            _ => Err(KsError::runtime("Invalid variable type to free")),
+        }?;
+
+        Ok(())
+    }
+
+    pub fn storage_remove_owner(&mut self, storage_id: StorageId) -> KsResult<()> {
+        let (owners, value_type) = {
+            let variable = self.variable_mut(storage_id)?;
+            variable.owners = variable.owners.saturating_sub(1);
+            (variable.owners, variable.value_type)
+        };
+
+        if owners == 0 {
+            self.free(storage_id, value_type)?;
         }
 
         Ok(())
@@ -96,9 +124,15 @@ impl GVS {
     }
 
     pub fn store(&mut self, variable: Variable) -> StorageId {
-        let storage_id = self.storage.len() as StorageId;
-        self.storage.push(Some(variable));
+        if let Some(storage_id) = self.free_storage.pop() {
+            self.storage[storage_id] = Some(variable);
 
-        storage_id
+            storage_id as StorageId
+        } else {
+            let storage_id = self.storage.len() as StorageId;
+            self.storage.push(Some(variable));
+
+            storage_id
+        }
     }
 }

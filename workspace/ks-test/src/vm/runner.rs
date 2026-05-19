@@ -850,7 +850,12 @@ fn free() -> KsResult<()> {
     assert_eq!(driver.runner.program_counter, 1);
 
     assert_eq!(driver.runner.stack.len(), 0);
-    assert_eq!(driver.gvs.storage.len(), 0);
+
+    assert_eq!(driver.gvs.storage.len(), 3);
+    assert_eq!(driver.gvs.storage, vec![None, None, None]);
+
+    assert_eq!(driver.gvs.free_storage.len(), 3);
+    assert_eq!(driver.gvs.free_storage, vec![2, 1, 0]);
 
     Ok(())
 }

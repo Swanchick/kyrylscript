@@ -96,4 +96,14 @@ impl Stack {
 
         data
     }
+
+    pub fn free_last(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        if let Some(storage_id) = self.data.pop() {
+            gvs.storage_remove_owner(storage_id)?;
+
+            Ok(())
+        } else {
+            Err(KsError::runtime("No variable in stack"))
+        }
+    }
 }

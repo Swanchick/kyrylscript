@@ -81,6 +81,7 @@ impl KsDriver {
         Some(GVS {
             storage,
             collections,
+            free_storage: Vec::new(), // Needs to have a separate test
         })
     }
 
@@ -110,6 +111,7 @@ impl KsDriver {
             program_counter,
             acc,
             stack,
+            call_stack: Vec::new(),
             prevent_step,
         })
     }
