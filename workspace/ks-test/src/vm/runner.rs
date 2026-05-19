@@ -815,7 +815,7 @@ fn load_collection() -> KsResult<()> {
 
 #[test]
 fn store() -> KsResult<()> {
-    let storage = vec![Some(Variable::from(10))];
+    let storage = vec![Some(Variable::from(10).with_owners(1))];
     let gvs = KsDriver::gvs_storage(Some(storage), None);
 
     let acc = Stack::from(vec![3, 2, 1, 0]);
