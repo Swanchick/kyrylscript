@@ -135,4 +135,21 @@ impl GVS {
             storage_id
         }
     }
+
+    pub fn variable_iter<COLLECTION, PRIMITIVE>(
+        &mut self,
+        storage_id: StorageId,
+        mut collection_func: COLLECTION,
+        mut primitive_func: PRIMITIVE,
+    ) -> KsResult<()>
+    where
+        COLLECTION: FnMut(&mut Self, StorageId) -> KsResult<()>,
+        PRIMITIVE: FnMut(&mut Self, StorageId) -> KsResult<()>,
+    {
+        // let mut collections = vec![storage_id];
+
+        // while let Some(storage_id) = splits {}
+
+        Ok(())
+    }
 }
