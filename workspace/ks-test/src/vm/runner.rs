@@ -831,3 +831,26 @@ fn store() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn free() -> KsResult<()> {
+    let storage = vec![
+        Some(Variable::from(10).with_owners(1)),
+        Some(Variable::from(20).with_owners(1)),
+        Some(Variable::from(30).with_owners(1)),
+    ];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), None);
+
+    let stack = Stack::from(vec![0, 1, 2]);
+    let runner = KsDriver::runner_default(None, Some(stack), false, None);
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Free(3))?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+
+    assert_eq!(driver.runner.stack.len(), 0);
+    assert_eq!(driver.gvs.storage.len(), 0);
+
+    Ok(())
+}

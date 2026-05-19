@@ -15,6 +15,7 @@ pub struct Runner {
     pub program_counter: Pointer,
     pub acc: Stack,
     pub stack: Stack,
+    pub call_stack: Vec<Pointer>,
     pub prevent_step: bool,
 }
 
@@ -24,6 +25,7 @@ impl Runner {
             program_counter: 0,
             acc: Stack::new(),
             stack: Stack::new(),
+            call_stack: Vec::new(),
             prevent_step: false,
         }
     }
@@ -346,11 +348,11 @@ impl Runner {
         variable.owners = 0;
 
         match variable.value_type {
-            INT_TYPE | FLOAT_TYPE | NULL_TYPE | BOOLEAN_TYPE => {}
-            STRING_TYPE => self.clone_string(gvs, &mut variable)?,
-            COLLECTION_TYPE => self.clone_stack(gvs, &mut variable)?,
-            _ => unreachable!(),
-        }
+            INT_TYPE | FLOAT_TYPE | NULL_TYPE | BOOLEAN_TYPE => Ok(()),
+            STRING_TYPE => self.clone_string(gvs, &mut variable),
+            COLLECTION_TYPE => self.clone_stack(gvs, &mut variable),
+            _ => Err(KsError::runtime("Invalid value_type for clone")),
+        }?;
 
         self.acc.push(gvs, variable)?;
 
