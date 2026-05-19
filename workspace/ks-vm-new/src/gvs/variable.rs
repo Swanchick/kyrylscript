@@ -11,9 +11,9 @@ pub const COLLECTION_TYPE: u8 = 5;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Variable {
+    pub value: u64,
     pub owners: Owners,
     pub value_type: u8,
-    pub value: u64,
 }
 
 impl From<i64> for Variable {
@@ -41,6 +41,11 @@ impl Variable {
             value_type,
             value,
         }
+    }
+
+    pub fn with_owners(mut self, owners: Owners) -> Self {
+        self.owners = owners;
+        self
     }
 
     pub fn null() -> Self {

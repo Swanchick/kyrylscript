@@ -707,18 +707,35 @@ fn clone_collection_string() -> KsResult<()> {
 
 #[test]
 fn clone_collection() -> KsResult<()> {
-    let value = vec![123, 67, 32, 94];
+    let value = vec![0, 1, 2, 3];
+    let mut variable = Variable::collection(0).with_owners(2);
+    let storage = vec![
+        Some(Variable::from(123).with_owners(1)),
+        Some(Variable::from(67).with_owners(1)),
+        Some(Variable::from(32).with_owners(1)),
+        Some(Variable::from(94).with_owners(1)),
+        Some(variable.clone()),
+    ];
 
-    let mut variable = Variable::collection(0);
-    variable.owners = 2;
+    let new_value = vec![5, 6, 7, 8];
+    let new_variable = Variable::collection(1).with_owners(2);
+    let new_storage = vec![
+        Some(Variable::from(123).with_owners(1)),
+        Some(Variable::from(67).with_owners(1)),
+        Some(Variable::from(32).with_owners(1)),
+        Some(Variable::from(94).with_owners(1)),
+        Some(variable.clone()),
+        Some(Variable::from(123).with_owners(1)),
+        Some(Variable::from(67).with_owners(1)),
+        Some(Variable::from(32).with_owners(1)),
+        Some(Variable::from(94).with_owners(1)),
+        Some(new_variable.clone()),
+    ];
 
     let mut variable_new = Variable::collection(1);
     variable_new.owners = 1;
 
-    let gvs = KsDriver::gvs_storage(
-        Some(vec![Some(variable.clone())]),
-        Some(vec![Collection::Stack(value.clone())]),
-    );
+    let gvs = KsDriver::gvs_storage(Some(storage), Some(vec![Collection::Stack(value.clone())]));
 
     let runner = KsDriver::runner_default(
         Some(Stack::from(vec![0])),
@@ -738,11 +755,13 @@ fn clone_collection() -> KsResult<()> {
     let gvs_variable_original = driver.gvs.storage[0].clone().unwrap();
     let gvs_variable_result = driver.gvs.storage[1].clone().unwrap();
 
+    assert_eq!(driver.gvs.storage, new_storage);
+
     let stack_original = driver.gvs.collections.get(0).unwrap();
     let stack_new = driver.gvs.collections.get(1).unwrap();
 
     assert_eq!(stack_original, &Collection::Stack(value.clone()));
-    assert_eq!(stack_new, &Collection::Stack(value));
+    assert_eq!(stack_new, &Collection::Stack(new_value));
 
     assert_eq!(gvs_variable_original.owners, 1);
 
@@ -756,10 +775,10 @@ fn clone_collection() -> KsResult<()> {
 fn load_collection() -> KsResult<()> {
     let collection = Collection::Stack(vec![0, 1, 2, 3]);
     let mut storage = vec![
-        Some(Variable::from(1)),
-        Some(Variable::from(2)),
-        Some(Variable::from(3)),
-        Some(Variable::from(4)),
+        Some(Variable::from(1).with_owners(1)),
+        Some(Variable::from(2).with_owners(1)),
+        Some(Variable::from(3).with_owners(1)),
+        Some(Variable::from(4).with_owners(1)),
     ];
 
     let storage_len = storage.len();

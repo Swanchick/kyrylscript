@@ -1,12 +1,9 @@
-use std::collections;
-
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
 use super::types::{Offset, Pointer, Slot};
 use super::{Constant, Instruction};
 
-use crate::Collection;
 use crate::gvs::variable::{
     BOOLEAN_TYPE, COLLECTION_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STRING_TYPE,
 };
