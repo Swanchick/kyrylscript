@@ -8,7 +8,7 @@ use crate::gvs::variable::{
     BOOLEAN_TYPE, COLLECTION_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STRING_TYPE,
 };
 use crate::gvs::{GVS, Stack, Variable};
-use crate::types::CollectionId;
+use crate::types::{CollectionId, StorageId};
 
 #[derive(Debug)]
 pub struct Runner {
@@ -312,22 +312,43 @@ impl Runner {
         Ok(())
     }
 
+    fn clone_string(&mut self, gvs: &mut GVS, variable: &mut Variable) -> KsResult<()> {
+        let collection_id = variable.value;
+        let string = gvs.collection_string(collection_id)?;
+        let collection_id = gvs.collection_store_string(string.to_string());
+
+        variable.value = collection_id;
+        Ok(())
+    }
+
+    fn clone_stack(&mut self, gvs: &mut GVS, variable: &mut Variable) -> KsResult<()> {
+        let collection_id = variable.value;
+        let stack = gvs.collection_stack(collection_id)?.to_vec();
+
+        // Todo: Implement deep cloning for matrices
+        let stack = stack
+            .iter()
+            .map(|storage_id| {
+                let variable = gvs.variable(*storage_id)?.clone();
+                let storage_id = gvs.store(variable);
+                Ok(storage_id)
+            })
+            .collect::<KsResult<Vec<StorageId>>>()?;
+
+        let collection_id = gvs.collection_store_stack(stack);
+        variable.value = collection_id;
+
+        Ok(())
+    }
+
     fn clone(&mut self, gvs: &mut GVS) -> KsResult<()> {
         let mut variable = self.acc.pop(gvs)?;
         variable.owners = 0;
 
         match variable.value_type {
             INT_TYPE | FLOAT_TYPE | NULL_TYPE | BOOLEAN_TYPE => {}
-            STRING_TYPE => {
-                let collection_id = variable.value;
-                let string = gvs.collection_string(collection_id)?;
-                let new_collection_id = gvs.collection_store_string(string.to_string());
-
-                variable.value = new_collection_id;
-            }
-            COLLECTION_TYPE => {
-                todo!()
-            }
+            STRING_TYPE => self.clone_string(gvs, &mut variable)?,
+            COLLECTION_TYPE => self.clone_stack(gvs, &mut variable)?,
             _ => unreachable!(),
         }
 
@@ -338,7 +359,7 @@ impl Runner {
 
     fn load_collection(&mut self, gvs: &mut GVS, size: usize) -> KsResult<()> {
         let stack = self.acc.take_pop_mut(size);
-        let collection_id = gvs.collection_store(stack);
+        let collection_id = gvs.collection_store_stack(stack);
 
         self.acc.push(gvs, Variable::collection(collection_id))?;
 

@@ -70,6 +70,17 @@ impl GVS {
         }
     }
 
+    pub fn collection_stack(&self, collection_id: CollectionId) -> KsResult<&[Slot]> {
+        if let Some(Collection::Stack(stack)) = self.collections.get(collection_id as usize) {
+            Ok(stack)
+        } else {
+            Err(KsError::runtime(&format!(
+                "Cannot get collection string {}",
+                collection_id
+            )))
+        }
+    }
+
     pub fn collection_store_string(&mut self, string: String) -> CollectionId {
         let collection_id = self.collections.len() as CollectionId;
         self.collections.push(Collection::String(string));
@@ -77,7 +88,7 @@ impl GVS {
         collection_id
     }
 
-    pub fn collection_store(&mut self, stack: Vec<Slot>) -> CollectionId {
+    pub fn collection_store_stack(&mut self, stack: Vec<Slot>) -> CollectionId {
         let collection_id = self.collections.len() as CollectionId;
         self.collections.push(Collection::Stack(stack));
 

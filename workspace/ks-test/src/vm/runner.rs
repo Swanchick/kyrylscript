@@ -718,13 +718,13 @@ fn clone_collection() -> KsResult<()> {
     ];
 
     let new_value = vec![5, 6, 7, 8];
-    let new_variable = Variable::collection(1).with_owners(2);
+    let new_variable = Variable::collection(1).with_owners(1);
     let new_storage = vec![
         Some(Variable::from(123).with_owners(1)),
         Some(Variable::from(67).with_owners(1)),
         Some(Variable::from(32).with_owners(1)),
         Some(Variable::from(94).with_owners(1)),
-        Some(variable.clone()),
+        Some(variable.clone().with_owners(1)),
         Some(Variable::from(123).with_owners(1)),
         Some(Variable::from(67).with_owners(1)),
         Some(Variable::from(32).with_owners(1)),
@@ -738,8 +738,8 @@ fn clone_collection() -> KsResult<()> {
     let gvs = KsDriver::gvs_storage(Some(storage), Some(vec![Collection::Stack(value.clone())]));
 
     let runner = KsDriver::runner_default(
-        Some(Stack::from(vec![0])),
-        Some(Stack::from(vec![0])),
+        Some(Stack::from(vec![4])),
+        Some(Stack::from(vec![4])),
         false,
         None,
     );
@@ -750,10 +750,10 @@ fn clone_collection() -> KsResult<()> {
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc.get(0).unwrap(), &1);
+    assert_eq!(driver.runner.acc.get(0).unwrap(), &9);
 
-    let gvs_variable_original = driver.gvs.storage[0].clone().unwrap();
-    let gvs_variable_result = driver.gvs.storage[1].clone().unwrap();
+    let gvs_variable_original = driver.gvs.storage[4].clone().unwrap();
+    let gvs_variable_result = driver.gvs.storage[9].clone().unwrap();
 
     assert_eq!(driver.gvs.storage, new_storage);
 
