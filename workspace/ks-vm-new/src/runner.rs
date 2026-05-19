@@ -366,8 +366,13 @@ impl Runner {
         Ok(())
     }
 
-    fn store(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        todo!()
+    fn store(&mut self) -> KsResult<()> {
+        if let Some(storage_id) = self.acc.data.pop() {
+            self.stack.data.push(storage_id);
+            Ok(())
+        } else {
+            Err(KsError::runtime("No storage_id in acc stack"))
+        }
     }
 
     pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
@@ -392,7 +397,7 @@ impl Runner {
             Instruction::Decrement => self.decrement(gvs),
             Instruction::Clone => self.clone(gvs),
             Instruction::LoadCollection(size) => self.load_collection(gvs, size),
-            Instruction::Store => self.store(gvs),
+            Instruction::Store => self.store(),
             _ => todo!(),
         }?;
 

@@ -7,7 +7,7 @@ use super::{GVS, Variable};
 
 #[derive(Debug)]
 pub struct Stack {
-    data: Vec<Slot>,
+    pub data: Vec<Slot>,
 }
 
 impl From<Vec<Slot>> for Stack {
