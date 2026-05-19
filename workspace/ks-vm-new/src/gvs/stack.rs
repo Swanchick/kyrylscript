@@ -85,7 +85,7 @@ impl Stack {
         }
     }
 
-    pub fn take_pop_mut(&mut self, size: usize) -> Vec<Slot> {
+    pub fn size_pop(&mut self, size: usize) -> Vec<Slot> {
         let mut data = Vec::<Slot>::with_capacity(size);
 
         for _ in 0..size {

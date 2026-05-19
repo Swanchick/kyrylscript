@@ -358,7 +358,7 @@ impl Runner {
     }
 
     fn load_collection(&mut self, gvs: &mut GVS, size: usize) -> KsResult<()> {
-        let stack = self.acc.take_pop_mut(size);
+        let stack = self.acc.size_pop(size);
         let collection_id = gvs.collection_store_stack(stack);
 
         self.acc.push(gvs, Variable::collection(collection_id))?;
