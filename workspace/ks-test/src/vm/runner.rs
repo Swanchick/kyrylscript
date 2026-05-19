@@ -81,12 +81,39 @@ fn load_const_boolean() -> KsResult<()> {
 }
 
 #[test]
+fn load_const_with_free_storage() -> KsResult<()> {
+    let integer = 100;
+    let variable = Variable::from(integer).with_owners(1);
+
+    let storage = vec![None, Some(Variable::from(250).with_owners(1))];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), None, Some(vec![0]));
+
+    let driver = KsDriver::runner_configured(
+        None,
+        gvs,
+        Instruction::LoadConst(Constant::Integer(integer)),
+    )?;
+
+    assert_eq!(driver.runner.program_counter(), 1);
+    assert_eq!(driver.runner.acc.get(0), Some(&0));
+    assert_eq!(driver.gvs.storage[0], Some(variable));
+
+    assert_eq!(
+        driver.gvs.storage[0],
+        Some(Variable::from(integer).with_owners(1)),
+    );
+
+    Ok(())
+}
+
+#[test]
 fn load_var() -> KsResult<()> {
     let mut int = Variable::from(67);
     int.owners += 1;
     let storage_id = 0;
 
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(int)]), None);
+    let gvs = KsDriver::gvs_storage(Some(vec![Some(int)]), None, None);
     let runner = KsDriver::runner_default(None, Some(Stack::from(vec![storage_id])), false, None);
 
     let driver = KsDriver::runner_configured(runner, gvs, Instruction::LoadVar(0))?;
@@ -184,6 +211,7 @@ fn add_string_string() -> KsResult<()> {
             Collection::String(string_left),
             Collection::String(string_right),
         ]),
+        None,
     );
 
     let driver = KsDriver::runner_configured(runner, gvs, Instruction::Add)?;
@@ -311,7 +339,11 @@ fn div_zero_division_error() -> KsResult<()> {
         false,
         None,
     );
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left), Some(variable_right)]), None);
+    let gvs = KsDriver::gvs_storage(
+        Some(vec![Some(variable_left), Some(variable_right)]),
+        None,
+        None,
+    );
 
     let err = KsDriver::runner_configured(runner, gvs, Instruction::Div).unwrap_err();
 
@@ -346,6 +378,7 @@ fn eq_string_string() -> KsResult<()> {
             Collection::String(string_left),
             Collection::String(string_right),
         ]),
+        None,
     );
 
     let driver = KsDriver::runner_configured(runner, gvs, Instruction::Eq)?;
@@ -396,6 +429,7 @@ fn not_eq_string_string() -> KsResult<()> {
             Collection::String(string_left),
             Collection::String(string_right),
         ]),
+        None,
     );
 
     let driver = KsDriver::runner_configured(runner, gvs, Instruction::NotEq)?;
@@ -512,7 +546,7 @@ fn not_true() -> KsResult<()> {
     let mut variable_result = Variable::from(!value);
     variable_result.owners = 1;
 
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left)]), None);
+    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left)]), None, None);
     let runner = KsDriver::runner_default(
         Some(Stack::from(vec![0])),
         Some(Stack::from(vec![0])),
@@ -544,7 +578,7 @@ fn not_false() -> KsResult<()> {
     let mut variable_result = Variable::from(!value);
     variable_result.owners = 1;
 
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left)]), None);
+    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left)]), None, None);
     let runner = KsDriver::runner_default(
         Some(Stack::from(vec![0])),
         Some(Stack::from(vec![0])),
@@ -576,7 +610,7 @@ fn increment() -> KsResult<()> {
     let mut variable_result = Variable::from(value + 1);
     variable_result.owners = 2;
 
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left)]), None);
+    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left)]), None, None);
     let runner = KsDriver::runner_default(
         Some(Stack::from(vec![0])),
         Some(Stack::from(vec![0])),
@@ -606,7 +640,7 @@ fn decrement() -> KsResult<()> {
     let mut variable_result = Variable::from(value - 1);
     variable_result.owners = 2;
 
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left)]), None);
+    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable_left)]), None, None);
     let runner = KsDriver::runner_default(
         Some(Stack::from(vec![0])),
         Some(Stack::from(vec![0])),
@@ -634,7 +668,7 @@ fn clone_primitive() -> KsResult<()> {
     let mut variable = Variable::from(value);
     variable.owners = 2;
 
-    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable.clone())]), None);
+    let gvs = KsDriver::gvs_storage(Some(vec![Some(variable.clone())]), None, None);
     let runner = KsDriver::runner_default(
         Some(Stack::from(vec![0])),
         Some(Stack::from(vec![0])),
@@ -672,6 +706,7 @@ fn clone_collection_string() -> KsResult<()> {
     let gvs = KsDriver::gvs_storage(
         Some(vec![Some(variable.clone())]),
         Some(vec![Collection::String(value.clone())]),
+        None,
     );
     let runner = KsDriver::runner_default(
         Some(Stack::from(vec![0])),
@@ -735,7 +770,11 @@ fn clone_collection() -> KsResult<()> {
     let mut variable_new = Variable::collection(1);
     variable_new.owners = 1;
 
-    let gvs = KsDriver::gvs_storage(Some(storage), Some(vec![Collection::Stack(value.clone())]));
+    let gvs = KsDriver::gvs_storage(
+        Some(storage),
+        Some(vec![Collection::Stack(value.clone())]),
+        None,
+    );
 
     let runner = KsDriver::runner_default(
         Some(Stack::from(vec![4])),
@@ -792,7 +831,7 @@ fn load_collection() -> KsResult<()> {
     let mut variable_collection = Variable::collection(0);
     variable_collection.owners = 1;
 
-    let gvs = KsDriver::gvs_storage(Some(storage), None);
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None);
 
     let acc = Stack::from(vec![3, 2, 1, 0]);
 
@@ -816,7 +855,7 @@ fn load_collection() -> KsResult<()> {
 #[test]
 fn store() -> KsResult<()> {
     let storage = vec![Some(Variable::from(10).with_owners(1))];
-    let gvs = KsDriver::gvs_storage(Some(storage), None);
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None);
 
     let acc = Stack::from(vec![0]);
     let runner = KsDriver::runner_default(Some(acc), None, false, None);
@@ -840,7 +879,7 @@ fn free() -> KsResult<()> {
         Some(Variable::from(30).with_owners(1)),
     ];
 
-    let gvs = KsDriver::gvs_storage(Some(storage), None);
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None);
 
     let stack = Stack::from(vec![0, 1, 2]);
     let runner = KsDriver::runner_default(None, Some(stack), false, None);

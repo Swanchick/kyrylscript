@@ -65,6 +65,7 @@ impl KsDriver {
     pub fn gvs_storage(
         storage: Option<Vec<Option<Variable>>>,
         collections: Option<Vec<Collection>>,
+        free_storage: Option<Vec<usize>>,
     ) -> Option<GVS> {
         let storage = if let Some(storage) = storage {
             storage
@@ -78,10 +79,16 @@ impl KsDriver {
             Vec::new()
         };
 
+        let free_storage = if let Some(free_storage) = free_storage {
+            free_storage
+        } else {
+            Vec::new()
+        };
+
         Some(GVS {
             storage,
             collections,
-            free_storage: Vec::new(), // Needs to have a separate test
+            free_storage,
         })
     }
 
@@ -144,7 +151,7 @@ impl KsDriver {
             false,
             None,
         );
-        let gvs = KsDriver::gvs_storage(Some(vec![Some(left), Some(right)]), None);
+        let gvs = KsDriver::gvs_storage(Some(vec![Some(left), Some(right)]), None, None);
 
         let driver = KsDriver::runner_configured(runner, gvs, instruction)?;
 
