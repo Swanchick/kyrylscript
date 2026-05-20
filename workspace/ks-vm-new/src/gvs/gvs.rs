@@ -85,7 +85,7 @@ impl GVS {
         };
 
         self.collections[collection_id] = Collection::Free;
-        self.free_collection.push(storage_id as usize);
+        self.free_collection.push(collection_id as usize);
 
         Ok(())
     }

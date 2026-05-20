@@ -907,7 +907,7 @@ fn free_primitive() -> KsResult<()> {
 
 #[test]
 fn free_string() -> KsResult<()> {
-    let storage = vec![Some(Variable::string(0))];
+    let storage = vec![Some(Variable::string(0).with_owners(1))];
     let collections = vec![Collection::String(String::from("Hello World"))];
 
     let gvs = KsDriver::gvs_storage(Some(storage), Some(collections), None, None);
@@ -936,7 +936,7 @@ fn free_collection() -> KsResult<()> {
         Some(Variable::from(10).with_owners(1)),
         Some(Variable::from(20).with_owners(1)),
         Some(Variable::from(30).with_owners(1)),
-        Some(Variable::collection(0)),
+        Some(Variable::collection(0).with_owners(1)),
     ];
 
     let collections = vec![Collection::Stack(vec![0, 1, 2])];
@@ -967,7 +967,7 @@ fn clear_acc() -> KsResult<()> {
         Some(Variable::from(10).with_owners(1)),
         Some(Variable::from(20).with_owners(1)),
         Some(Variable::from(30).with_owners(1)),
-        Some(Variable::collection(0)),
+        Some(Variable::collection(0).with_owners(1)),
     ];
 
     let collections = vec![Collection::Stack(vec![0, 1, 2])];

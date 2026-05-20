@@ -385,6 +385,14 @@ impl Runner {
         Ok(())
     }
 
+    fn clear_acc(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        while let Some(storage_id) = self.acc.data.pop() {
+            gvs.storage_remove_owner(storage_id)?;
+        }
+
+        Ok(())
+    }
+
     pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
         match instruction {
             Instruction::LoadConst(constant) => self.load_const(gvs, constant),
@@ -409,6 +417,7 @@ impl Runner {
             Instruction::LoadCollection(size) => self.load_collection(gvs, size),
             Instruction::Store => self.store(),
             Instruction::Free(size) => self.free(gvs, size),
+            Instruction::ClearAcc => self.clear_acc(gvs),
             _ => todo!(),
         }?;
 
