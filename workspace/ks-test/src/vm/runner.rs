@@ -960,3 +960,38 @@ fn free_collection() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn clear_acc() -> KsResult<()> {
+    let storage = vec![
+        Some(Variable::from(10).with_owners(1)),
+        Some(Variable::from(20).with_owners(1)),
+        Some(Variable::from(30).with_owners(1)),
+        Some(Variable::collection(0)),
+    ];
+
+    let collections = vec![Collection::Stack(vec![0, 1, 2])];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), Some(collections), None, None);
+
+    let acc = Stack::from(vec![3]);
+    let runner = KsDriver::runner_default(Some(acc), None, false, None);
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::ClearAcc)?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+
+    assert_eq!(driver.runner.acc.len(), 0);
+
+    assert_eq!(driver.gvs.storage.len(), 4);
+    assert_eq!(driver.gvs.storage, vec![None, None, None, None]);
+
+    assert_eq!(driver.gvs.free_storage.len(), 4);
+    assert_eq!(driver.gvs.free_storage, vec![0, 1, 2, 3]);
+
+    assert_eq!(driver.gvs.collections, vec![Collection::Free]);
+    assert_eq!(driver.gvs.free_collection.len(), 1);
+    assert_eq!(driver.gvs.free_collection, vec![0]);
+
+    Ok(())
+}
