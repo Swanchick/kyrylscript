@@ -4,4 +4,5 @@ use crate::types::Stack;
 pub enum Collection {
     String(String),
     Stack(Stack),
+    Free,
 }

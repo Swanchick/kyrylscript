@@ -1,4 +1,5 @@
 mod collection;
+mod frame;
 mod gvs;
 mod stack;
 pub mod variable;

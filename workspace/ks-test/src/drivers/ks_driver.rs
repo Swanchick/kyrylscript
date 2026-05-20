@@ -66,6 +66,7 @@ impl KsDriver {
         storage: Option<Vec<Option<Variable>>>,
         collections: Option<Vec<Collection>>,
         free_storage: Option<Vec<usize>>,
+        free_collection: Option<Vec<usize>>,
     ) -> Option<GVS> {
         let storage = if let Some(storage) = storage {
             storage
@@ -85,10 +86,17 @@ impl KsDriver {
             Vec::new()
         };
 
+        let free_collection = if let Some(free_collection) = free_collection {
+            free_collection
+        } else {
+            Vec::new()
+        };
+
         Some(GVS {
             storage,
             collections,
             free_storage,
+            free_collection,
         })
     }
 
@@ -151,7 +159,7 @@ impl KsDriver {
             false,
             None,
         );
-        let gvs = KsDriver::gvs_storage(Some(vec![Some(left), Some(right)]), None, None);
+        let gvs = KsDriver::gvs_storage(Some(vec![Some(left), Some(right)]), None, None, None);
 
         let driver = KsDriver::runner_configured(runner, gvs, instruction)?;
 
