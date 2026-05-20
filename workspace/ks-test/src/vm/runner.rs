@@ -927,6 +927,10 @@ fn free_string() -> KsResult<()> {
     assert_eq!(driver.gvs.free_storage.len(), 1);
     assert_eq!(driver.gvs.free_storage, vec![0]);
 
+    assert_eq!(driver.gvs.collections, vec![Collection::Free]);
+    assert_eq!(driver.gvs.free_collection.len(), 1);
+    assert_eq!(driver.gvs.free_collection, vec![0]);
+
     Ok(())
 }
 
@@ -957,6 +961,10 @@ fn free_collection() -> KsResult<()> {
 
     assert_eq!(driver.gvs.free_storage.len(), 4);
     assert_eq!(driver.gvs.free_storage, vec![0, 1, 2, 3]);
+
+    assert_eq!(driver.gvs.collections, vec![Collection::Free]);
+    assert_eq!(driver.gvs.free_collection.len(), 1);
+    assert_eq!(driver.gvs.free_collection, vec![0]);
 
     Ok(())
 }
