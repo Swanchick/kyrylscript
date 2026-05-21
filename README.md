@@ -27,7 +27,7 @@ A purpose-built runtime compiled from scratch, designed to run as a **separate p
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourname/kyrylscript.git
+git clone https://github.com/Swanchick/kyrylscript.git
 cd kyrylscript
 ```
 
