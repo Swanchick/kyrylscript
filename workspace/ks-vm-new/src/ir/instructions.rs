@@ -1,7 +1,6 @@
-use crate::compiler_new::types::CaptureSize;
+use crate::types::{ArgumentSize, CaptureSize, Offset, VariableId};
 
 use super::constant::Constant;
-use super::types::{ArgumentSize, Offset, VariableId};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Instruction {
@@ -30,8 +29,8 @@ pub enum Instruction {
     JumpIfFalse(Offset),
     JumpIfTrue(Offset),
     Jump(Offset),
-    Store(VariableId),
-    PubStore(VariableId),
+    Store,
+    PubStore,
     Assign,
     LoadConst(Constant),
     LoadVar(VariableId),

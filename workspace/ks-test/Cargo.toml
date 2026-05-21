@@ -9,3 +9,5 @@ ks-core = { path = "../ks-core" }
 ks-std = { path = "../ks-std" }
 ks-vm = { path = "../ks-vm" }
 ks-global = { path = "../ks-global" }
+ks-vm-new = { path = "../ks-vm-new" }
+paste = "1.0.15"

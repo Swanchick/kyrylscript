@@ -175,7 +175,7 @@ impl Compiler {
                 instructions.push(Instruction::Assign);
             }
 
-            Statement::AddValue { segments, value } => {
+            Statement::AddValue { segments, value: _ } => {
                 instructions = self.compile_identity(segments, instructions, true);
 
                 // instructions.push(Instruction::LoadVar(name.clone()));
@@ -186,7 +186,10 @@ impl Compiler {
                 // instructions.push(Instruction::Store(name.clone()));
             }
 
-            Statement::RemoveValue { segments, value } => {
+            Statement::RemoveValue {
+                segments: _,
+                value: _,
+            } => {
                 // instructions.push(Instruction::LoadVar(name.clone()));
                 // instructions = self.compile_expression(value, instructions);
 

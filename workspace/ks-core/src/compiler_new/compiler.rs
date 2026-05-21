@@ -2,6 +2,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
+use ks_vm_new::{Constant, Instruction, Program};
 
 use crate::parser::expression::Expression;
 use crate::parser::identifier_tail::IdentifierTail;
@@ -10,10 +11,7 @@ use crate::parser::parameter::Parameter;
 use crate::parser::statement::Statement;
 
 use super::collection::Collection;
-use super::constant::Constant;
 use super::environment::Environment;
-use super::instructions::Instruction;
-use super::program::Program;
 use super::slot::Slot;
 use super::types::{CollectionId, Pointer, VariableId};
 
@@ -140,11 +138,11 @@ impl CompilerNew {
         Ok(())
     }
 
-    fn insert_store(&mut self, variable_id: VariableId, public: bool) -> KsResult<()> {
+    fn insert_store(&mut self, public: bool) -> KsResult<()> {
         if public {
-            self.insert(Instruction::PubStore(variable_id))?;
+            self.insert(Instruction::PubStore)?;
         } else {
-            self.insert(Instruction::Store(variable_id))?;
+            self.insert(Instruction::Store)?;
         }
 
         Ok(())
@@ -162,8 +160,8 @@ impl CompilerNew {
             self.insert_constant(Constant::Null)
         }?;
 
-        let variable_id = self.environment.define_variable(name)?;
-        self.insert_store(variable_id, public)?;
+        self.environment.define_variable(name)?;
+        self.insert_store(public)?;
 
         Ok(())
     }
@@ -190,15 +188,15 @@ impl CompilerNew {
         self.scope_enter();
 
         for parameter in parameters {
-            let parameter_id = self.environment.define_variable(parameter.name)?;
-            self.insert(Instruction::Store(parameter_id))?;
+            self.environment.define_variable(parameter.name)?;
+            self.insert(Instruction::Store)?;
         }
 
         for index in 0..captured.len() {
-            self.insert(Instruction::LoadCapture(index))?;
+            self.insert(Instruction::LoadCapture(index as u64))?;
 
-            let variable_id = self.environment.define_variable(captured[index].clone())?;
-            self.insert(Instruction::Store(variable_id))?;
+            self.environment.define_variable(captured[index].clone())?;
+            self.insert(Instruction::Store)?;
         }
 
         self.scope_enter();
@@ -226,7 +224,7 @@ impl CompilerNew {
 
         self.scope_append(final_scope)?;
 
-        self.insert_constant(Constant::Integer(pointer as i32))?;
+        self.insert_constant(Constant::Integer(pointer as i64))?;
         let captured_len = captured.len();
         for capture in captured {
             let variable_id = self.environment.variable_id(&capture)?;
@@ -250,9 +248,8 @@ impl CompilerNew {
         let pointer = self.function(parameters, body, captured)?;
 
         self.environment.define_function(&name, pointer);
-
-        let variable_id = self.environment.define_variable(name)?;
-        self.insert_store(variable_id, public)?;
+        self.environment.define_variable(name)?;
+        self.insert_store(public)?;
 
         Ok(())
     }
@@ -265,7 +262,7 @@ impl CompilerNew {
         let variables = self.environment.current()?;
 
         if variables != 0 {
-            self.insert(Instruction::Free(variables))?;
+            self.insert(Instruction::Free(variables as usize))?;
         }
 
         self.insert(Instruction::Return)?;
@@ -371,11 +368,11 @@ impl CompilerNew {
         let iter_variable_id = self.environment.define_variable(name)?;
 
         self.compile_expression(list)?;
-        self.insert(Instruction::Store(iter_list))?;
+        self.insert(Instruction::Store)?;
         self.insert_constant(Constant::Integer(0))?;
-        self.insert(Instruction::Store(iter))?;
+        self.insert(Instruction::Store)?;
         self.insert_constant(Constant::Null)?;
-        self.insert(Instruction::Store(iter_variable_id))?;
+        self.insert(Instruction::Store)?;
 
         self.scope_enter();
         self.insert(Instruction::AssignVar(iter_variable_id))?;
@@ -475,11 +472,11 @@ impl CompilerNew {
             let collection = self.environment.collection(*collection_id)?;
             if let Collection::Module { children, indeces } = collection {
                 if let Some(variable_id) = indeces.get(&name) {
-                    if let Some(collection_id) = children.get(*variable_id) {
+                    if let Some(collection_id) = children.get(*variable_id as usize) {
                         *last_collection_id = collection_id.clone();
                     }
 
-                    self.insert_constant(Constant::Integer(*variable_id as i32))?;
+                    self.insert_constant(Constant::Integer(*variable_id as i64))?;
                     self.insert_collection(assign)?;
                 }
             }
@@ -555,7 +552,7 @@ impl CompilerNew {
                     *last_collection_id = collection_id.clone();
                 }
 
-                self.insert_constant(Constant::Integer(index))?;
+                self.insert_constant(Constant::Integer(index as i64))?;
                 self.insert_collection(assign)?;
             }
 
@@ -663,7 +660,7 @@ impl CompilerNew {
         for (name, expression) in module {
             self.compile_expression(expression)?;
 
-            indeces.insert(name, children.len());
+            indeces.insert(name, children.len() as u64);
             let temp_collection = self.environment.temp_collection();
             children.push(temp_collection);
         }
@@ -711,7 +708,9 @@ impl CompilerNew {
         match expression {
             Expression::NullLiteral => self.insert_constant(Constant::Null),
             Expression::BooleanLiteral(boolean) => self.insert_constant(Constant::Boolean(boolean)),
-            Expression::IntegerLiteral(integer) => self.insert_constant(Constant::Integer(integer)),
+            Expression::IntegerLiteral(integer) => {
+                self.insert_constant(Constant::Integer(integer as i64))
+            }
             Expression::FloatLiteral(float) => self.insert_constant(Constant::Float(float)),
             Expression::StringLiteral(string) => self.insert_constant(Constant::String(string)),
             Expression::Identifier(identifier) => self.identifier(identifier, false),

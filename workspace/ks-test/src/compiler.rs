@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use ks_core::compiler_new::constant::Constant;
-use ks_core::compiler_new::instructions::Instruction;
-use ks_core::compiler_new::program::Program;
 use ks_global::utils::ks_result::KsResult;
+use ks_vm_new::Constant;
+use ks_vm_new::Instruction;
+use ks_vm_new::Program;
 
 use crate::drivers::KsDriver;
 
@@ -24,7 +24,7 @@ fn create_main_function() -> KsResult<()> {
 fn simple_variable_declaration() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(100)),
-        Instruction::Store(0),
+        Instruction::Store,
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -48,7 +48,7 @@ fn expression() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(2)),
         Instruction::Minus,
         Instruction::Mul,
-        Instruction::Store(0),
+        Instruction::Store,
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -90,9 +90,9 @@ fn expression_statement() -> KsResult<()> {
 fn simple_identifier() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(10)),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::LoadVar(0),
-        Instruction::Store(1),
+        Instruction::Store,
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -116,7 +116,7 @@ fn function_declaration() -> KsResult<()> {
         Instruction::Return,
         Instruction::LoadConst(Constant::Integer(1)),
         Instruction::LoadFunction(0),
-        Instruction::Store(0),
+        Instruction::Store,
     ];
 
     let mut functions = HashMap::<String, usize>::new();
@@ -140,7 +140,7 @@ fn should_create_return_at_the_end() -> KsResult<()> {
         Instruction::Return,
         Instruction::LoadConst(Constant::Integer(1)),
         Instruction::LoadFunction(0),
-        Instruction::Store(0),
+        Instruction::Store,
     ];
 
     let mut functions = HashMap::<String, usize>::new();
@@ -161,8 +161,8 @@ fn should_create_return_at_the_end() -> KsResult<()> {
 fn function_with_parameters() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::Jump(7),                         // Skiping function to store it
-        Instruction::Store(0),                        // Storing parameter a
-        Instruction::Store(1),                        // Storing parameter b
+        Instruction::Store,                           // Storing parameter a
+        Instruction::Store,                           // Storing parameter b
         Instruction::LoadVar(0),                      // Loading var a to variable stack
         Instruction::LoadVar(1),                      // Loading var b to variable stack
         Instruction::Add,                             // Sum them
@@ -170,7 +170,7 @@ fn function_with_parameters() -> KsResult<()> {
         Instruction::Return,                          // And return
         Instruction::LoadConst(Constant::Integer(1)), // Defining function pointer
         Instruction::LoadFunction(0),                 // Save function with function pointer
-        Instruction::Store(0),                        // Saving function from variable stack
+        Instruction::Store,                           // Saving function from variable stack
     ];
 
     let mut functions = HashMap::<String, usize>::new();
@@ -197,7 +197,7 @@ fn function_call() -> KsResult<()> {
         Instruction::Return,
         Instruction::LoadConst(Constant::Integer(1)),
         Instruction::LoadFunction(0),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::LoadVar(0),
         Instruction::Call(0),
         Instruction::ClearAcc,
@@ -221,8 +221,8 @@ fn function_call() -> KsResult<()> {
 fn function_call_with_parameters() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::Jump(7),                         // Skiping function to store it
-        Instruction::Store(0),                        // Storing parameter a
-        Instruction::Store(1),                        // Storing parameter b
+        Instruction::Store,                           // Storing parameter a
+        Instruction::Store,                           // Storing parameter b
         Instruction::LoadVar(0),                      // Loading var a to variable stack
         Instruction::LoadVar(1),                      // Loading var b to variable stack
         Instruction::Add,                             // Sum them
@@ -230,7 +230,7 @@ fn function_call_with_parameters() -> KsResult<()> {
         Instruction::Return,                          // And return
         Instruction::LoadConst(Constant::Integer(1)), // Defining function pointer as variable and save to variable stack
         Instruction::LoadFunction(0),
-        Instruction::Store(0),   // Saving function from variable stack
+        Instruction::Store,      // Saving function from variable stack
         Instruction::LoadVar(0), // Loading variable stored on variable_id. It's a function
         Instruction::LoadConst(Constant::Integer(20)), // Loading constant 20
         Instruction::LoadConst(Constant::Integer(10)), // Loading constant 10
@@ -256,7 +256,7 @@ fn function_call_with_parameters() -> KsResult<()> {
 fn assignment_statment() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(10)),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::AssignVar(0),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Assign,
@@ -278,7 +278,7 @@ fn assignment_statment() -> KsResult<()> {
 fn add_value_statment() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(10)),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::AssignVar(0),
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(20)),
@@ -303,7 +303,7 @@ fn add_value_statment() -> KsResult<()> {
 fn remove_value_statment() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(10)),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::AssignVar(0),
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(20)),
@@ -327,7 +327,7 @@ fn remove_value_statment() -> KsResult<()> {
 fn if_statement() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(10)),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Eq,
@@ -352,7 +352,7 @@ fn if_statement() -> KsResult<()> {
 fn if_statement_with_else() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(10)),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Eq,
@@ -381,7 +381,7 @@ fn if_statement_with_else() -> KsResult<()> {
 fn while_statement() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(0)),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::Jump(5),
         Instruction::AssignVar(0),
         Instruction::LoadVar(0),
@@ -412,11 +412,11 @@ fn for_statement() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(1)),
         Instruction::LoadConst(Constant::Integer(2)),
         Instruction::LoadCollection(3),
-        Instruction::Store(0), // list_iter = [0, 1, 2]
+        Instruction::Store, // list_iter = [0, 1, 2]
         Instruction::LoadConst(Constant::Integer(0)),
-        Instruction::Store(1), // iterator = 0,
+        Instruction::Store, // iterator = 0,
         Instruction::LoadConst(Constant::Null),
-        Instruction::Store(2), // our preallocated variable
+        Instruction::Store, // our preallocated variable
         Instruction::AssignVar(2),
         Instruction::LoadVar(1),
         Instruction::LoadVar(0),
@@ -451,7 +451,7 @@ fn list_expression() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(40)),
         Instruction::LoadConst(Constant::Integer(50)),
         Instruction::LoadCollection(5),
-        Instruction::Store(0),
+        Instruction::Store,
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -469,13 +469,13 @@ fn list_expression() -> KsResult<()> {
 fn unary_operator() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Boolean(true)),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::LoadVar(0),
         Instruction::Not,
-        Instruction::Store(1),
+        Instruction::Store,
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Minus,
-        Instruction::Store(2),
+        Instruction::Store,
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -493,7 +493,7 @@ fn unary_operator() -> KsResult<()> {
 fn front_unary_operator() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(10)),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::LoadVar(0),
         Instruction::Increment,
         Instruction::ClearAcc,
@@ -502,7 +502,7 @@ fn front_unary_operator() -> KsResult<()> {
         Instruction::ClearAcc,
         Instruction::LoadVar(0),
         Instruction::Clone,
-        Instruction::Store(1),
+        Instruction::Store,
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -524,7 +524,7 @@ fn tuple_literal() -> KsResult<()> {
         Instruction::LoadConst(Constant::Float(3.14)),
         Instruction::LoadConst(Constant::Boolean(true)),
         Instruction::LoadCollection(4),
-        Instruction::Store(0),
+        Instruction::Store,
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -545,7 +545,7 @@ fn module_literal() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::LoadConst(Constant::String(String::from("Kyryl"))),
         Instruction::LoadCollection(3),
-        Instruction::Store(0),
+        Instruction::Store,
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -567,7 +567,7 @@ fn complex_module() -> KsResult<()> {
         Instruction::LoadCollection(2),
         Instruction::LoadConst(Constant::String(String::from("Kyryl"))),
         Instruction::LoadCollection(2),
-        Instruction::Store(0),
+        Instruction::Store,
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -588,7 +588,7 @@ fn access_module_children() -> KsResult<()> {
         Instruction::LoadConst(Constant::String(String::from("Hi"))),
         Instruction::LoadCollection(1),
         Instruction::LoadCollection(2),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(1)),
         Instruction::LoadFromCollection,
@@ -623,7 +623,7 @@ fn complex_access() -> KsResult<()> {
         Instruction::LoadCollection(4), // languages
         Instruction::LoadConst(Constant::String(String::from("Kyryl"))), // name
         Instruction::LoadCollection(3),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(2)),
         Instruction::LoadFromCollection,
@@ -661,7 +661,7 @@ fn complex_assignment_statement() -> KsResult<()> {
         Instruction::LoadConst(Constant::String(String::from("Becon"))),
         Instruction::LoadCollection(3),
         Instruction::LoadCollection(1),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::AssignVar(0),
         Instruction::LoadConst(Constant::Integer(0)),
         Instruction::AssignCollection,
@@ -686,39 +686,39 @@ fn complex_assignment_statement() -> KsResult<()> {
 fn scope_enter_exit() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(20)),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::LoadConst(Constant::Boolean(true)),
         Instruction::JumpIfFalse(3),
         Instruction::LoadConst(Constant::Integer(10)),
-        Instruction::Store(1),
+        Instruction::Store,
         Instruction::Free(1),
         Instruction::LoadConst(Constant::Integer(23)),
-        Instruction::Store(1),
+        Instruction::Store,
         Instruction::Jump(3),
         Instruction::LoadConst(Constant::String(String::from("Hello World"))),
-        Instruction::Store(2),
+        Instruction::Store,
         Instruction::Free(1),
         Instruction::LoadConst(Constant::Boolean(true)),
         Instruction::JumpIfTrue(-4),
         Instruction::LoadConst(Constant::Integer(10)),
-        Instruction::Store(2),
+        Instruction::Store,
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::LoadConst(Constant::Integer(30)),
         Instruction::LoadConst(Constant::Integer(40)),
         Instruction::LoadCollection(4),
-        Instruction::Store(3),
+        Instruction::Store,
         Instruction::LoadConst(Constant::Integer(0)),
-        Instruction::Store(4),
+        Instruction::Store,
         Instruction::LoadConst(Constant::Null),
-        Instruction::Store(5),
+        Instruction::Store,
         Instruction::AssignVar(5),
         Instruction::LoadVar(4),
         Instruction::LoadVar(3),
         Instruction::LoadFromCollection,
         Instruction::Assign,
         Instruction::LoadConst(Constant::Integer(10)),
-        Instruction::Store(6),
+        Instruction::Store,
         Instruction::Free(1),
         Instruction::LoadVar(4),
         Instruction::Increment,
@@ -728,7 +728,7 @@ fn scope_enter_exit() -> KsResult<()> {
         Instruction::JumpIfFalse(-13),
         Instruction::Free(3),
         Instruction::LoadConst(Constant::Integer(345)),
-        Instruction::Store(3),
+        Instruction::Store,
     ];
 
     let test_program = Program::new(instructions, HashMap::new());
@@ -746,19 +746,19 @@ fn scope_enter_exit() -> KsResult<()> {
 fn function_scope_store_name_register() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(10)),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::Jump(7),
         Instruction::LoadCapture(0),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::LoadConst(Constant::Integer(10)),
-        Instruction::Store(1),
+        Instruction::Store,
         Instruction::LoadVar(0),
         Instruction::Free(2),
         Instruction::Return,
         Instruction::LoadConst(Constant::Integer(3)),
         Instruction::LoadVar(0),
         Instruction::LoadFunction(1),
-        Instruction::Store(1),
+        Instruction::Store,
         Instruction::LoadVar(1),
         Instruction::Call(0),
         Instruction::ClearAcc,
@@ -782,7 +782,7 @@ fn function_scope_store_name_register() -> KsResult<()> {
 fn function_return_in_if_statement() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::Jump(12),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Eq,
@@ -791,12 +791,12 @@ fn function_return_in_if_statement() -> KsResult<()> {
         Instruction::Free(1),
         Instruction::Return,
         Instruction::LoadConst(Constant::Integer(20)),
-        Instruction::Store(1),
+        Instruction::Store,
         Instruction::Free(2),
         Instruction::Return,
         Instruction::LoadConst(Constant::Integer(1)),
         Instruction::LoadFunction(0),
-        Instruction::Store(0),
+        Instruction::Store,
     ];
 
     let mut functions = HashMap::<String, usize>::new();
@@ -817,15 +817,15 @@ fn function_return_in_if_statement() -> KsResult<()> {
 fn multiple_function_scoping() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(783)),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::Jump(19),
         Instruction::LoadConst(Constant::Integer(10)),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::Jump(9),
         Instruction::LoadCapture(0),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::LoadConst(Constant::Integer(20)),
-        Instruction::Store(1),
+        Instruction::Store,
         Instruction::LoadVar(0),
         Instruction::LoadVar(1),
         Instruction::Add,
@@ -834,17 +834,17 @@ fn multiple_function_scoping() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(6)),
         Instruction::LoadVar(0),
         Instruction::LoadFunction(1),
-        Instruction::Store(1),
+        Instruction::Store,
         Instruction::LoadVar(1),
         Instruction::Free(2),
         Instruction::Return,
         Instruction::LoadConst(Constant::Integer(3)),
         Instruction::LoadFunction(0),
-        Instruction::Store(1),
+        Instruction::Store,
         Instruction::LoadVar(1),
         Instruction::Call(0),
         Instruction::Call(0),
-        Instruction::Store(2),
+        Instruction::Store,
     ];
 
     let mut functions = HashMap::<String, usize>::new();
@@ -866,17 +866,17 @@ fn multiple_function_scoping() -> KsResult<()> {
 fn function_curring() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::Jump(29),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::Jump(22),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::LoadCapture(0),
-        Instruction::Store(1),
+        Instruction::Store,
         Instruction::Jump(12),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::LoadCapture(0),
-        Instruction::Store(1),
+        Instruction::Store,
         Instruction::LoadCapture(1),
-        Instruction::Store(2),
+        Instruction::Store,
         Instruction::LoadVar(1),
         Instruction::LoadVar(2),
         Instruction::Add,
@@ -897,7 +897,7 @@ fn function_curring() -> KsResult<()> {
         Instruction::Return,
         Instruction::LoadConst(Constant::Integer(1)),
         Instruction::LoadFunction(0),
-        Instruction::Store(0),
+        Instruction::Store,
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Call(1),
@@ -905,7 +905,7 @@ fn function_curring() -> KsResult<()> {
         Instruction::Call(1),
         Instruction::LoadConst(Constant::Integer(30)),
         Instruction::Call(1),
-        Instruction::Store(1),
+        Instruction::Store,
     ];
 
     let mut functions = HashMap::<String, usize>::new();

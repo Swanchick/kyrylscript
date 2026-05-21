@@ -1,6 +1,8 @@
-use super::instructions::Instruction;
-use super::types::Pointer;
 use std::collections::HashMap;
+
+use crate::types::Pointer;
+
+use super::instructions::Instruction;
 
 #[derive(Debug, PartialEq)]
 pub struct Program {

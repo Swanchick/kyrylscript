@@ -5,8 +5,7 @@ members = [
     "workspace/ks-std",
     "workspace/ks-vm",
     "workspace/ks-global",
-    # "workspace/ks-programator",
-    # "workspace/ks-esp32",
+    "workspace/ks-vm-new",
     "workspace/ks-test"
 ]
 

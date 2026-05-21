@@ -463,33 +463,6 @@ impl Parser {
         })
     }
 
-    fn parse_remove_value_statement(
-        &mut self,
-        segments: &Vec<IdentifierTail>,
-    ) -> KsResult<Statement> {
-        let identifier_type = self
-            .semantic_analyzer
-            .get_data_type_from_segments(segments)?;
-
-        let expression = self.parse_expression()?;
-        let data_type = self.semantic_analyzer.get_data_type(&expression)?;
-
-        if !(data_type == DataType::Float || data_type == DataType::Int) {
-            return Err(KsError::parse("Invalid data type for add assignment!"));
-        }
-
-        if identifier_type == data_type {
-            return Err(KsError::parse("Add assignment value mismatch!"));
-        }
-
-        self.consume_token(Token::Semicolon)?;
-
-        Ok(Statement::RemoveValue {
-            segments: segments.clone(),
-            value: expression,
-        })
-    }
-
     fn parse_variable_declaration_statement(&mut self, public: bool) -> KsResult<Statement> {
         let name = self.consume_identifier()?;
 
