@@ -1,69 +1,48 @@
 # KyrylScript
 
-**KyrylScript** is a lightweight interpreted programming language designed and built from scratch in Rust.  
-It combines the simplicity of scripting with the clarity of structured typing, offering a unique reference-based runtime without garbage collection.
+**KyrylScript** is a lightweight, high-performance programming language designed for embedded systems — bridging the gap between high-level expressiveness and low-level control.
 
-> A spiritual successor to Lua, with the structural rigor of Rust and the flexibility of Python.
+> **Note:** This project is in active development. Expect frequent changes and potential bugs.
 
 ---
 
 ## Features
 
-- **Custom Lexer and Parser**
-  - Hand-written in Rust, with clear syntax trees and tokenization rules.
+### Custom Lexer and Parser
+Hand-written in Rust, featuring clean syntax trees and well-defined tokenization rules — giving full control over parsing behavior with no external dependencies.
 
-- **Runtime and Scoping**
-  - Lexical scoping with reference-based variable tracking.
-  - No garbage collector — all memory is managed manually using reference IDs.
+### Runtime and Scoping
+Lexical scoping with reference-based variable tracking. No garbage collector — memory is managed manually using reference IDs, making it ideal for resource-constrained environments.
 
-- **Type System**
-  - Built-in support for numbers, strings, booleans, lists, tuples, functions, and native values.
+### Type System
+Built-in support for a rich set of primitive and compound types:
+`number` · `string` · `boolean` · `list` · `tuple` · `function` · `native`
 
-- **Control Structures**
-  - If/else, while loops, pattern matching, recursion, scoped blocks.
-
-- **Native Function Registry**
-  - Easily extend the language by registering native Rust functions with the runtime.
+### KIRIL — Kyryl's Intermediate Runtime & Intermediate Language
+A purpose-built runtime compiled from scratch, designed to run as a **separate process** that accepts a stream of IL (Intermediate Language) instructions. KIRIL is capable of running **without an OS**, utilizing a custom allocator for full environment independence.
 
 ---
 
 ## Getting Started
 
-1. **Clone the repo**
-
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/yourname/kyrylscript.git
 cd kyrylscript
 ```
 
-2. **Build & Run**
-
+### 2. Build & Run
 ```bash
-cargo run -- examples/test.ks
+cargo run -- examples/test.ks -p ks-cli
 ```
-
----
-
-## Roadmap
-
-* [x] Lexing, Parsing, Runtime
-* [x] Custom Value Model
-* [x] Native Function Integration
-* [x] Basic Control Structures
-* [x] Functional Programming Support
-* [ ] Generics
-* [ ] Module System & Imports
-* [ ] REPL
-* [ ] Object-Oriented Programming System
-* [ ] Online Playground
 
 ---
 
 ## License
 
-MIT © 2025 Kyryl Lebedenko
+GNU General Public License v3.0 © 2026 Kyryl Lebedenko
 
 ---
 
-> Created with love by Kyryl Lebedenko 
+*Created with love by Kyryl Lebedenko :3*
 
