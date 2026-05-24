@@ -1006,7 +1006,7 @@ fn clear_acc() -> KsResult<()> {
 
 #[test]
 fn jump_if_false_if_actually_false() -> KsResult<()> {
-    let condition = Variable::from(false);
+    let condition = Variable::from(false).with_owners(1);
 
     let gvs = KsDriver::gvs_storage(Some(vec![Some(condition)]), None, None, None);
     let acc = Stack::from(vec![0]);
@@ -1026,7 +1026,7 @@ fn jump_if_false_if_actually_false() -> KsResult<()> {
 
 #[test]
 fn jump_if_false_if_actually_true() -> KsResult<()> {
-    let condition = Variable::from(true);
+    let condition = Variable::from(true).with_owners(1);
 
     let gvs = KsDriver::gvs_storage(Some(vec![Some(condition)]), None, None, None);
     let acc = Stack::from(vec![0]);
