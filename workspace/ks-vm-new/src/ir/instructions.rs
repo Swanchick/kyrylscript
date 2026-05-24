@@ -4,7 +4,6 @@ use super::constant::Constant;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Instruction {
-    // Expressions
     Add,
     Minus,
     Mul,

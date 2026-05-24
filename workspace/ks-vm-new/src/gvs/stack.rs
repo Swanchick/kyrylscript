@@ -1,7 +1,10 @@
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
-use crate::types::{Slot, StorageId};
+use crate::{
+    gvs::variable,
+    types::{Slot, StorageId},
+};
 
 use super::{GVS, Variable};
 
@@ -39,10 +42,10 @@ impl Stack {
 
     pub fn pop(&mut self, gvs: &mut GVS) -> KsResult<Variable> {
         if let Some(storage_id) = self.data.pop() {
+            let variable = gvs.variable(storage_id)?.clone();
             gvs.storage_remove_owner(storage_id)?;
-            let variable = gvs.variable(storage_id)?;
 
-            Ok(variable.clone())
+            Ok(variable)
         } else {
             Err(KsError::runtime("No Varialbe in ACC"))
         }
