@@ -1108,3 +1108,43 @@ fn jump_if_false_if_actually_true() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn jump_if_true_if_actually_false() -> KsResult<()> {
+    let condition = Variable::from(false).with_owners(1);
+
+    let gvs = KsDriver::gvs_storage(Some(vec![Some(condition)]), None, None, None);
+    let acc = Stack::from(vec![0]);
+
+    let runner = KsDriver::runner_default(Some(acc), None, false, None);
+    let jump_offset = 32;
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::JumpIfTrue(jump_offset))?;
+
+    assert_eq!(driver.runner.program_counter(), 1);
+    assert_eq!(driver.runner.prevent_step, false);
+
+    assert_eq!(driver.runner.acc.len(), 0);
+
+    Ok(())
+}
+
+#[test]
+fn jump_if_true_if_actually_true() -> KsResult<()> {
+    let condition = Variable::from(true).with_owners(1);
+
+    let gvs = KsDriver::gvs_storage(Some(vec![Some(condition)]), None, None, None);
+    let acc = Stack::from(vec![0]);
+
+    let runner = KsDriver::runner_default(Some(acc), None, false, None);
+    let jump_offset = 32;
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::JumpIfTrue(jump_offset))?;
+
+    assert_eq!(driver.runner.program_counter(), jump_offset as usize);
+    assert_eq!(driver.runner.prevent_step, false);
+
+    assert_eq!(driver.runner.acc.len(), 0);
+
+    Ok(())
+}
