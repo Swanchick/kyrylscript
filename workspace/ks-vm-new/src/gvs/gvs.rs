@@ -1,3 +1,5 @@
+use std::path::Component::ParentDir;
+
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
@@ -56,6 +58,12 @@ impl GVS {
         Ok(())
     }
 
+    fn free_primitive(&mut self, storage_id: StorageId) {
+        let storage_id = storage_id as usize;
+        self.storage[storage_id] = None;
+        self.free_storage.push(storage_id);
+    }
+
     fn free_string(&mut self, storage_id: StorageId) -> KsResult<()> {
         let collection_id = {
             let variable = self.variable(storage_id)?;
@@ -68,24 +76,40 @@ impl GVS {
         Ok(())
     }
 
-    fn free_collection(&mut self, storage_id: StorageId) -> KsResult<()> {
-        self.collection_iter(storage_id, |gvs, current_storage_id| {
-            if storage_id == current_storage_id {
-                return Ok(());
-            }
-
-            gvs.storage_remove_owner(current_storage_id)?;
-
-            Ok(())
-        })?;
-
-        let collection_id = {
-            let variable = self.variable(storage_id)?;
-            variable.value as usize
-        };
-
+    fn free_collection(&mut self, collection_id: CollectionId) {
+        let collection_id = collection_id as usize;
         self.collections[collection_id] = Collection::Free;
         self.free_collection.push(collection_id as usize);
+    }
+
+    fn free_stack(&mut self, storage_id: StorageId) -> KsResult<()> {
+        self.collection_iter(
+            storage_id,
+            |gvs, current_storage_id| {
+                gvs.storage_remove_owner(current_storage_id)?;
+
+                Ok(())
+            },
+            |gvs, current_storage_id| {
+                let (collection_id, owners) = {
+                    let variable = gvs.variable_mut(current_storage_id)?;
+                    variable.owners = variable.owners.saturating_sub(1);
+                    (variable.value, variable.owners)
+                };
+
+                if current_storage_id == storage_id {
+                    gvs.free_collection(collection_id);
+                    return Ok(());
+                }
+
+                if owners == 0 {
+                    gvs.free_collection(collection_id);
+                    gvs.free_primitive(current_storage_id);
+                }
+
+                Ok(())
+            },
+        )?;
 
         Ok(())
     }
@@ -94,14 +118,11 @@ impl GVS {
         match value_type {
             INT_TYPE | FLOAT_TYPE | NULL_TYPE | BOOLEAN_TYPE => Ok(()),
             STRING_TYPE => self.free_string(storage_id),
-            COLLECTION_TYPE => self.free_collection(storage_id),
+            COLLECTION_TYPE => self.free_stack(storage_id),
             _ => Err(KsError::runtime("Invalid variable type to free")),
         }?;
 
-        let storage_id = storage_id as usize;
-
-        self.storage[storage_id] = None;
-        self.free_storage.push(storage_id);
+        self.free_primitive(storage_id);
 
         Ok(())
     }
@@ -180,13 +201,15 @@ impl GVS {
         }
     }
 
-    pub fn collection_iter<VARIABLE>(
+    fn collection_iter<VARIABLE, STACK>(
         &mut self,
         storage_id: StorageId,
         mut variable_func: VARIABLE,
+        mut stack_func: STACK,
     ) -> KsResult<()>
     where
         VARIABLE: FnMut(&mut Self, StorageId) -> KsResult<()>,
+        STACK: FnMut(&mut Self, StorageId) -> KsResult<()>,
     {
         let collection_id = {
             let variable = self.variable(storage_id)?;
@@ -218,7 +241,7 @@ impl GVS {
 
                 variable_func(self, *storage_id)?;
             } else {
-                variable_func(self, frame.storage_id)?;
+                stack_func(self, frame.storage_id)?;
             }
         }
 
