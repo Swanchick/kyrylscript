@@ -83,8 +83,6 @@ impl GVS {
     }
 
     fn free_stack(&mut self, storage_id: StorageId) -> KsResult<()> {
-        println!("Started new collection free");
-
         self.collection_iter(
             storage_id,
             |gvs, current_storage_id| {
