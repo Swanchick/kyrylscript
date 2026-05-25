@@ -1148,3 +1148,8 @@ fn jump_if_true_if_actually_true() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn call() -> KsResult<()> {
+    Ok(())
+}

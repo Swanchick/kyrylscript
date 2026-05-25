@@ -1,6 +1,6 @@
 use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
 
-use crate::types::{CollectionId, Owners};
+use crate::types::{CollectionId, Offset, Owners};
 
 pub const NULL_TYPE: u8 = 0;
 pub const INT_TYPE: u8 = 1;
@@ -8,6 +8,7 @@ pub const FLOAT_TYPE: u8 = 2;
 pub const STRING_TYPE: u8 = 3;
 pub const BOOLEAN_TYPE: u8 = 4;
 pub const COLLECTION_TYPE: u8 = 5;
+pub const FUNCTION_TYPE: u8 = 6;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Variable {
@@ -58,6 +59,10 @@ impl Variable {
 
     pub fn collection(collection_id: CollectionId) -> Self {
         Self::new(COLLECTION_TYPE, collection_id)
+    }
+
+    pub fn function(offset: Offset) -> Self {
+        Self::new(FUNCTION_TYPE, offset as u64)
     }
 
     pub fn as_boolean(&self) -> bool {

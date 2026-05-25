@@ -1,21 +1,21 @@
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
-use super::types::{Offset, Pointer, Slot};
-use super::{Constant, Instruction};
-
-use crate::environment::variable::{
+use super::call_stack::CallStack;
+use super::environment::variable::{
     BOOLEAN_TYPE, COLLECTION_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STRING_TYPE,
 };
-use crate::environment::{GVS, Stack, Variable};
-use crate::types::{CollectionId, StorageId};
+use super::environment::{GVS, Stack, Variable};
+use super::types::{CollectionId, StorageId};
+use super::types::{Offset, Pointer, Slot};
+use super::{Constant, Instruction};
 
 #[derive(Debug)]
 pub struct Runner {
     pub program_counter: Pointer,
     pub acc: Stack,
     pub stack: Stack,
-    pub call_stack: Vec<Pointer>,
+    pub call_stack: Vec<CallStack>,
     pub prevent_step: bool,
 }
 
