@@ -1,10 +1,7 @@
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
-use crate::{
-    gvs::variable,
-    types::{Slot, StorageId},
-};
+use crate::types::{Slot, StorageId};
 
 use super::{GVS, Variable};
 

@@ -1,8 +1,8 @@
-use crate::types::Stack;
+use crate::types::StorageId;
 
 #[derive(Debug, PartialEq)]
 pub enum Collection {
     String(String),
-    Stack(Stack),
+    Stack(Vec<StorageId>),
     Free,
 }

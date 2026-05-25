@@ -5,7 +5,6 @@ pub type VariableId = u64;
 pub type Pointer = usize;
 
 pub type Slot = u64;
-pub type Stack = Vec<Slot>;
 
 pub type CollectionId = u64;
 pub type StorageId = u64;
