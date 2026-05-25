@@ -5,7 +5,7 @@ use ks_global::utils::ks_result::KsResult;
 use crate::Instruction;
 
 use super::Program;
-use super::gvs::GVS;
+use super::environment::GVS;
 use super::runner::Runner;
 
 pub struct VM {

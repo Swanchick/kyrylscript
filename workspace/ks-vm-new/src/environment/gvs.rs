@@ -18,6 +18,12 @@ pub struct GVS {
     pub free_collection: Vec<usize>,
 }
 
+impl Default for GVS {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GVS {
     pub fn new() -> Self {
         Self {
@@ -77,7 +83,7 @@ impl GVS {
     fn free_collection(&mut self, collection_id: CollectionId) {
         let collection_id = collection_id as usize;
         self.collections[collection_id] = Collection::Free;
-        self.free_collection.push(collection_id as usize);
+        self.free_collection.push(collection_id);
     }
 
     fn free_stack(&mut self, storage_id: StorageId) -> KsResult<()> {

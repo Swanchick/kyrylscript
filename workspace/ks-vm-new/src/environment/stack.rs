@@ -16,6 +16,12 @@ impl From<Vec<Slot>> for Stack {
     }
 }
 
+impl Default for Stack {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Stack {
     pub fn new() -> Self {
         Self { data: Vec::new() }
@@ -65,6 +71,10 @@ impl Stack {
 
     pub fn len(&self) -> usize {
         self.data.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.data.is_empty()
     }
 
     pub fn last<'a>(&self, gvs: &'a mut GVS) -> KsResult<&'a Variable> {
