@@ -393,16 +393,14 @@ impl Runner {
         Ok(())
     }
 
-    fn jump_if_false(&mut self, gvs: &mut GVS, offset: i32) -> KsResult<()> {
-        println!("GVS: {:?}", gvs);
-
+    fn jump_if(&mut self, gvs: &mut GVS, offset: i32, boolean: bool) -> KsResult<()> {
         let variable = self.acc.pop(gvs)?;
 
         if variable.value_type != BOOLEAN_TYPE {
             return Err(KsError::runtime("Invalid value type, expected boolean"));
         }
 
-        if !variable.as_boolean() {
+        if variable.as_boolean() == boolean {
             self.jump(offset)?;
         }
 
@@ -434,7 +432,8 @@ impl Runner {
             Instruction::Store => self.store(),
             Instruction::Free(size) => self.free(gvs, size),
             Instruction::ClearAcc => self.clear_acc(gvs),
-            Instruction::JumpIfFalse(offset) => self.jump_if_false(gvs, offset),
+            Instruction::JumpIfFalse(offset) => self.jump_if(gvs, offset, false),
+            Instruction::JumpIfTrue(offset) => self.jump_if(gvs, offset, true),
             _ => todo!(),
         }?;
 
