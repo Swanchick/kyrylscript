@@ -4,10 +4,10 @@ use ks_global::utils::ks_result::KsResult;
 use super::types::{Offset, Pointer, Slot};
 use super::{Constant, Instruction};
 
-use crate::gvs::variable::{
+use crate::environment::variable::{
     BOOLEAN_TYPE, COLLECTION_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STRING_TYPE,
 };
-use crate::gvs::{GVS, Stack, Variable};
+use crate::environment::{GVS, Stack, Variable};
 use crate::types::{CollectionId, StorageId};
 
 #[derive(Debug)]
@@ -17,6 +17,12 @@ pub struct Runner {
     pub stack: Stack,
     pub call_stack: Vec<Pointer>,
     pub prevent_step: bool,
+}
+
+impl Default for Runner {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Runner {
