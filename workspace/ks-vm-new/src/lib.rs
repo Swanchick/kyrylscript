@@ -7,6 +7,7 @@ mod types;
 mod utils;
 mod vm;
 
+pub use call_stack::CallStack;
 pub use environment::{Collection, GVS, Stack, Variable};
 pub use ir::constant::Constant;
 pub use ir::instructions::Instruction;
