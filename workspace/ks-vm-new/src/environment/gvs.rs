@@ -6,7 +6,6 @@ use crate::types::{CollectionId, Slot, StorageId};
 
 use super::Variable;
 use super::frame::Frame;
-use super::variable::{BOOLEAN_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STACK_TYPE, STRING_TYPE};
 
 #[derive(Debug)]
 pub struct GVS {

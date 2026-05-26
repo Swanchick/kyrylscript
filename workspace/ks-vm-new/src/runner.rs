@@ -444,7 +444,7 @@ impl Runner {
             Instruction::ClearAcc => self.clear_acc(gvs),
             Instruction::JumpIfFalse(offset) => self.jump_if(gvs, offset, false),
             Instruction::JumpIfTrue(offset) => self.jump_if(gvs, offset, true),
-            Instruction::Call(_) => self.call(gvs),
+            Instruction::Call => self.call(gvs),
             _ => todo!(),
         }?;
 

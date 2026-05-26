@@ -506,13 +506,11 @@ impl CompilerNew {
         if assign {
             return Err(KsError::parse("Cannot call in assign statement"));
         }
-
-        let arguments = expressions.len();
         while let Some(expression) = expressions.pop() {
             self.compile_expression(expression)?;
         }
 
-        self.insert(Instruction::Call(arguments))?;
+        self.insert(Instruction::Call)?;
 
         Ok(())
     }
