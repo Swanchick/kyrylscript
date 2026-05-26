@@ -3,7 +3,7 @@ use ks_global::utils::ks_result::KsResult;
 
 use super::call_stack::CallStack;
 use super::environment::variable::{
-    BOOLEAN_TYPE, COLLECTION_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STRING_TYPE,
+    BOOLEAN_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STACK_TYPE, STRING_TYPE,
 };
 use super::environment::{GVS, Stack, Variable};
 use super::types::{CollectionId, StorageId};
@@ -356,7 +356,7 @@ impl Runner {
         match variable.value_type {
             INT_TYPE | FLOAT_TYPE | NULL_TYPE | BOOLEAN_TYPE => Ok(()),
             STRING_TYPE => self.clone_string(gvs, &mut variable),
-            COLLECTION_TYPE => self.clone_stack(gvs, &mut variable),
+            STACK_TYPE => self.clone_stack(gvs, &mut variable),
             _ => Err(KsError::runtime("Invalid value_type for clone")),
         }?;
 

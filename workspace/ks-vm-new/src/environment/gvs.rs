@@ -6,9 +6,7 @@ use crate::types::{CollectionId, Slot, StorageId};
 
 use super::Variable;
 use super::frame::Frame;
-use super::variable::{
-    BOOLEAN_TYPE, COLLECTION_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STRING_TYPE,
-};
+use super::variable::{BOOLEAN_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STACK_TYPE, STRING_TYPE};
 
 #[derive(Debug)]
 pub struct GVS {
@@ -117,13 +115,14 @@ impl GVS {
         Ok(())
     }
 
-    fn free(&mut self, storage_id: StorageId, value_type: u8) -> KsResult<()> {
-        match value_type {
-            INT_TYPE | FLOAT_TYPE | NULL_TYPE | BOOLEAN_TYPE => Ok(()),
-            STRING_TYPE => self.free_string(storage_id),
-            COLLECTION_TYPE => self.free_stack(storage_id),
-            _ => Err(KsError::runtime("Invalid variable type to free")),
-        }?;
+    fn free(&mut self, storage_id: StorageId) -> KsResult<()> {
+        let variable = self.variable(storage_id)?;
+
+        if variable.is_stack() {
+            self.free_stack(storage_id)?;
+        } else if variable.is_string() {
+            self.free_string(storage_id)?;
+        }
 
         self.free_primitive(storage_id);
 
@@ -131,14 +130,14 @@ impl GVS {
     }
 
     pub fn storage_remove_owner(&mut self, storage_id: StorageId) -> KsResult<()> {
-        let (owners, value_type) = {
+        let owners = {
             let variable = self.variable_mut(storage_id)?;
             variable.owners = variable.owners.saturating_sub(1);
-            (variable.owners, variable.value_type)
+            variable.owners
         };
 
         if owners == 0 {
-            self.free(storage_id, value_type)?;
+            self.free(storage_id)?;
         }
 
         Ok(())
@@ -217,7 +216,7 @@ impl GVS {
         let collection_id = {
             let variable = self.variable(storage_id)?;
 
-            if variable.value_type != COLLECTION_TYPE {
+            if !variable.is_stack() {
                 return Err(KsError::runtime(
                     "Cannot iterate over non collection variable",
                 ));
@@ -237,7 +236,7 @@ impl GVS {
                 collections.push(frame);
 
                 let variable = self.variable(*storage_id)?;
-                if variable.value_type == COLLECTION_TYPE {
+                if variable.is_stack() {
                     collections.push(Frame::new(*storage_id, variable.value));
                     continue;
                 }

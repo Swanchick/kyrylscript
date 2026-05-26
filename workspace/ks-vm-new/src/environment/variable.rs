@@ -7,7 +7,7 @@ pub const INT_TYPE: u8 = 1;
 pub const FLOAT_TYPE: u8 = 2;
 pub const STRING_TYPE: u8 = 3;
 pub const BOOLEAN_TYPE: u8 = 4;
-pub const COLLECTION_TYPE: u8 = 5;
+pub const STACK_TYPE: u8 = 5;
 pub const FUNCTION_TYPE: u8 = 6;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -58,7 +58,7 @@ impl Variable {
     }
 
     pub fn collection(collection_id: CollectionId) -> Self {
-        Self::new(COLLECTION_TYPE, collection_id)
+        Self::new(STACK_TYPE, collection_id)
     }
 
     pub fn function(pointer: Pointer) -> Self {
@@ -67,6 +67,21 @@ impl Variable {
 
     pub fn as_boolean(&self) -> bool {
         self.value == 1
+    }
+
+    pub fn is_primitive(&self) -> bool {
+        matches!(
+            self.value_type,
+            INT_TYPE | FLOAT_TYPE | NULL_TYPE | BOOLEAN_TYPE | FUNCTION_TYPE
+        )
+    }
+
+    pub fn is_string(&self) -> bool {
+        self.value_type == STRING_TYPE
+    }
+
+    pub fn is_stack(&self) -> bool {
+        self.value_type == STACK_TYPE
     }
 
     pub fn as_f64(&self) -> KsResult<f64> {
