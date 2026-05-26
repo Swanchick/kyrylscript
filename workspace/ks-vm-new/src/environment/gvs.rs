@@ -68,22 +68,21 @@ impl GVS {
         self.free_storage.push(storage_id);
     }
 
-    fn free_string(&mut self, storage_id: StorageId) -> KsResult<()> {
-        let collection_id = {
-            let variable = self.variable(storage_id)?;
-            variable.value as usize
-        };
-
-        self.collections[collection_id] = Collection::Free;
-        self.free_collection.push(storage_id as usize);
-
-        Ok(())
-    }
-
     fn free_collection(&mut self, collection_id: CollectionId) {
         let collection_id = collection_id as usize;
         self.collections[collection_id] = Collection::Free;
         self.free_collection.push(collection_id);
+    }
+
+    fn free_string(&mut self, storage_id: StorageId) -> KsResult<()> {
+        let collection_id = {
+            let variable = self.variable(storage_id)?;
+            variable.value
+        };
+
+        self.free_collection(collection_id);
+
+        Ok(())
     }
 
     fn free_stack(&mut self, storage_id: StorageId) -> KsResult<()> {

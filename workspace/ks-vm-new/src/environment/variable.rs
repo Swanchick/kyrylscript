@@ -1,6 +1,6 @@
 use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
 
-use crate::types::{CollectionId, Offset, Owners};
+use crate::types::{CollectionId, Owners, Pointer};
 
 pub const NULL_TYPE: u8 = 0;
 pub const INT_TYPE: u8 = 1;
@@ -61,8 +61,8 @@ impl Variable {
         Self::new(COLLECTION_TYPE, collection_id)
     }
 
-    pub fn function(offset: Offset) -> Self {
-        Self::new(FUNCTION_TYPE, offset as u64)
+    pub fn function(pointer: Pointer) -> Self {
+        Self::new(FUNCTION_TYPE, pointer as u64)
     }
 
     pub fn as_boolean(&self) -> bool {
