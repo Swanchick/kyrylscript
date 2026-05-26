@@ -1,21 +1,23 @@
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
+use crate::environment::variable::FUNCTION_TYPE;
+
+use super::call_stack::CallStack;
+use super::environment::variable::{
+    BOOLEAN_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STACK_TYPE, STRING_TYPE,
+};
+use super::environment::{GVS, Stack, Variable};
+use super::types::{CollectionId, StorageId};
 use super::types::{Offset, Pointer, Slot};
 use super::{Constant, Instruction};
-
-use crate::environment::variable::{
-    BOOLEAN_TYPE, COLLECTION_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STRING_TYPE,
-};
-use crate::environment::{GVS, Stack, Variable};
-use crate::types::{CollectionId, StorageId};
 
 #[derive(Debug)]
 pub struct Runner {
     pub program_counter: Pointer,
     pub acc: Stack,
     pub stack: Stack,
-    pub call_stack: Vec<Pointer>,
+    pub call_stack: Vec<CallStack>,
     pub prevent_step: bool,
 }
 
@@ -356,7 +358,7 @@ impl Runner {
         match variable.value_type {
             INT_TYPE | FLOAT_TYPE | NULL_TYPE | BOOLEAN_TYPE => Ok(()),
             STRING_TYPE => self.clone_string(gvs, &mut variable),
-            COLLECTION_TYPE => self.clone_stack(gvs, &mut variable),
+            STACK_TYPE => self.clone_stack(gvs, &mut variable),
             _ => Err(KsError::runtime("Invalid value_type for clone")),
         }?;
 
@@ -413,6 +415,37 @@ impl Runner {
         Ok(())
     }
 
+    fn call(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        let function = self.acc.pop(gvs)?;
+        if function.value_type != FUNCTION_TYPE {
+            return Err(KsError::runtime("Variable is not a function!"));
+        }
+
+        self.prevent_step = true;
+
+        let return_pointer = self.program_counter;
+        let stack_pointer = self.stack.len();
+
+        let call_stack = CallStack::new(return_pointer, stack_pointer);
+        self.call_stack.push(call_stack);
+
+        self.program_counter = function.value as usize;
+
+        Ok(())
+    }
+
+    pub fn on_return(&mut self) -> KsResult<()> {
+        if let Some(call_stack) = self.call_stack.pop() {
+            self.program_counter = call_stack.return_pointer;
+
+            Ok(())
+        } else {
+            Err(KsError::runtime(
+                "CallStack is empty, cannot execute return",
+            ))
+        }
+    }
+
     pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
         match instruction {
             Instruction::LoadConst(constant) => self.load_const(gvs, constant),
@@ -440,6 +473,8 @@ impl Runner {
             Instruction::ClearAcc => self.clear_acc(gvs),
             Instruction::JumpIfFalse(offset) => self.jump_if(gvs, offset, false),
             Instruction::JumpIfTrue(offset) => self.jump_if(gvs, offset, true),
+            Instruction::Call => self.call(gvs),
+            Instruction::Return => self.on_return(),
             _ => todo!(),
         }?;
 

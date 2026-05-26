@@ -199,7 +199,7 @@ fn function_call() -> KsResult<()> {
         Instruction::LoadFunction(0),
         Instruction::Store,
         Instruction::LoadVar(0),
-        Instruction::Call(0),
+        Instruction::Call,
         Instruction::ClearAcc,
     ];
 
@@ -234,7 +234,7 @@ fn function_call_with_parameters() -> KsResult<()> {
         Instruction::LoadVar(0), // Loading variable stored on variable_id. It's a function
         Instruction::LoadConst(Constant::Integer(20)), // Loading constant 20
         Instruction::LoadConst(Constant::Integer(10)), // Loading constant 10
-        Instruction::Call(2),    // Calling function with 2 arguments stored in variable stack
+        Instruction::Call,       // Calling function with 2 arguments stored in variable stack
         Instruction::ClearAcc,   // Ending an expression
     ];
 
@@ -760,7 +760,7 @@ fn function_scope_store_name_register() -> KsResult<()> {
         Instruction::LoadFunction(1),
         Instruction::Store,
         Instruction::LoadVar(1),
-        Instruction::Call(0),
+        Instruction::Call,
         Instruction::ClearAcc,
     ];
 
@@ -842,8 +842,8 @@ fn multiple_function_scoping() -> KsResult<()> {
         Instruction::LoadFunction(0),
         Instruction::Store,
         Instruction::LoadVar(1),
-        Instruction::Call(0),
-        Instruction::Call(0),
+        Instruction::Call,
+        Instruction::Call,
         Instruction::Store,
     ];
 
@@ -900,11 +900,11 @@ fn function_curring() -> KsResult<()> {
         Instruction::Store,
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(10)),
-        Instruction::Call(1),
+        Instruction::Call,
         Instruction::LoadConst(Constant::Integer(20)),
-        Instruction::Call(1),
+        Instruction::Call,
         Instruction::LoadConst(Constant::Integer(30)),
-        Instruction::Call(1),
+        Instruction::Call,
         Instruction::Store,
     ];
 
