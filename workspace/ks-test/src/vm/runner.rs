@@ -1222,7 +1222,7 @@ fn load_function_empty() -> KsResult<()> {
 }
 
 // #[test]
-// fn load_function_with_closure() -> KsResult<()> {
+// fn load_function_with_capture() -> KsResult<()> {
 //     let storage = vec![
 //         Some(Variable::from(20).with_owners(1)),
 //         Some(Variable::from(1).with_owners(1)),

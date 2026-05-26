@@ -1,14 +1,12 @@
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
-use crate::environment::variable::FUNCTION_TYPE;
-
 use super::call_stack::CallStack;
 use super::environment::variable::{
-    BOOLEAN_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STACK_TYPE, STRING_TYPE,
+    BOOLEAN_TYPE, FLOAT_TYPE, FUNCTION_TYPE, INT_TYPE, NULL_TYPE, STACK_TYPE, STRING_TYPE,
 };
 use super::environment::{GVS, Stack, Variable};
-use super::types::{CollectionId, StorageId};
+use super::types::{CaptureSize, CollectionId, StorageId};
 use super::types::{Offset, Pointer, Slot};
 use super::{Constant, Instruction};
 
@@ -434,7 +432,7 @@ impl Runner {
         Ok(())
     }
 
-    pub fn on_return(&mut self) -> KsResult<()> {
+    fn on_return(&mut self) -> KsResult<()> {
         if let Some(call_stack) = self.call_stack.pop() {
             self.program_counter = call_stack.return_pointer;
 
@@ -444,6 +442,19 @@ impl Runner {
                 "CallStack is empty, cannot execute return",
             ))
         }
+    }
+
+    fn load_function(&mut self, gvs: &mut GVS, captures: CaptureSize) -> KsResult<()> {
+        if captures != 0 {
+            todo!("Implement captures for function")
+        }
+
+        let variable_pointer = self.acc.pop(gvs)?;
+
+        let function = Variable::function(variable_pointer.value as Pointer);
+        self.acc.push(gvs, function)?;
+
+        Ok(())
     }
 
     pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
@@ -475,6 +486,7 @@ impl Runner {
             Instruction::JumpIfTrue(offset) => self.jump_if(gvs, offset, true),
             Instruction::Call => self.call(gvs),
             Instruction::Return => self.on_return(),
+            Instruction::LoadFunction(captures) => self.load_function(gvs, captures),
             _ => todo!(),
         }?;
 
