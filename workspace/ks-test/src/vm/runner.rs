@@ -1161,11 +1161,36 @@ fn call_no_arguments() -> KsResult<()> {
     let driver = KsDriver::runner_configured(runner, gvs, Instruction::Call(0))?;
 
     assert_eq!(driver.runner.program_counter, 20);
-    assert_eq!(driver.runner.call_stack.len(), 0);
+    assert_eq!(driver.runner.call_stack.len(), 1);
     assert_eq!(driver.runner.call_stack[0].return_pointer, 1);
     assert_eq!(driver.runner.call_stack[0].stack_pointer, 0);
 
     assert_eq!(driver.runner.acc.len(), 0);
+
+    Ok(())
+}
+
+#[test]
+fn call_with_arguments() -> KsResult<()> {
+    let storage = vec![
+        Some(Variable::function(20).with_owners(1)),
+        Some(Variable::from(10).with_owners(1)),
+        Some(Variable::from(20).with_owners(1)),
+    ];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
+
+    let acc = vec![1, 2, 0];
+    let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, false, None);
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Call(0))?;
+
+    assert_eq!(driver.runner.program_counter, 20);
+    assert_eq!(driver.runner.call_stack.len(), 1);
+    assert_eq!(driver.runner.call_stack[0].return_pointer, 1);
+    assert_eq!(driver.runner.call_stack[0].stack_pointer, 0);
+
+    assert_eq!(driver.runner.acc.len(), 2);
 
     Ok(())
 }

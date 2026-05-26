@@ -413,6 +413,10 @@ impl Runner {
         Ok(())
     }
 
+    fn call(&mut self, gvs: &mut GVS, args: usize) -> KsResult<()> {
+        Ok(())
+    }
+
     pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
         match instruction {
             Instruction::LoadConst(constant) => self.load_const(gvs, constant),
@@ -440,6 +444,7 @@ impl Runner {
             Instruction::ClearAcc => self.clear_acc(gvs),
             Instruction::JumpIfFalse(offset) => self.jump_if(gvs, offset, false),
             Instruction::JumpIfTrue(offset) => self.jump_if(gvs, offset, true),
+            Instruction::Call(args) => self.call(gvs, args),
             _ => todo!(),
         }?;
 
