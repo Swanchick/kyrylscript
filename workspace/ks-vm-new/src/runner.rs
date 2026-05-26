@@ -1,6 +1,8 @@
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
+use crate::environment::variable::FUNCTION_TYPE;
+
 use super::call_stack::CallStack;
 use super::environment::variable::{
     BOOLEAN_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STACK_TYPE, STRING_TYPE,
@@ -414,6 +416,21 @@ impl Runner {
     }
 
     fn call(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        let function = self.acc.pop(gvs)?;
+        if function.value_type != FUNCTION_TYPE {
+            return Err(KsError::runtime("Variable is not a function!"));
+        }
+
+        self.prevent_step = true;
+
+        let return_pointer = self.program_counter + 1;
+        let stack_pointer = self.stack.len();
+
+        let call_stack = CallStack::new(return_pointer, stack_pointer);
+        self.call_stack.push(call_stack);
+
+        self.program_counter = function.value as usize;
+
         Ok(())
     }
 

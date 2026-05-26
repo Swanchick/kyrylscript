@@ -1150,7 +1150,7 @@ fn jump_if_true_if_actually_true() -> KsResult<()> {
 }
 
 #[test]
-fn call_no_arguments() -> KsResult<()> {
+fn call() -> KsResult<()> {
     let storage = vec![Some(Variable::function(20).with_owners(1))];
 
     let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
