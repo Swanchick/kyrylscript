@@ -1,5 +1,5 @@
 use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
-use ks_vm_new::{Collection, Constant, Instruction, Stack, Variable};
+use ks_vm_new::{CallStack, Collection, Constant, Instruction, Stack, Variable};
 
 use crate::drivers::KsDriver;
 use crate::drivers::utils::operation;
@@ -1175,10 +1175,27 @@ fn call() -> KsResult<()> {
 
     assert_eq!(driver.runner.program_counter, 20);
     assert_eq!(driver.runner.call_stack.len(), 1);
-    assert_eq!(driver.runner.call_stack[0].return_pointer, 1);
+    assert_eq!(driver.runner.call_stack[0].return_pointer, 0);
     assert_eq!(driver.runner.call_stack[0].stack_pointer, 0);
 
     assert_eq!(driver.runner.acc.len(), 0);
+
+    Ok(())
+}
+
+#[test]
+fn return_instruction() -> KsResult<()> {
+    let initial_pc = 20usize;
+
+    let call_stack = CallStack::new(0, 0);
+
+    let runner =
+        KsDriver::runner_default(None, None, false, Some(initial_pc), Some(vec![call_stack]));
+
+    let driver = KsDriver::runner_configured(runner, None, Instruction::Return)?;
+
+    assert_eq!(driver.runner.call_stack.len(), 0);
+    assert_eq!(driver.runner.program_counter, 1);
 
     Ok(())
 }

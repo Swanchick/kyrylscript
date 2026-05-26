@@ -423,7 +423,7 @@ impl Runner {
 
         self.prevent_step = true;
 
-        let return_pointer = self.program_counter + 1;
+        let return_pointer = self.program_counter;
         let stack_pointer = self.stack.len();
 
         let call_stack = CallStack::new(return_pointer, stack_pointer);
@@ -432,6 +432,18 @@ impl Runner {
         self.program_counter = function.value as usize;
 
         Ok(())
+    }
+
+    pub fn on_return(&mut self) -> KsResult<()> {
+        if let Some(call_stack) = self.call_stack.pop() {
+            self.program_counter = call_stack.return_pointer;
+
+            Ok(())
+        } else {
+            Err(KsError::runtime(
+                "CallStack is empty, cannot execute return",
+            ))
+        }
     }
 
     pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
@@ -462,6 +474,7 @@ impl Runner {
             Instruction::JumpIfFalse(offset) => self.jump_if(gvs, offset, false),
             Instruction::JumpIfTrue(offset) => self.jump_if(gvs, offset, true),
             Instruction::Call => self.call(gvs),
+            Instruction::Return => self.on_return(),
             _ => todo!(),
         }?;
 
