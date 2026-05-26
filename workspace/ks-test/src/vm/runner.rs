@@ -1220,28 +1220,3 @@ fn load_function_empty() -> KsResult<()> {
 
     Ok(())
 }
-
-// #[test]
-// fn load_function_with_capture() -> KsResult<()> {
-//     let storage = vec![
-//         Some(Variable::from(20).with_owners(1)),
-//         Some(Variable::from(1).with_owners(1)),
-//         Some(Variable::from(3).with_owners(2)),
-//     ];
-
-//     let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
-
-//     let acc = vec![0, 1, 2];
-//     let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, false, None, None);
-
-//     let driver = KsDriver::runner_configured(runner, gvs, Instruction::LoadFunction(2))?;
-
-//     assert_eq!(driver.runner.program_counter, 1);
-//     assert_eq!(driver.runner.call_stack.len(), 1);
-//     assert_eq!(driver.runner.call_stack[0].return_pointer, 0);
-//     assert_eq!(driver.runner.call_stack[0].stack_pointer, 0);
-
-//     assert_eq!(driver.runner.acc.len(), 0);
-
-//     Ok(())
-// }
