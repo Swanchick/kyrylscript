@@ -1250,3 +1250,38 @@ fn load_function_capture() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn free_function_with_capture() -> KsResult<()> {
+    let storage = vec![
+        Some(Variable::from(10).with_owners(1)),
+        Some(Variable::from(20).with_owners(1)),
+        Some(Variable::from(30).with_owners(1)),
+        Some(Variable::from(Function::new(10, 0)).with_owners(1)),
+    ];
+
+    let collections = vec![Collection::Stack(vec![0, 1, 2])];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), Some(collections), None, None);
+
+    let stack = Stack::from(vec![3]);
+    let runner = KsDriver::runner_default(None, Some(stack), false, None, None);
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Free(1))?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+
+    assert_eq!(driver.runner.stack.len(), 0);
+
+    assert_eq!(driver.gvs.storage.len(), 4);
+    assert_eq!(driver.gvs.storage, vec![None, None, None, None]);
+
+    assert_eq!(driver.gvs.free_storage.len(), 4);
+    assert_eq!(driver.gvs.free_storage, vec![0, 1, 2, 3]);
+
+    assert_eq!(driver.gvs.collections, vec![Collection::Free]);
+    assert_eq!(driver.gvs.free_collection.len(), 1);
+    assert_eq!(driver.gvs.free_collection, vec![0]);
+
+    Ok(())
+}

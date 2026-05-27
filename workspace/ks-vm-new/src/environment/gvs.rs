@@ -2,6 +2,7 @@ use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
 use crate::Collection;
+use crate::environment::variable::{FUNCTION_TYPE, STACK_TYPE};
 use crate::types::{CollectionId, Slot, StorageId};
 
 use super::Variable;
@@ -108,7 +109,13 @@ impl GVS {
                 let (collection_id, owners) = {
                     let variable = gvs.variable_mut(current_storage_id)?;
                     variable.owners = variable.owners.saturating_sub(1);
-                    (variable.value, variable.owners)
+
+                    if variable.is_function() {
+                        let function = variable.as_function()?;
+                        (function.collection_id.unwrap() as u64, variable.owners)
+                    } else {
+                        (variable.value, variable.owners)
+                    }
                 };
 
                 if current_storage_id == storage_id {
@@ -132,9 +139,9 @@ impl GVS {
         let variable = self.variable(storage_id)?;
 
         if variable.is_stack() {
-            self.free_stack(storage_id)?;
+            self.free_stack(storage_id)?
         } else if variable.is_string() {
-            self.free_string(storage_id)?;
+            self.free_string(storage_id)?
         }
 
         self.free_primitive(storage_id);
@@ -221,12 +228,20 @@ impl GVS {
                 ));
             }
 
-            variable.value
+            if variable.is_function() {
+                let function = variable.as_function()?;
+
+                function.collection_id.unwrap() as u64
+            } else {
+                variable.value
+            }
         };
 
         let mut collections = vec![Frame::new(storage_id, collection_id)];
 
         while let Some(mut frame) = collections.pop() {
+            println!("FRAME COLLECTION_ID: {}", frame.collection_id);
+
             let collection = self.collection_stack(frame.collection_id)?;
 
             if let Some(storage_id) = collection.get(frame.index) {
@@ -235,9 +250,27 @@ impl GVS {
                 collections.push(frame);
 
                 let variable = self.variable(*storage_id)?;
-                if variable.is_stack() {
-                    collections.push(Frame::new(*storage_id, variable.value));
-                    continue;
+
+                println!("variable: {:?}", variable);
+
+                match variable.value_type {
+                    FUNCTION_TYPE => {
+                        println!("HERE =============");
+
+                        let function = variable.as_function()?;
+
+                        if let Some(collection_id) = function.collection_id {
+                            collections.push(Frame::new(*storage_id, collection_id as u64));
+
+                            continue;
+                        }
+                    }
+                    STACK_TYPE => {
+                        collections.push(Frame::new(*storage_id, variable.value));
+
+                        continue;
+                    }
+                    _ => {}
                 }
 
                 variable_func(self, *storage_id)?;
