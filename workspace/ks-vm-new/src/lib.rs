@@ -3,12 +3,12 @@ mod environment;
 mod ir;
 mod runner;
 mod stats;
-mod types;
+pub mod types;
 mod utils;
 mod vm;
 
 pub use call_stack::CallStack;
-pub use environment::{Collection, GVS, Stack, Variable};
+pub use environment::{Collection, Function, GVS, Stack, Variable};
 pub use ir::constant::Constant;
 pub use ir::instructions::Instruction;
 pub use ir::program::Program;
