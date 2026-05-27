@@ -1223,23 +1223,29 @@ fn load_function_empty() -> KsResult<()> {
     Ok(())
 }
 
-// #[test]
-// fn load_function_capture() -> KsResult<()> {
-//     let function = Variable::function(Function::from(20)).with_owners(1);
+#[test]
+fn load_function_capture() -> KsResult<()> {
+    let function = Variable::function(Function::new(20, 0)).with_owners(1);
 
-//     let storage = vec![Some(Variable::from(20).with_owners(1))];
-//     let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
+    let storage = vec![
+        Some(Variable::from(10).with_owners(1)),
+        Some(Variable::from(20).with_owners(1)),
+    ];
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
 
-//     let acc = vec![0];
-//     let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, false, None, None);
+    let acc = vec![1, 0];
+    let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, false, None, None);
 
-//     let driver = KsDriver::runner_configured(runner, gvs, Instruction::LoadFunction(0))?;
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::LoadFunction(2))?;
 
-//     assert_eq!(driver.runner.program_counter, 1);
-//     assert_eq!(driver.gvs.storage[0], Some(function));
+    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.gvs.storage[0], Some(function));
 
-//     assert_eq!(driver.runner.acc.len(), 1);
-//     assert_eq!(driver.runner.acc.get(0), Some(&0));
+    assert_eq!(driver.runner.acc.len(), 1);
+    assert_eq!(driver.runner.acc.get(0), Some(&0));
 
-//     Ok(())
-// }
+    assert_eq!(driver.gvs.collections.len(), 1);
+    assert_eq!(driver.gvs.collections[0], Collection::Stack(vec![0, 1]));
+
+    Ok(())
+}
