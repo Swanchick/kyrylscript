@@ -1228,12 +1228,13 @@ fn load_function_capture() -> KsResult<()> {
     let function = Variable::function(Function::new(20, 0)).with_owners(1);
 
     let storage = vec![
-        Some(Variable::from(10).with_owners(1)),
         Some(Variable::from(20).with_owners(1)),
+        Some(Variable::from(1).with_owners(1)),
+        Some(Variable::from(2).with_owners(1)),
     ];
     let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
 
-    let acc = vec![1, 0];
+    let acc = vec![0, 2, 1];
     let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, false, None, None);
 
     let driver = KsDriver::runner_configured(runner, gvs, Instruction::LoadFunction(2))?;
@@ -1245,7 +1246,7 @@ fn load_function_capture() -> KsResult<()> {
     assert_eq!(driver.runner.acc.get(0), Some(&0));
 
     assert_eq!(driver.gvs.collections.len(), 1);
-    assert_eq!(driver.gvs.collections[0], Collection::Stack(vec![0, 1]));
+    assert_eq!(driver.gvs.collections[0], Collection::Stack(vec![1, 2]));
 
     Ok(())
 }

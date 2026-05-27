@@ -445,13 +445,23 @@ impl Runner {
     }
 
     fn load_function(&mut self, gvs: &mut GVS, captures: CaptureSize) -> KsResult<()> {
-        if captures != 0 {
-            todo!("Implement captures for function")
-        }
+        let collection_id = if captures == 0 {
+            None
+        } else {
+            let stack = self.acc.size_pop(captures);
+            let collection_id = gvs.collection_store_stack(stack);
+
+            Some(collection_id as u32)
+        };
 
         let variable_pointer = self.acc.pop(gvs)?;
 
-        let function = Function::from(variable_pointer.value as u32);
+        let function = if let Some(collection_id) = collection_id {
+            Function::new(variable_pointer.value as u32, collection_id)
+        } else {
+            Function::from(variable_pointer.value as u32)
+        };
+
         let variable_function = Variable::from(function);
 
         self.acc.push(gvs, variable_function)?;
