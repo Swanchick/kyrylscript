@@ -46,4 +46,8 @@ impl Function {
 
         collection_id << 32 | pointer
     }
+
+    pub fn has_collection(&self) -> bool {
+        self.collection_id != None
+    }
 }
