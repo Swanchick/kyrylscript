@@ -2,8 +2,7 @@ use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
 use crate::Collection;
-use crate::environment::function;
-use crate::environment::variable::{FUNCTION_TYPE, STACK_TYPE, STRING_TYPE};
+use crate::environment::variable::{FUNCTION_TYPE, STACK_TYPE};
 use crate::types::{CollectionId, Slot, StorageId};
 
 use super::Variable;
