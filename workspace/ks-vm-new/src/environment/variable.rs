@@ -97,7 +97,15 @@ impl Variable {
     }
 
     pub fn is_stack(&self) -> bool {
-        self.value_type == STACK_TYPE
+        if self.value_type == STACK_TYPE {
+            return true;
+        }
+
+        if let Ok(function) = self.as_function() {
+            matches!(function.collection_id, Some(_))
+        } else {
+            false
+        }
     }
 
     pub fn is_function(&self) -> bool {
