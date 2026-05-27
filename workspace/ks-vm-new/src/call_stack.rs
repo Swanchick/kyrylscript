@@ -3,14 +3,14 @@ use super::types::Pointer;
 #[derive(Debug)]
 pub struct CallStack {
     pub return_pointer: Pointer,
-    pub stack_pointer: Pointer,
+    pub collection_id: Pointer,
 }
 
 impl CallStack {
-    pub fn new(return_pointer: Pointer, stack_pointer: Pointer) -> Self {
+    pub fn new(return_pointer: Pointer, collection_id: Pointer) -> Self {
         Self {
             return_pointer,
-            stack_pointer,
+            collection_id,
         }
     }
 }

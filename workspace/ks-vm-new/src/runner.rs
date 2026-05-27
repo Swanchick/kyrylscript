@@ -1,14 +1,14 @@
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
-use crate::environment::variable::FUNCTION_TYPE;
+use crate::Function;
 
 use super::call_stack::CallStack;
 use super::environment::variable::{
-    BOOLEAN_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STACK_TYPE, STRING_TYPE,
+    BOOLEAN_TYPE, FLOAT_TYPE, FUNCTION_TYPE, INT_TYPE, NULL_TYPE, STACK_TYPE, STRING_TYPE,
 };
 use super::environment::{GVS, Stack, Variable};
-use super::types::{CollectionId, StorageId};
+use super::types::{CaptureSize, CollectionId, StorageId};
 use super::types::{Offset, Pointer, Slot};
 use super::{Constant, Instruction};
 
@@ -76,9 +76,9 @@ impl Runner {
     fn jump(&mut self, offset: Offset) -> KsResult<()> {
         self.program_counter = if offset < 0 {
             self.program_counter
-                .saturating_sub(offset.unsigned_abs() as usize)
+                .saturating_sub(offset.unsigned_abs() as Pointer)
         } else {
-            self.program_counter.saturating_add(offset as usize)
+            self.program_counter.saturating_add(offset as Pointer)
         };
 
         self.prevent_step = true;
@@ -416,25 +416,23 @@ impl Runner {
     }
 
     fn call(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let function = self.acc.pop(gvs)?;
-        if function.value_type != FUNCTION_TYPE {
-            return Err(KsError::runtime("Variable is not a function!"));
-        }
+        let variable_function = self.acc.pop(gvs)?;
+        let function = variable_function.as_function()?;
 
         self.prevent_step = true;
 
         let return_pointer = self.program_counter;
-        let stack_pointer = self.stack.len();
+        let stack_pointer = self.stack.len() as Pointer;
 
         let call_stack = CallStack::new(return_pointer, stack_pointer);
         self.call_stack.push(call_stack);
 
-        self.program_counter = function.value as usize;
+        self.program_counter = function.pointer as usize;
 
         Ok(())
     }
 
-    pub fn on_return(&mut self) -> KsResult<()> {
+    fn on_return(&mut self) -> KsResult<()> {
         if let Some(call_stack) = self.call_stack.pop() {
             self.program_counter = call_stack.return_pointer;
 
@@ -444,6 +442,31 @@ impl Runner {
                 "CallStack is empty, cannot execute return",
             ))
         }
+    }
+
+    fn load_function(&mut self, gvs: &mut GVS, captures: CaptureSize) -> KsResult<()> {
+        let collection_id = if captures == 0 {
+            None
+        } else {
+            let stack = self.acc.size_pop(captures);
+            let collection_id = gvs.collection_store_stack(stack);
+
+            Some(collection_id as u32)
+        };
+
+        let variable_pointer = self.acc.pop(gvs)?;
+
+        let function = if let Some(collection_id) = collection_id {
+            Function::new(variable_pointer.value as u32, collection_id)
+        } else {
+            Function::from(variable_pointer.value as u32)
+        };
+
+        let variable_function = Variable::from(function);
+
+        self.acc.push(gvs, variable_function)?;
+
+        Ok(())
     }
 
     pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
@@ -475,6 +498,7 @@ impl Runner {
             Instruction::JumpIfTrue(offset) => self.jump_if(gvs, offset, true),
             Instruction::Call => self.call(gvs),
             Instruction::Return => self.on_return(),
+            Instruction::LoadFunction(captures) => self.load_function(gvs, captures),
             _ => todo!(),
         }?;
 

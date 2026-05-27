@@ -47,7 +47,7 @@ impl VM {
             let runner = &mut self.runners[index];
             let pc = runner.program_counter();
 
-            if let Some(instruction) = instructions.get(pc) {
+            if let Some(instruction) = instructions.get(pc as usize) {
                 let instruction = instruction.clone();
                 runner.run(instruction, &mut self.vgs)?;
             }

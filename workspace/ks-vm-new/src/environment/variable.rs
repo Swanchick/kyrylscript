@@ -1,6 +1,8 @@
 use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
 
-use crate::types::{CollectionId, Owners, Pointer};
+use crate::types::{CollectionId, Owners};
+
+use super::function::Function;
 
 pub const NULL_TYPE: u8 = 0;
 pub const INT_TYPE: u8 = 1;
@@ -35,6 +37,12 @@ impl From<bool> for Variable {
     }
 }
 
+impl From<Function> for Variable {
+    fn from(function: Function) -> Self {
+        Self::new(FUNCTION_TYPE, function.as_u64())
+    }
+}
+
 impl Variable {
     pub fn new(value_type: u8, value: u64) -> Self {
         Self {
@@ -61,12 +69,20 @@ impl Variable {
         Self::new(STACK_TYPE, collection_id)
     }
 
-    pub fn function(pointer: Pointer) -> Self {
-        Self::new(FUNCTION_TYPE, pointer as u64)
+    pub fn function(function: Function) -> Self {
+        Self::new(FUNCTION_TYPE, function.as_u64())
     }
 
     pub fn as_boolean(&self) -> bool {
         self.value == 1
+    }
+
+    pub fn as_function(&self) -> KsResult<Function> {
+        if self.value_type == FUNCTION_TYPE {
+            Ok(Function::from(self.value))
+        } else {
+            Err(KsError::runtime("Variable is not a function"))
+        }
     }
 
     pub fn is_primitive(&self) -> bool {

@@ -59,6 +59,20 @@ impl GVS {
         Ok(())
     }
 
+    pub fn storage_remove_owner(&mut self, storage_id: StorageId) -> KsResult<()> {
+        let owners = {
+            let variable = self.variable_mut(storage_id)?;
+            variable.owners = variable.owners.saturating_sub(1);
+            variable.owners
+        };
+
+        if owners == 0 {
+            self.free(storage_id)?;
+        }
+
+        Ok(())
+    }
+
     fn free_primitive(&mut self, storage_id: StorageId) {
         let storage_id = storage_id as usize;
         self.storage[storage_id] = None;
@@ -124,20 +138,6 @@ impl GVS {
         }
 
         self.free_primitive(storage_id);
-
-        Ok(())
-    }
-
-    pub fn storage_remove_owner(&mut self, storage_id: StorageId) -> KsResult<()> {
-        let owners = {
-            let variable = self.variable_mut(storage_id)?;
-            variable.owners = variable.owners.saturating_sub(1);
-            variable.owners
-        };
-
-        if owners == 0 {
-            self.free(storage_id)?;
-        }
 
         Ok(())
     }
