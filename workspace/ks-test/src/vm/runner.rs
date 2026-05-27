@@ -1250,3 +1250,8 @@ fn load_function_capture() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn free_function_with_capture() -> KsResult<()> {
+    todo!("implement this function")
+}

@@ -5,7 +5,7 @@ use crate::Function;
 
 use super::call_stack::CallStack;
 use super::environment::variable::{
-    BOOLEAN_TYPE, FLOAT_TYPE, FUNCTION_TYPE, INT_TYPE, NULL_TYPE, STACK_TYPE, STRING_TYPE,
+    BOOLEAN_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STACK_TYPE, STRING_TYPE,
 };
 use super::environment::{GVS, Stack, Variable};
 use super::types::{CaptureSize, CollectionId, StorageId};

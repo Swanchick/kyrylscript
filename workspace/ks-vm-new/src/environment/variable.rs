@@ -88,7 +88,7 @@ impl Variable {
     pub fn is_primitive(&self) -> bool {
         matches!(
             self.value_type,
-            INT_TYPE | FLOAT_TYPE | NULL_TYPE | BOOLEAN_TYPE | FUNCTION_TYPE
+            INT_TYPE | FLOAT_TYPE | NULL_TYPE | BOOLEAN_TYPE
         )
     }
 
@@ -98,6 +98,10 @@ impl Variable {
 
     pub fn is_stack(&self) -> bool {
         self.value_type == STACK_TYPE
+    }
+
+    pub fn is_function(&self) -> bool {
+        self.value_type == FUNCTION_TYPE
     }
 
     pub fn as_f64(&self) -> KsResult<f64> {
