@@ -1,3 +1,5 @@
+use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
+
 const EMPTY_COLLECTION: u32 = 0xFFFFFFFF;
 
 pub struct Function {
@@ -49,5 +51,15 @@ impl Function {
         let collection_id = self.collection_id.unwrap_or(EMPTY_COLLECTION) as u64;
 
         collection_id << 32 | pointer
+    }
+
+    pub fn collection_id(&self) -> KsResult<usize> {
+        if let Some(collection_id) = self.collection_id {
+            Ok(collection_id as usize)
+        } else {
+            Err(KsError::runtime(
+                "Function does not have any captured variables",
+            ))
+        }
     }
 }
