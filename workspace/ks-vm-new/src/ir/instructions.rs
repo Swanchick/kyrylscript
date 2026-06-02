@@ -33,7 +33,6 @@ pub enum Instruction {
     Assign,
     LoadConst(Constant),
     LoadVar(VariableId),
-    Closure(VariableId),
     Call,
     AssignVar(VariableId),
     LoadCapture(VariableId),
