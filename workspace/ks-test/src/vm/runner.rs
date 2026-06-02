@@ -1285,3 +1285,34 @@ fn free_function_with_capture() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn call_stack_should_own_collection() -> KsResult<()> {
+    let storage = vec![
+        Some(Variable::from(10).with_owners(1)),
+        Some(Variable::from(20).with_owners(1)),
+        Some(Variable::from(30).with_owners(1)),
+        Some(Variable::from(Function::new(20u32, 0u32)).with_owners(1)),
+    ];
+
+    let collection = vec![Collection::Stack(vec![0, 1, 2])];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), Some(collection), None, None);
+
+    let acc = vec![3];
+    let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, false, None, None);
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Call)?;
+
+    assert_eq!(driver.runner.program_counter, 20);
+    assert_eq!(driver.runner.call_stack.len(), 1);
+    assert_eq!(driver.runner.call_stack[0].return_pointer, 0);
+    assert_eq!(driver.runner.call_stack[0].collection_id, 0);
+
+    assert_eq!(driver.runner.acc.len(), 0);
+
+    assert_eq!(driver.gvs.collections.len(), 1);
+    assert_eq!(driver.gvs.collections[0], Collection::Stack(vec![0, 1, 2]));
+
+    Ok(())
+}
