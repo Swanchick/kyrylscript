@@ -500,6 +500,26 @@ impl Runner {
         }
     }
 
+    fn collection_len(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        let variable = self.acc.last(gvs)?.clone();
+
+        if variable.value_type != STACK_TYPE {
+            return Err(KsError::runtime("Variable is not a stack!"));
+        }
+
+        let collection_len = {
+            let collection = gvs.collection_stack(variable.value)?;
+            collection.len() as i64
+        };
+
+        self.acc.pop(gvs)?;
+
+        let variable = Variable::from(collection_len);
+        self.acc.push(gvs, variable)?;
+
+        Ok(())
+    }
+
     pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
         match instruction {
             Instruction::LoadConst(constant) => self.load_const(gvs, constant),
@@ -531,6 +551,7 @@ impl Runner {
             Instruction::Return => self.on_return(gvs),
             Instruction::LoadFunction(captures) => self.load_function(gvs, captures),
             Instruction::LoadCapture(slot_id) => self.load_capture(gvs, slot_id),
+            Instruction::CollectionLen => self.collection_len(gvs),
             _ => todo!(),
         }?;
 

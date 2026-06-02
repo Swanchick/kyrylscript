@@ -1349,3 +1349,35 @@ fn load_capture() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn collection_len() -> KsResult<()> {
+    let storage = vec![
+        Some(Variable::from(10).with_owners(1)),
+        Some(Variable::from(20).with_owners(1)),
+        Some(Variable::from(30).with_owners(1)),
+        Some(Variable::collection(0).with_owners(2)),
+    ];
+
+    let collections = vec![Collection::Stack(vec![0, 1, 2])];
+
+    let expected_length = Variable::from(3).with_owners(1);
+
+    let gvs = KsDriver::gvs_storage(Some(storage), Some(collections), None, None);
+
+    let stack = Stack::from(vec![3]);
+    let acc = Stack::from(vec![3]);
+    let runner = KsDriver::runner_default(Some(acc), Some(stack), false, None, None);
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::CollectionLen)?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+
+    assert_eq!(driver.runner.acc.len(), 1);
+    assert_eq!(driver.runner.acc.get(0), Some(&4));
+
+    assert_eq!(driver.gvs.storage.len(), 5);
+    assert_eq!(driver.gvs.storage[4], Some(expected_length));
+
+    Ok(())
+}
