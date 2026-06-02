@@ -416,7 +416,9 @@ impl Runner {
     }
 
     fn call(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let variable_function = self.acc.pop(gvs)?;
+        let storage_id = self.acc.pop_data()?;
+
+        let variable_function = gvs.variable(storage_id)?;
         let function = variable_function.as_function()?;
 
         self.prevent_step = true;
@@ -424,7 +426,7 @@ impl Runner {
         let return_pointer = self.program_counter;
         let stack_pointer = self.stack.len() as Pointer;
 
-        let call_stack = CallStack::new(return_pointer, stack_pointer);
+        let call_stack = CallStack::new(return_pointer, stack_pointer, storage_id);
         self.call_stack.push(call_stack);
 
         self.program_counter = function.pointer as usize;
@@ -432,8 +434,9 @@ impl Runner {
         Ok(())
     }
 
-    fn on_return(&mut self) -> KsResult<()> {
+    fn on_return(&mut self, gvs: &mut GVS) -> KsResult<()> {
         if let Some(call_stack) = self.call_stack.pop() {
+            gvs.storage_remove_owner(call_stack.storage_id)?;
             self.program_counter = call_stack.return_pointer;
 
             Ok(())
@@ -497,7 +500,7 @@ impl Runner {
             Instruction::JumpIfFalse(offset) => self.jump_if(gvs, offset, false),
             Instruction::JumpIfTrue(offset) => self.jump_if(gvs, offset, true),
             Instruction::Call => self.call(gvs),
-            Instruction::Return => self.on_return(),
+            Instruction::Return => self.on_return(gvs),
             Instruction::LoadFunction(captures) => self.load_function(gvs, captures),
             _ => todo!(),
         }?;

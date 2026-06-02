@@ -54,6 +54,14 @@ impl Stack {
         }
     }
 
+    pub fn pop_data(&mut self) -> KsResult<Slot> {
+        if let Some(data) = self.data.pop() {
+            Ok(data)
+        } else {
+            Err(KsError::runtime("Stack is empty"))
+        }
+    }
+
     pub fn storage_id(&mut self, slot: Slot) -> KsResult<StorageId> {
         if let Some(storage_id) = self.data.get(slot as usize) {
             Ok(*storage_id)

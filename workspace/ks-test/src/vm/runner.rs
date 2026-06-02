@@ -1189,12 +1189,16 @@ fn call() -> KsResult<()> {
 fn return_instruction() -> KsResult<()> {
     let initial_pc = 20usize;
 
-    let call_stack = CallStack::new(0, 0);
+    let call_stack = CallStack::new(0, 0, 0);
+
+    let storage = vec![Some(Variable::from(Function::from(0u32)).with_owners(1))];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
 
     let runner =
         KsDriver::runner_default(None, None, false, Some(initial_pc), Some(vec![call_stack]));
 
-    let driver = KsDriver::runner_configured(runner, None, Instruction::Return)?;
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Return)?;
 
     assert_eq!(driver.runner.call_stack.len(), 0);
     assert_eq!(driver.runner.program_counter, 1);
