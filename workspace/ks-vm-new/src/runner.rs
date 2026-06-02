@@ -472,6 +472,34 @@ impl Runner {
         Ok(())
     }
 
+    fn last_function(&self, gvs: &mut GVS) -> KsResult<Function> {
+        if let Some(call_stack) = self.call_stack.last() {
+            let variable = gvs.variable(call_stack.storage_id)?;
+            let function = variable.as_function()?;
+            Ok(function)
+        } else {
+            Err(KsError::runtime("Call stack is empty"))
+        }
+    }
+
+    fn load_capture(&mut self, gvs: &mut GVS, slot_id: StorageId) -> KsResult<()> {
+        let function = self.last_function(gvs)?;
+
+        let collection_id = function.collection_id()?;
+        let collection = gvs.collection_stack(collection_id as CollectionId)?;
+
+        if let Some(storage_id) = collection.get(slot_id as usize) {
+            self.acc.push_storage_id(gvs, *storage_id)?;
+
+            Ok(())
+        } else {
+            Err(KsError::runtime(&format!(
+                "The function does not have captured variable with slot_id {}",
+                slot_id
+            )))
+        }
+    }
+
     pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
         match instruction {
             Instruction::LoadConst(constant) => self.load_const(gvs, constant),
@@ -502,6 +530,7 @@ impl Runner {
             Instruction::Call => self.call(gvs),
             Instruction::Return => self.on_return(gvs),
             Instruction::LoadFunction(captures) => self.load_function(gvs, captures),
+            Instruction::LoadCapture(slot_id) => self.load_capture(gvs, slot_id),
             _ => todo!(),
         }?;
 
