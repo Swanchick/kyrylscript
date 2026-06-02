@@ -34,12 +34,10 @@ pub enum Instruction {
     LoadConst(Constant),
     LoadVar(VariableId),
     Call,
-    AssignVar(VariableId),
     LoadCapture(VariableId),
     LoadFunction(CaptureSize),
 
     LoadCollection(usize),
     LoadFromCollection,
-    AssignCollection,
     CollectionLen,
 }
