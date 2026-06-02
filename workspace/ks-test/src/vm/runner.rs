@@ -1361,7 +1361,7 @@ fn collection_len() -> KsResult<()> {
 
     let collections = vec![Collection::Stack(vec![0, 1, 2])];
 
-    let expected_length = Variable::from(3);
+    let expected_length = Variable::from(3).with_owners(1);
 
     let gvs = KsDriver::gvs_storage(Some(storage), Some(collections), None, None);
 
