@@ -1384,7 +1384,7 @@ fn collection_len() -> KsResult<()> {
 
 #[test]
 fn collection_len_string() -> KsResult<()> {
-    let storage = vec![Some(Variable::collection(0).with_owners(2))];
+    let storage = vec![Some(Variable::string(0).with_owners(2))];
 
     let string = String::from("Hello World");
 
@@ -1403,10 +1403,10 @@ fn collection_len_string() -> KsResult<()> {
     assert_eq!(driver.runner.program_counter, 1);
 
     assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc.get(0), Some(&4));
+    assert_eq!(driver.runner.acc.get(0), Some(&1));
 
-    assert_eq!(driver.gvs.storage.len(), 5);
-    assert_eq!(driver.gvs.storage[4], Some(expected_length));
+    assert_eq!(driver.gvs.storage.len(), 2);
+    assert_eq!(driver.gvs.storage[1], Some(expected_length));
 
     Ok(())
 }
