@@ -1381,3 +1381,32 @@ fn collection_len() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn collection_len_string() -> KsResult<()> {
+    let storage = vec![Some(Variable::string(0).with_owners(2))];
+
+    let string = String::from("Hello World");
+
+    let collections = vec![Collection::String(string.clone())];
+
+    let expected_length = Variable::from(string.len() as i64).with_owners(1);
+
+    let gvs = KsDriver::gvs_storage(Some(storage), Some(collections), None, None);
+
+    let stack = Stack::from(vec![0]);
+    let acc = Stack::from(vec![0]);
+    let runner = KsDriver::runner_default(Some(acc), Some(stack), false, None, None);
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::CollectionLen)?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+
+    assert_eq!(driver.runner.acc.len(), 1);
+    assert_eq!(driver.runner.acc.get(0), Some(&1));
+
+    assert_eq!(driver.gvs.storage.len(), 2);
+    assert_eq!(driver.gvs.storage[1], Some(expected_length));
+
+    Ok(())
+}

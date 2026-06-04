@@ -500,17 +500,48 @@ impl Runner {
         }
     }
 
-    fn collection_len(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        let variable = self.acc.last(gvs)?.clone();
-
-        if variable.value_type != STACK_TYPE {
-            return Err(KsError::runtime("Variable is not a stack!"));
-        }
-
+    fn collection_len_stack(
+        &mut self,
+        gvs: &mut GVS,
+        collection_id: CollectionId,
+    ) -> KsResult<i64> {
         let collection_len = {
-            let collection = gvs.collection_stack(variable.value)?;
+            let collection = gvs.collection_stack(collection_id)?;
             collection.len() as i64
         };
+
+        Ok(collection_len)
+    }
+
+    fn collection_len_string(
+        &mut self,
+        gvs: &mut GVS,
+        collection_id: CollectionId,
+    ) -> KsResult<i64> {
+        let collection_len = {
+            let string = gvs.collection_string(collection_id)?;
+            string.len() as i64
+        };
+
+        println!("Hello World 2");
+
+        Ok(collection_len)
+    }
+
+    fn collection_len(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        println!("Hello World 1");
+
+        let (collection_id, value_type) = {
+            let variable = self.acc.last(gvs)?;
+
+            (variable.value as CollectionId, variable.value_type)
+        };
+
+        let collection_len = match value_type {
+            STACK_TYPE => self.collection_len_stack(gvs, collection_id),
+            STRING_TYPE => self.collection_len_string(gvs, collection_id),
+            _ => Err(KsError::runtime("Variable is not a stack!")),
+        }?;
 
         self.acc.pop(gvs)?;
 
