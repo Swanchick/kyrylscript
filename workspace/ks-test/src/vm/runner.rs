@@ -1446,5 +1446,33 @@ fn load_from_collection_stack() -> KsResult<()> {
 
 #[test]
 fn load_from_collection_string() -> KsResult<()> {
-    todo!("Implement load_from_collection_stack")
+    let storage = vec![Some(Variable::string(0).with_owners(2))];
+
+    let string = String::from("Hello World");
+    let char = String::from("e");
+
+    let expected_char_variable = Variable::string(1).with_owners(1);
+
+    let collections = vec![Collection::String(string.clone())];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), Some(collections), None, None);
+
+    let stack = Stack::from(vec![0]);
+    let acc = Stack::from(vec![0]);
+    let runner = KsDriver::runner_default(Some(acc), Some(stack), false, None, None);
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::LoadFromCollection)?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+
+    assert_eq!(driver.runner.acc.len(), 1);
+    assert_eq!(driver.runner.acc.get(0), Some(&1));
+
+    assert_eq!(driver.gvs.storage.len(), 2);
+    assert_eq!(driver.gvs.storage[1], Some(expected_char_variable));
+
+    assert_eq!(driver.gvs.collections.len(), 2);
+    assert_eq!(driver.gvs.collections[1], Collection::String(char));
+
+    Ok(())
 }
