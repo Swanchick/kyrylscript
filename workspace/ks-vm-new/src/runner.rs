@@ -631,19 +631,37 @@ impl Runner {
         Ok(())
     }
 
-    fn assuign_for_collection(
+    fn assign_for_collection(
         &mut self,
         gvs: &mut GVS,
         collection_id: CollectionId,
         index: usize,
     ) -> KsResult<()> {
+        let storage_id = {
+            let collection = gvs.collection_stack(collection_id)?;
+            if let Some(storage_id) = collection.get(index) {
+                Ok(*storage_id)
+            } else {
+                Err(KsError::runtime("No storage_id in collection"))
+            }
+        }?;
+
+        gvs.storage_remove_owner(storage_id)?;
+
+        let new_storage_id = self.acc.pop_data()?;
+
+        let collection = gvs.collection_stack_mut(collection_id)?;
+        collection[index] = new_storage_id;
+
         Ok(())
     }
 
     fn assign(&mut self, gvs: &mut GVS) -> KsResult<()> {
         match self.assign {
             Assign::Variable(slot_id) => self.assign_for_variable(gvs, slot_id),
-            Assign::Collection(_, _) => todo!(),
+            Assign::Collection(collection_id, index) => {
+                self.assign_for_collection(gvs, collection_id, index)
+            }
             Assign::None => todo!(),
         }?;
 

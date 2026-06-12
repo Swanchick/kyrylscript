@@ -171,6 +171,17 @@ impl GVS {
         }
     }
 
+    pub fn collection_stack_mut(&mut self, collection_id: CollectionId) -> KsResult<&mut [Slot]> {
+        if let Some(Collection::Stack(stack)) = self.collections.get_mut(collection_id as usize) {
+            Ok(stack)
+        } else {
+            Err(KsError::runtime(&format!(
+                "Cannot get collection stack {}",
+                collection_id
+            )))
+        }
+    }
+
     pub fn collection_store_string(&mut self, string: String) -> CollectionId {
         if let Some(collection_id) = self.free_collection.pop() {
             self.collections[collection_id] = Collection::String(string);
