@@ -240,8 +240,6 @@ impl GVS {
         let mut collections = vec![Frame::new(storage_id, collection_id)];
 
         while let Some(mut frame) = collections.pop() {
-            println!("FRAME COLLECTION_ID: {}", frame.collection_id);
-
             let collection = self.collection_stack(frame.collection_id)?;
 
             if let Some(storage_id) = collection.get(frame.index) {
@@ -251,12 +249,8 @@ impl GVS {
 
                 let variable = self.variable(*storage_id)?;
 
-                println!("variable: {:?}", variable);
-
                 match variable.value_type {
                     FUNCTION_TYPE => {
-                        println!("HERE =============");
-
                         let function = variable.as_function()?;
 
                         if let Some(collection_id) = function.collection_id {
