@@ -556,11 +556,38 @@ impl Runner {
         gvs: &mut GVS,
         collection_id: CollectionId,
         index: usize,
-    ) -> KsResult<StorageId> {
+    ) -> KsResult<()> {
         let collection = gvs.collection_stack(collection_id)?;
 
         if let Some(storage_id) = collection.get(index) {
-            Ok(*storage_id)
+            self.acc.push_storage_id(gvs, *storage_id)?;
+            Ok(())
+        } else {
+            Err(KsError::runtime(&format!(
+                "No value by that index {}",
+                index
+            )))
+        }
+    }
+
+    fn load_from_collection_string(
+        &mut self,
+        gvs: &mut GVS,
+        collection_id: CollectionId,
+        index: usize,
+    ) -> KsResult<()> {
+        let collection = gvs.collection_string(collection_id)?;
+
+        let string = collection.to_string();
+
+        if let Some(char) = string.chars().collect::<Vec<char>>().get(index) {
+            let char_string = format!("{}", char);
+            let collection_id = gvs.collection_store_string(char_string);
+            let string_variable = Variable::string(collection_id);
+
+            self.acc.push(gvs, string_variable)?;
+
+            Ok(())
         } else {
             Err(KsError::runtime(&format!(
                 "No value by that index {}",
@@ -577,17 +604,16 @@ impl Runner {
 
         let collection_variable = self.acc.pop(gvs)?;
 
-        let storage_id = match collection_variable.value_type {
-            STACK_TYPE => self.load_from_collection_stack(
-                gvs,
-                collection_variable.value,
-                index_variable.value as usize,
-            ),
-            STRING_TYPE => todo!(),
+        let collection_id = collection_variable.value;
+        let index = index_variable.value as usize;
+
+        match collection_variable.value_type {
+            STACK_TYPE => self.load_from_collection_stack(gvs, collection_id, index),
+            STRING_TYPE => self.load_from_collection_string(gvs, collection_id, index),
             _ => Err(KsError::runtime("This is not a collection")),
         }?;
 
-        self.acc.push_storage_id(gvs, storage_id)?;
+        println!("GVS: {:?}", gvs);
 
         Ok(())
     }

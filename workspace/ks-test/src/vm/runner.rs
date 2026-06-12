@@ -1446,7 +1446,10 @@ fn load_from_collection_stack() -> KsResult<()> {
 
 #[test]
 fn load_from_collection_string() -> KsResult<()> {
-    let storage = vec![Some(Variable::string(0).with_owners(2))];
+    let storage = vec![
+        Some(Variable::string(0).with_owners(2)),
+        Some(Variable::from(1).with_owners(1)),
+    ];
 
     let string = String::from("Hello World");
     let char = String::from("e");
@@ -1458,7 +1461,7 @@ fn load_from_collection_string() -> KsResult<()> {
     let gvs = KsDriver::gvs_storage(Some(storage), Some(collections), None, None);
 
     let stack = Stack::from(vec![0]);
-    let acc = Stack::from(vec![0]);
+    let acc = Stack::from(vec![0, 1]);
     let runner = KsDriver::runner_default(Some(acc), Some(stack), false, None, None);
 
     let driver = KsDriver::runner_configured(runner, gvs, Instruction::LoadFromCollection)?;
