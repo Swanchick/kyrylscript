@@ -699,7 +699,7 @@ impl Runner {
 
         match self.assign {
             Assign::Variable(slot_id) => self.assign_collection_from_variable(gvs, slot_id, index),
-            Assign::Collection(collection_id, index) => todo!(),
+            Assign::Collection(collection_id, collection_index) => todo!(),
             Assign::None => Err(KsError::runtime("No assign available for collection")),
         }?;
 

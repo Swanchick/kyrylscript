@@ -1618,7 +1618,7 @@ fn assign_variable() -> KsResult<()> {
 }
 
 #[test]
-fn assign_collection() -> KsResult<()> {
+fn assign_collection_from_variable() -> KsResult<()> {
     let storage = vec![
         Some(Variable::from(10).with_owners(1)),
         Some(Variable::from(20).with_owners(1)),
@@ -1646,6 +1646,55 @@ fn assign_collection() -> KsResult<()> {
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.assign, Assign::Collection(0, 1));
+
+    assert_eq!(driver.runner.acc.len(), 0);
+
+    Ok(())
+}
+
+#[test]
+fn assign_collection_from_collection() -> KsResult<()> {
+    let storage = vec![
+        Some(Variable::from(10).with_owners(1)),
+        Some(Variable::from(20).with_owners(1)),
+        Some(Variable::from(30).with_owners(1)),
+        Some(Variable::collection(0).with_owners(1)),
+        Some(Variable::from(40).with_owners(1)),
+        Some(Variable::from(50).with_owners(1)),
+        Some(Variable::from(60).with_owners(1)),
+        Some(Variable::collection(1).with_owners(1)),
+        Some(Variable::from(70).with_owners(1)),
+        Some(Variable::from(80).with_owners(1)),
+        Some(Variable::from(90).with_owners(1)),
+        Some(Variable::collection(2).with_owners(1)),
+        Some(Variable::collection(3).with_owners(1)),
+        Some(Variable::from(2).with_owners(1)),
+    ];
+
+    let collections = vec![
+        Collection::Stack(vec![0, 1, 2]),
+        Collection::Stack(vec![4, 5, 6]),
+        Collection::Stack(vec![8, 9, 10]),
+        Collection::Stack(vec![3, 7, 11]),
+    ];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), Some(collections), None, None);
+
+    let stack = Stack::from(vec![12]);
+    let acc = Stack::from(vec![13]);
+    let runner = KsDriver::runner_default(
+        Some(acc),
+        Some(stack),
+        false,
+        None,
+        None,
+        Some(Assign::Collection(3, 1)),
+    );
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::AssignCollection)?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.assign, Assign::Collection(1, 2));
 
     assert_eq!(driver.runner.acc.len(), 0);
 
