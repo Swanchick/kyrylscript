@@ -138,12 +138,8 @@ impl CompilerNew {
         Ok(())
     }
 
-    fn insert_store(&mut self, public: bool) -> KsResult<()> {
-        if public {
-            self.insert(Instruction::PubStore)?;
-        } else {
-            self.insert(Instruction::Store)?;
-        }
+    fn insert_store(&mut self) -> KsResult<()> {
+        self.insert(Instruction::Store)?;
 
         Ok(())
     }
@@ -151,7 +147,6 @@ impl CompilerNew {
     fn variable_declaration(
         &mut self,
         name: String,
-        public: bool,
         expression: Option<Expression>,
     ) -> KsResult<()> {
         if let Some(expression) = expression {
@@ -161,7 +156,7 @@ impl CompilerNew {
         }?;
 
         self.environment.define_variable(name)?;
-        self.insert_store(public)?;
+        self.insert_store()?;
 
         Ok(())
     }
@@ -240,7 +235,6 @@ impl CompilerNew {
     fn function_declaration(
         &mut self,
         name: String,
-        public: bool,
         parameters: Vec<Parameter>,
         body: Vec<Statement>,
         captured: Vec<String>,
@@ -249,7 +243,7 @@ impl CompilerNew {
 
         self.environment.define_function(&name, pointer);
         self.environment.define_variable(name)?;
-        self.insert_store(public)?;
+        self.insert_store()?;
 
         Ok(())
     }
@@ -411,19 +405,19 @@ impl CompilerNew {
         match statement {
             Statement::VariableDeclaration {
                 name,
-                public,
+                public: _,
                 data_type: _,
                 value,
-            } => self.variable_declaration(name, public, value),
+            } => self.variable_declaration(name, value),
             Statement::Expression { value } => self.expression_statement(value),
             Statement::Function {
                 name,
-                public,
+                public: _,
                 return_type: _,
                 parameters,
                 body,
                 captured,
-            } => self.function_declaration(name, public, parameters, body, captured),
+            } => self.function_declaration(name, parameters, body, captured),
             Statement::ReturnStatement { value } => self.return_statement(value),
             Statement::Assignment { segments, value } => self.assignment(segments, value),
             Statement::AddValue { segments, value } => {

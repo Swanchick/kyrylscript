@@ -28,7 +28,6 @@ pub enum Instruction {
     JumpIfTrue(Offset),
     Jump(Offset),
     Store,
-    PubStore,
     Assign,
     AssignVariable(VariableId),
     LoadConst(Constant),
