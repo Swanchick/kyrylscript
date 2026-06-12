@@ -615,7 +615,30 @@ impl Runner {
             _ => Err(KsError::runtime("This is not a collection")),
         }?;
 
-        println!("GVS: {:?}", gvs);
+        Ok(())
+    }
+
+    fn assign_for_variable(&mut self, gvs: &mut GVS, slot_id: StorageId) -> KsResult<()> {
+        let slot_id = slot_id as usize;
+
+        let storage_id = self.stack.data[slot_id];
+        gvs.storage_remove_owner(storage_id)?;
+
+        let new_storage_id = self.acc.pop_data()?;
+
+        self.stack.data[slot_id] = new_storage_id;
+
+        Ok(())
+    }
+
+    fn assign(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        match self.assign {
+            Assign::Variable(slot_id) => self.assign_for_variable(gvs, slot_id),
+            Assign::Collection(_, _) => todo!(),
+            Assign::None => todo!(),
+        }?;
+
+        self.assign = Assign::None;
 
         Ok(())
     }
@@ -653,6 +676,7 @@ impl Runner {
             Instruction::LoadCapture(slot_id) => self.load_capture(gvs, slot_id),
             Instruction::CollectionLen => self.collection_len(gvs),
             Instruction::LoadFromCollection => self.load_from_collection(gvs),
+            Instruction::Assign => self.assign(gvs),
             _ => todo!(),
         }?;
 

@@ -1,8 +1,8 @@
-use super::types::{CollectionId, StorageId};
+use super::types::{CollectionId, Slot};
 
 #[derive(Debug, PartialEq)]
 pub enum Assign {
-    Variable(StorageId),
+    Variable(Slot),
     Collection(CollectionId, usize),
     None,
 }

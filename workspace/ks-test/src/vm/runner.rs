@@ -1516,7 +1516,7 @@ fn variable_assign() -> KsResult<()> {
 
     let storage = vec![
         Some(Variable::from(10).with_owners(1)),
-        Some(expected_variable.clone().with_owners(1)),
+        Some(expected_variable.clone().with_owners(2)),
     ];
 
     let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
