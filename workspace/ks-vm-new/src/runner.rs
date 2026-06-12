@@ -693,13 +693,38 @@ impl Runner {
         Ok(())
     }
 
+    fn assign_collection_from_collection(
+        &mut self,
+        gvs: &mut GVS,
+        collection_id: CollectionId,
+        collection_index: usize,
+        index: usize,
+    ) -> KsResult<()> {
+        let collection = gvs.collection_stack(collection_id)?;
+        let storage_id = collection
+            .get(collection_index)
+            .ok_or_else(|| KsError::runtime("No storage_id in collection"))?;
+
+        let variable = gvs.variable(*storage_id)?;
+
+        if variable.value_type != STACK_TYPE {
+            return Err(KsError::runtime("Cannot extract slot_id from not stack"));
+        }
+
+        self.assign = Assign::Collection(variable.value, index);
+
+        Ok(())
+    }
+
     fn assign_collection(&mut self, gvs: &mut GVS) -> KsResult<()> {
         let index_variable = self.acc.pop(gvs)?;
         let index = index_variable.value as usize;
 
         match self.assign {
             Assign::Variable(slot_id) => self.assign_collection_from_variable(gvs, slot_id, index),
-            Assign::Collection(collection_id, collection_index) => todo!(),
+            Assign::Collection(collection_id, collection_index) => {
+                self.assign_collection_from_collection(gvs, collection_id, collection_index, index)
+            }
             Assign::None => Err(KsError::runtime("No assign available for collection")),
         }?;
 
