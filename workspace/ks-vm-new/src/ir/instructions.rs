@@ -30,6 +30,7 @@ pub enum Instruction {
     Store,
     PubStore,
     Assign,
+    AssignVariable(VariableId),
     LoadConst(Constant),
     LoadVar(VariableId),
     Call,
@@ -38,4 +39,5 @@ pub enum Instruction {
     LoadCollection(usize),
     LoadFromCollection,
     CollectionLen,
+    AssignCollection,
 }
