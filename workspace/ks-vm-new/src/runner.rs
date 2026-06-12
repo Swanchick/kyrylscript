@@ -662,7 +662,7 @@ impl Runner {
             Assign::Collection(collection_id, index) => {
                 self.assign_for_collection(gvs, collection_id, index)
             }
-            Assign::None => todo!(),
+            Assign::None => Err(KsError::runtime("No assign available")),
         }?;
 
         self.assign = Assign::None;
