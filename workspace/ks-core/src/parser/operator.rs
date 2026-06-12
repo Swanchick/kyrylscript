@@ -4,7 +4,6 @@ pub enum Operator {
     Minus,
     Multiply,
     Divide,
-    Power,
     EqualEqual,
     GreaterEqual,
     Greater,

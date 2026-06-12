@@ -20,7 +20,6 @@ pub enum Instruction {
     Increment,
     Decrement,
     Clone,
-    Power,
     ClearAcc,
     Return,
     Free(usize),

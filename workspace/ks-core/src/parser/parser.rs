@@ -746,7 +746,7 @@ impl Parser {
     }
 
     fn parse_multiplication(&mut self) -> KsResult<Expression> {
-        let mut expression = self.parse_power()?;
+        let mut expression = self.parse_unary()?;
 
         while self.match_token(&Token::Multiply) || self.match_token(&Token::Divide) {
             let operator = match self.previous() {
@@ -755,29 +755,13 @@ impl Parser {
                 _ => unreachable!(),
             };
 
-            let right = self.parse_power()?;
+            let right = self.parse_unary()?;
 
             expression = Expression::BinaryOp {
                 left: Box::new(expression),
                 operator: operator,
                 right: Box::new(right),
             };
-        }
-
-        Ok(expression)
-    }
-
-    fn parse_power(&mut self) -> KsResult<Expression> {
-        let mut expression = self.parse_unary()?;
-
-        while self.match_token(&Token::Power) {
-            let right = self.parse_unary()?;
-
-            expression = Expression::BinaryOp {
-                left: Box::new(expression),
-                operator: Operator::Power,
-                right: Box::new(right),
-            }
         }
 
         Ok(expression)

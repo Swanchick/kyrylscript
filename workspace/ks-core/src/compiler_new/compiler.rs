@@ -595,7 +595,6 @@ impl CompilerNew {
             Operator::PlusPlus => Instruction::Increment,
             Operator::MinusMinus => Instruction::Decrement,
             Operator::Clone => Instruction::Clone,
-            Operator::Power => Instruction::Power,
         };
 
         self.insert(instruction)?;

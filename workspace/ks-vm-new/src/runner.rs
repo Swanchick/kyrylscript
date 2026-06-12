@@ -767,7 +767,6 @@ impl Runner {
             Instruction::Assign => self.assign(gvs),
             Instruction::AssignVariable(slot_id) => self.assign_variable(slot_id),
             Instruction::AssignCollection => self.assign_collection(gvs),
-            _ => todo!(),
         }?;
 
         self.step();
