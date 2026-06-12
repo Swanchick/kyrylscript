@@ -551,6 +551,47 @@ impl Runner {
         Ok(())
     }
 
+    fn load_from_collection_stack(
+        &mut self,
+        gvs: &mut GVS,
+        collection_id: CollectionId,
+        index: usize,
+    ) -> KsResult<StorageId> {
+        let collection = gvs.collection_stack(collection_id)?;
+
+        if let Some(storage_id) = collection.get(index) {
+            Ok(*storage_id)
+        } else {
+            Err(KsError::runtime(&format!(
+                "No value by that index {}",
+                index
+            )))
+        }
+    }
+
+    fn load_from_collection(&mut self, gvs: &mut GVS) -> KsResult<()> {
+        let index_variable = self.acc.pop(gvs)?;
+        if index_variable.value_type != INT_TYPE {
+            return Err(KsError::runtime("Index variable is not an integer"));
+        }
+
+        let collection_variable = self.acc.pop(gvs)?;
+
+        let storage_id = match collection_variable.value_type {
+            STACK_TYPE => self.load_from_collection_stack(
+                gvs,
+                collection_variable.value,
+                index_variable.value as usize,
+            ),
+            STRING_TYPE => todo!(),
+            _ => Err(KsError::runtime("This is not a collection")),
+        }?;
+
+        self.acc.push_storage_id(gvs, storage_id)?;
+
+        Ok(())
+    }
+
     pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
         match instruction {
             Instruction::LoadConst(constant) => self.load_const(gvs, constant),
@@ -583,6 +624,7 @@ impl Runner {
             Instruction::LoadFunction(captures) => self.load_function(gvs, captures),
             Instruction::LoadCapture(slot_id) => self.load_capture(gvs, slot_id),
             Instruction::CollectionLen => self.collection_len(gvs),
+            Instruction::LoadFromCollection => self.load_from_collection(gvs),
             _ => todo!(),
         }?;
 
