@@ -5,7 +5,7 @@ use ks_core::parser::statement::Statement;
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 use ks_std::ks_register_std;
-use ks_vm_new::{CallStack, Collection, GVS, Instruction, Runner, Stack, Variable};
+use ks_vm_new::{Assign, CallStack, Collection, GVS, Instruction, Runner, Stack, Variable};
 
 use super::runner_driver::RunnerDriver;
 
@@ -106,6 +106,7 @@ impl KsDriver {
         prevent_step: bool,
         program_counter: Option<usize>,
         call_stack: Option<Vec<CallStack>>,
+        assign: Option<Assign>,
     ) -> Option<Runner> {
         let acc = if let Some(acc) = acc {
             acc
@@ -131,11 +132,18 @@ impl KsDriver {
             Vec::new()
         };
 
+        let assign = if let Some(assign) = assign {
+            assign
+        } else {
+            Assign::None
+        };
+
         Some(Runner {
             program_counter,
             acc,
             stack,
             call_stack,
+            assign,
             prevent_step,
         })
     }
@@ -166,6 +174,7 @@ impl KsDriver {
             Some(Stack::from(vec![0, 1])),
             Some(Stack::from(vec![0, 1])),
             false,
+            None,
             None,
             None,
         );

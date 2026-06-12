@@ -1,7 +1,7 @@
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
-use crate::Function;
+use crate::{Assign, Function};
 
 use super::call_stack::CallStack;
 use super::environment::variable::{
@@ -18,6 +18,7 @@ pub struct Runner {
     pub acc: Stack,
     pub stack: Stack,
     pub call_stack: Vec<CallStack>,
+    pub assign: Assign,
     pub prevent_step: bool,
 }
 
@@ -34,6 +35,7 @@ impl Runner {
             acc: Stack::new(),
             stack: Stack::new(),
             call_stack: Vec::new(),
+            assign: Assign::None,
             prevent_step: false,
         }
     }
