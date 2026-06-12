@@ -1,6 +1,6 @@
 use super::types::{CollectionId, StorageId};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Assign {
     Variable(StorageId),
     Collection(CollectionId, usize),

@@ -1,5 +1,6 @@
 use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
 
+use ks_vm_new::Assign;
 use ks_vm_new::types::Pointer;
 use ks_vm_new::{CallStack, Collection, Constant, Function, Instruction, Stack, Variable};
 
@@ -1505,6 +1506,42 @@ fn load_from_collection_string() -> KsResult<()> {
 
     assert_eq!(driver.gvs.collections.len(), 2);
     assert_eq!(driver.gvs.collections[1], Collection::String(char));
+
+    Ok(())
+}
+
+#[test]
+fn variable_assign() -> KsResult<()> {
+    let expected_variable = Variable::from(20).with_owners(2);
+
+    let storage = vec![
+        Some(Variable::from(10).with_owners(1)),
+        Some(expected_variable.clone().with_owners(1)),
+    ];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
+
+    let stack = Stack::from(vec![0, 1]);
+    let acc = Stack::from(vec![1]);
+    let runner = KsDriver::runner_default(
+        Some(acc),
+        Some(stack),
+        false,
+        None,
+        None,
+        Some(Assign::Variable(0)),
+    );
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Assign)?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+
+    assert_eq!(driver.gvs.storage.len(), 2);
+    assert_eq!(driver.gvs.storage[0], None);
+    assert_eq!(driver.gvs.storage[1], Some(expected_variable));
+
+    assert_eq!(driver.runner.stack.get(0), Some(&1));
+    assert_eq!(driver.runner.assign, Assign::None);
 
     Ok(())
 }
