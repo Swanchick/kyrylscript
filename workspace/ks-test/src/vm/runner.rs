@@ -1588,3 +1588,31 @@ fn collection_assign() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn assign_variable() -> KsResult<()> {
+    let storage = vec![
+        Some(Variable::from(10).with_owners(1)),
+        Some(Variable::from(20).with_owners(2)),
+    ];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
+
+    let stack = Stack::from(vec![0, 1]);
+    let acc = Stack::from(vec![1]);
+    let runner = KsDriver::runner_default(
+        Some(acc),
+        Some(stack),
+        false,
+        None,
+        None,
+        Some(Assign::None),
+    );
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::AssignVariable(0))?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.assign, Assign::Variable(0));
+
+    Ok(())
+}
