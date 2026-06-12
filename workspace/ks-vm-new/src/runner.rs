@@ -670,6 +670,11 @@ impl Runner {
         Ok(())
     }
 
+    fn assign_variable(&mut self, slot_id: Slot) -> KsResult<()> {
+        self.assign = Assign::Variable(slot_id);
+        Ok(())
+    }
+
     pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
         match instruction {
             Instruction::LoadConst(constant) => self.load_const(gvs, constant),
@@ -704,6 +709,7 @@ impl Runner {
             Instruction::CollectionLen => self.collection_len(gvs),
             Instruction::LoadFromCollection => self.load_from_collection(gvs),
             Instruction::Assign => self.assign(gvs),
+            Instruction::AssignVariable(slot_id) => self.assign_variable(slot_id),
             _ => todo!(),
         }?;
 
