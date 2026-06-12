@@ -21,7 +21,6 @@ pub enum Instruction {
     Decrement,
     Clone,
     Power,
-
     ClearAcc,
     Return,
     Free(usize),
@@ -36,7 +35,6 @@ pub enum Instruction {
     Call,
     LoadCapture(VariableId),
     LoadFunction(CaptureSize),
-
     LoadCollection(usize),
     LoadFromCollection,
     CollectionLen,
