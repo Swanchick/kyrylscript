@@ -631,6 +631,15 @@ impl Runner {
         Ok(())
     }
 
+    fn assuign_for_collection(
+        &mut self,
+        gvs: &mut GVS,
+        collection_id: CollectionId,
+        index: usize,
+    ) -> KsResult<()> {
+        Ok(())
+    }
+
     fn assign(&mut self, gvs: &mut GVS) -> KsResult<()> {
         match self.assign {
             Assign::Variable(slot_id) => self.assign_for_variable(gvs, slot_id),
