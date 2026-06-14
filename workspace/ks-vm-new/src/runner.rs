@@ -8,8 +8,7 @@ use super::environment::variable::{
     BOOLEAN_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STACK_TYPE, STRING_TYPE,
 };
 use super::environment::{GVS, Stack, Variable};
-use super::types::{CaptureSize, CollectionId, StorageId};
-use super::types::{Offset, Pointer, Slot};
+use super::types::{CaptureSize, CollectionId, Offset, Pointer, Slot, StorageId};
 use super::{Constant, Instruction};
 
 #[derive(Debug)]
@@ -767,6 +766,7 @@ impl Runner {
             Instruction::Assign => self.assign(gvs),
             Instruction::AssignVariable(slot_id) => self.assign_variable(slot_id),
             Instruction::AssignCollection => self.assign_collection(gvs),
+            _ => todo!(),
         }?;
 
         self.step();

@@ -8,3 +8,6 @@ pub type Slot = u64;
 pub type CollectionId = u64;
 pub type StorageId = u64;
 pub type Owners = u32;
+
+pub type NativeId = usize;
+pub type Arguments = usize;
