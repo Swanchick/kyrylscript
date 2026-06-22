@@ -2,6 +2,7 @@ mod assign;
 mod call_stack;
 mod environment;
 mod ir;
+mod native;
 mod runner;
 mod stats;
 pub mod types;

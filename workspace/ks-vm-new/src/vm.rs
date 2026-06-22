@@ -11,7 +11,7 @@ use super::runner::Runner;
 pub struct VM {
     program: Program,
     pub runners: Vec<Runner>,
-    pub vgs: GVS,
+    pub gvs: GVS,
 }
 
 impl From<Vec<Instruction>> for VM {
@@ -19,7 +19,7 @@ impl From<Vec<Instruction>> for VM {
         Self {
             program: Program::new(instructions, HashMap::new()),
             runners: Vec::new(),
-            vgs: GVS::new(),
+            gvs: GVS::new(),
         }
     }
 }
@@ -29,7 +29,7 @@ impl From<Program> for VM {
         Self {
             program,
             runners: Vec::new(),
-            vgs: GVS::new(),
+            gvs: GVS::new(),
         }
     }
 }
@@ -49,7 +49,7 @@ impl VM {
 
             if let Some(instruction) = instructions.get(pc as usize) {
                 let instruction = instruction.clone();
-                runner.run(instruction, &mut self.vgs)?;
+                runner.run(instruction, &mut self.gvs)?;
             }
         }
 
