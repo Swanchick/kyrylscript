@@ -1,7 +1,9 @@
+use std::process::Output;
+
 use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
 
-use ks_vm_new::Assign;
 use ks_vm_new::types::Pointer;
+use ks_vm_new::{Assign, NativeHelper, NativeRegistry};
 use ks_vm_new::{CallStack, Collection, Constant, Function, Instruction, Stack, Variable};
 
 use crate::drivers::KsDriver;
@@ -1697,6 +1699,21 @@ fn assign_collection_from_collection() -> KsResult<()> {
     assert_eq!(driver.runner.assign, Assign::Collection(1, 2));
 
     assert_eq!(driver.runner.acc.len(), 0);
+
+    Ok(())
+}
+
+#[test]
+fn call_native() -> KsResult<()> {
+    let output = String::new();
+
+    fn test_println(arguments: usize, helper: NativeHelper) -> KsResult<()> {
+        Ok(())
+    }
+
+    let mut native_registry = NativeRegistry::new();
+
+    native_registry.functions.push(test_println);
 
     Ok(())
 }
