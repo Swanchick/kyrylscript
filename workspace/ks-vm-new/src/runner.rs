@@ -1,7 +1,7 @@
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
-use crate::{Assign, Function};
+use crate::{Assign, Function, NativeCall};
 
 use super::call_stack::CallStack;
 use super::environment::variable::{
@@ -730,7 +730,12 @@ impl Runner {
         Ok(())
     }
 
-    pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
+    pub fn run(
+        &mut self,
+        instruction: Instruction,
+        gvs: &mut GVS,
+        native_stack: &mut Vec<NativeCall>,
+    ) -> KsResult<()> {
         match instruction {
             Instruction::LoadConst(constant) => self.load_const(gvs, constant),
             Instruction::LoadVar(slot) => self.load_var(gvs, slot),
