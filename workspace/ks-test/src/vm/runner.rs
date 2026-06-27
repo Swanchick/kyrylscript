@@ -1711,13 +1711,14 @@ fn native_call_was_added() -> KsResult<()> {
     let arguments = 5;
 
     runner.run(
+        0,
         Instruction::CallNative(native_id, arguments),
         &mut gvs,
         &mut native_stack,
     )?;
 
     assert_eq!(native_stack.len(), 1);
-    assert_eq!(native_stack[0], NativeCall::new(1, 5));
+    assert_eq!(native_stack[0], NativeCall::new(1, 5, 0));
 
     Ok(())
 }
@@ -1726,8 +1727,8 @@ struct TestPrint {
     output: String,
 }
 
-impl<'a> KsCall<'a> for TestPrint {
-    fn call(&mut self, arguments: usize, helper: NativeHelper<'a>) -> KsResult<()> {
+impl KsCall for TestPrint {
+    fn call(&mut self, arguments: usize, helper: NativeHelper) -> KsResult<()> {
         let gvs = helper.gvs;
 
         for _ in 0..arguments {

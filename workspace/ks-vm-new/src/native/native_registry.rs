@@ -1,14 +1,15 @@
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
+use super::{KsCall, NativeHelper};
 use crate::types::Arguments;
-use crate::{KsCall, NativeHelper};
+use crate::{GVS, Runner};
 
-pub struct NativeRegistry<'a> {
-    pub functions: Vec<Box<dyn KsCall<'a> + 'a>>,
+pub struct NativeRegistry {
+    pub functions: Vec<Box<dyn KsCall>>,
 }
 
-impl<'a> NativeRegistry<'a> {
+impl NativeRegistry {
     pub fn new() -> Self {
         Self {
             functions: Vec::new(),
@@ -19,7 +20,8 @@ impl<'a> NativeRegistry<'a> {
         &mut self,
         index: usize,
         arguments: Arguments,
-        helper: NativeHelper<'a>,
+        runner: &mut Runner,
+        gvs: &mut GVS,
     ) -> KsResult<()> {
         let function = self
             .functions
@@ -28,6 +30,8 @@ impl<'a> NativeRegistry<'a> {
                 "Cannot find function with index {}",
                 index
             )))?;
+
+        let helper = NativeHelper { runner, gvs };
 
         function.call(arguments, helper)?;
 

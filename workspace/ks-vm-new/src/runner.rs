@@ -1,5 +1,4 @@
 use ks_global::utils::ks_error::KsError;
-use ks_global::utils::ks_error_type::KsErrorType::Native;
 use ks_global::utils::ks_result::KsResult;
 
 use crate::types::{Arguments, NativeId};
@@ -737,14 +736,16 @@ impl Runner {
         native_stack: &mut Vec<NativeCall>,
         native_id: NativeId,
         arguments: Arguments,
+        runner_id: usize,
     ) -> KsResult<()> {
-        let native_call = NativeCall::new(native_id, arguments);
+        let native_call = NativeCall::new(native_id, arguments, runner_id);
         native_stack.push(native_call);
         Ok(())
     }
 
     pub fn run(
         &mut self,
+        runner_id: usize,
         instruction: Instruction,
         gvs: &mut GVS,
         native_stack: &mut Vec<NativeCall>,
@@ -785,7 +786,7 @@ impl Runner {
             Instruction::AssignVariable(slot_id) => self.assign_variable(slot_id),
             Instruction::AssignCollection => self.assign_collection(gvs),
             Instruction::CallNative(native_id, arguments) => {
-                self.call_native(native_stack, native_id, arguments)
+                self.call_native(native_stack, native_id, arguments, runner_id)
             }
         }?;
 
