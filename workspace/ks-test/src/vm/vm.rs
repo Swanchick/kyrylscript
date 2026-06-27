@@ -53,7 +53,7 @@ fn call_native() -> KsResult<()> {
 
     let vm = KsDriver::vm_configured(None, None, Some(native), instructions)?;
 
-    // assert_eq!(vm.runners[0].program_counter, 1);
+    assert_eq!(vm.runners[0].program_counter, 3);
 
     let output_string = output.borrow().clone();
     assert_eq!(output_string, String::from("Hello, world!"));
