@@ -2,16 +2,13 @@ use std::collections::HashMap;
 
 use ks_global::utils::ks_result::KsResult;
 
-use crate::Instruction;
-
-use super::Program;
-use super::environment::GVS;
-use super::runner::Runner;
+use crate::{GVS, Instruction, NativeCall, NativeRegistry, Program, Runner};
 
 pub struct VM {
     program: Program,
     pub runners: Vec<Runner>,
-    pub vgs: GVS,
+    pub gvs: GVS,
+    pub native: NativeRegistry,
 }
 
 impl From<Vec<Instruction>> for VM {
@@ -19,7 +16,8 @@ impl From<Vec<Instruction>> for VM {
         Self {
             program: Program::new(instructions, HashMap::new()),
             runners: Vec::new(),
-            vgs: GVS::new(),
+            gvs: GVS::new(),
+            native: NativeRegistry::new(),
         }
     }
 }
@@ -29,28 +27,54 @@ impl From<Program> for VM {
         Self {
             program,
             runners: Vec::new(),
-            vgs: GVS::new(),
+            gvs: GVS::new(),
+            native: NativeRegistry::new(),
         }
     }
 }
 
 impl VM {
+    pub fn new(program: Program, runners: Vec<Runner>, gvs: GVS, native: NativeRegistry) -> Self {
+        Self {
+            program,
+            runners,
+            gvs,
+            native,
+        }
+    }
+
     fn create_thread(&mut self) {
         let runner = Runner::new();
         self.runners.push(runner);
     }
 
+    fn call_native(&mut self, native_call: NativeCall) -> KsResult<()> {
+        self.native.call(
+            native_call.native_id,
+            native_call.arguments,
+            &mut self.runners[native_call.runner_id],
+            &mut self.gvs,
+        )?;
+
+        Ok(())
+    }
+
     pub fn step(&mut self) -> KsResult<()> {
         let instructions = self.program.instructions();
+        let mut native_calls = Vec::new();
 
-        for index in 0..self.runners.len() {
-            let runner = &mut self.runners[index];
+        for runner_id in 0..self.runners.len() {
+            let runner = &mut self.runners[runner_id];
             let pc = runner.program_counter();
 
             if let Some(instruction) = instructions.get(pc as usize) {
                 let instruction = instruction.clone();
-                runner.run(instruction, &mut self.vgs)?;
+                runner.run(runner_id, instruction, &mut self.gvs, &mut native_calls)?;
             }
+        }
+
+        while let Some(native_call) = native_calls.pop() {
+            self.call_native(native_call)?;
         }
 
         Ok(())

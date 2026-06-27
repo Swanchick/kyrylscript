@@ -1,8 +1,8 @@
 use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
 
-use ks_vm_new::Assign;
 use ks_vm_new::types::Pointer;
-use ks_vm_new::{CallStack, Collection, Constant, Function, Instruction, Stack, Variable};
+use ks_vm_new::{Assign, KsCall, NativeCall, NativeHelper, NativeRegistry, Runner, STRING_TYPE};
+use ks_vm_new::{CallStack, Collection, Constant, Function, GVS, Instruction, Stack, Variable};
 
 use crate::drivers::KsDriver;
 use crate::drivers::utils::operation;
@@ -1697,6 +1697,60 @@ fn assign_collection_from_collection() -> KsResult<()> {
     assert_eq!(driver.runner.assign, Assign::Collection(1, 2));
 
     assert_eq!(driver.runner.acc.len(), 0);
+
+    Ok(())
+}
+
+#[test]
+fn native_call_was_added() -> KsResult<()> {
+    let mut gvs = GVS::new();
+    let mut native_stack = Vec::new();
+    let mut runner = Runner::new();
+
+    let native_id = 1;
+    let arguments = 5;
+
+    runner.run(
+        0,
+        Instruction::CallNative(native_id, arguments),
+        &mut gvs,
+        &mut native_stack,
+    )?;
+
+    assert_eq!(native_stack.len(), 1);
+    assert_eq!(native_stack[0], NativeCall::new(1, 5, 0));
+
+    Ok(())
+}
+
+struct TestPrint {
+    output: String,
+}
+
+impl KsCall for TestPrint {
+    fn call(&mut self, arguments: usize, helper: NativeHelper) -> KsResult<()> {
+        let gvs = helper.gvs;
+
+        for _ in 0..arguments {
+            let variable = helper.runner.acc.pop(gvs)?;
+            if variable.value_type != STRING_TYPE {
+                continue;
+            }
+
+            let string = gvs.collection_string(variable.value)?;
+            self.output.push_str(string);
+        }
+
+        Ok(())
+    }
+}
+
+#[test]
+fn call_native() -> KsResult<()> {
+    let mut native_registry = NativeRegistry::new();
+    native_registry.functions.push(Box::new(TestPrint {
+        output: String::new(),
+    }));
 
     Ok(())
 }

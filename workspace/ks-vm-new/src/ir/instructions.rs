@@ -1,4 +1,4 @@
-use crate::types::{CaptureSize, Offset, VariableId};
+use crate::types::{Arguments, CaptureSize, NativeId, Offset, VariableId};
 
 use super::constant::Constant;
 
@@ -32,6 +32,7 @@ pub enum Instruction {
     LoadConst(Constant),
     LoadVar(VariableId),
     Call,
+    CallNative(NativeId, Arguments),
     LoadCapture(VariableId),
     LoadFunction(CaptureSize),
     LoadCollection(usize),

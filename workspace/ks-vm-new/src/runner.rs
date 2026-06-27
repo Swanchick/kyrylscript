@@ -1,15 +1,15 @@
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
-use crate::{Assign, Function};
+use crate::types::{Arguments, NativeId};
+use crate::{Assign, Function, NativeCall};
 
 use super::call_stack::CallStack;
 use super::environment::variable::{
     BOOLEAN_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STACK_TYPE, STRING_TYPE,
 };
 use super::environment::{GVS, Stack, Variable};
-use super::types::{CaptureSize, CollectionId, StorageId};
-use super::types::{Offset, Pointer, Slot};
+use super::types::{CaptureSize, CollectionId, Offset, Pointer, Slot, StorageId};
 use super::{Constant, Instruction};
 
 #[derive(Debug)]
@@ -731,7 +731,25 @@ impl Runner {
         Ok(())
     }
 
-    pub fn run(&mut self, instruction: Instruction, gvs: &mut GVS) -> KsResult<()> {
+    fn call_native(
+        &self,
+        native_stack: &mut Vec<NativeCall>,
+        native_id: NativeId,
+        arguments: Arguments,
+        runner_id: usize,
+    ) -> KsResult<()> {
+        let native_call = NativeCall::new(native_id, arguments, runner_id);
+        native_stack.push(native_call);
+        Ok(())
+    }
+
+    pub fn run(
+        &mut self,
+        runner_id: usize,
+        instruction: Instruction,
+        gvs: &mut GVS,
+        native_stack: &mut Vec<NativeCall>,
+    ) -> KsResult<()> {
         match instruction {
             Instruction::LoadConst(constant) => self.load_const(gvs, constant),
             Instruction::LoadVar(slot) => self.load_var(gvs, slot),
@@ -767,6 +785,9 @@ impl Runner {
             Instruction::Assign => self.assign(gvs),
             Instruction::AssignVariable(slot_id) => self.assign_variable(slot_id),
             Instruction::AssignCollection => self.assign_collection(gvs),
+            Instruction::CallNative(native_id, arguments) => {
+                self.call_native(native_stack, native_id, arguments, runner_id)
+            }
         }?;
 
         self.step();
