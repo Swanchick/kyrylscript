@@ -16,9 +16,12 @@ impl KsCall for TestPrint {
     fn call(&mut self, arguments: usize, helper: NativeHelper) -> KsResult<()> {
         let gvs = helper.gvs;
 
-        for _ in 0..arguments {
-            let variable = helper.runner.acc.pop(gvs)?;
+        let mut storage_ids = helper.runner.acc.size_pop(arguments);
+        storage_ids.reverse();
+        for storage_id in storage_ids {
+            let variable = gvs.variable(storage_id)?;
             if variable.value_type != STRING_TYPE {
+                gvs.storage_remove_owner(storage_id)?;
                 continue;
             }
 
@@ -26,6 +29,8 @@ impl KsCall for TestPrint {
 
             let mut output = self.output.borrow_mut();
             output.push_str(string);
+
+            gvs.storage_remove_owner(storage_id)?;
         }
 
         Ok(())
