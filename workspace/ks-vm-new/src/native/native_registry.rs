@@ -1,9 +1,9 @@
-// #[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
-// #[cfg(not(feature = "std"))]
+#[cfg(not(feature = "std"))]
 use alloc::boxed::Box;
-// #[cfg(not(feature = "std"))]
+#[cfg(not(feature = "std"))]
 use alloc::format;
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 
 use super::{KsCall, NativeHelper};
 use crate::types::Arguments;

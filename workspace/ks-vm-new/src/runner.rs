@@ -1,9 +1,9 @@
-// #[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
-// #[cfg(not(feature = "std"))]
+#[cfg(not(feature = "std"))]
 use alloc::format;
-// #[cfg(not(feature = "std"))]
+#[cfg(not(feature = "std"))]
 use alloc::string::{String, ToString};
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 
 use crate::types::{Arguments, NativeId};
 use crate::{Assign, Function, NativeCall, VMError, VMResult};

@@ -1,4 +1,4 @@
-// #[cfg(not(feature = "std"))]
+#[cfg(not(feature = "std"))]
 use alloc::string::{String, ToString};
 
 #[derive(Debug, PartialEq)]

@@ -1,6 +1,6 @@
-// #[cfg(not(feature = "std"))]
+#[cfg(not(feature = "std"))]
 use alloc::format;
-// #[cfg(not(feature = "std"))]
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
 use crate::types::{Slot, StorageId};

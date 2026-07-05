@@ -1,4 +1,4 @@
-// #[cfg(not(feature = "std"))]
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
 use crate::{GVS, Instruction, NativeCall, NativeRegistry, Program, Runner, VMResult};
