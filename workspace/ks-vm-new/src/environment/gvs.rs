@@ -1,9 +1,6 @@
-use ks_global::utils::ks_error::KsError;
-use ks_global::utils::ks_result::KsResult;
-
-use crate::Collection;
 use crate::environment::variable::{FUNCTION_TYPE, STACK_TYPE};
 use crate::types::{CollectionId, Slot, StorageId};
+use crate::{Collection, VMError, VMResult};
 
 use super::Variable;
 use super::frame::Frame;
@@ -32,35 +29,35 @@ impl GVS {
         }
     }
 
-    pub fn variable(&self, storage_id: StorageId) -> KsResult<&Variable> {
+    pub fn variable(&self, storage_id: StorageId) -> VMResult<&Variable> {
         if let Some(Some(variable)) = self.storage.get(storage_id as usize) {
             Ok(variable)
         } else {
-            Err(KsError::runtime(&format!(
+            Err(VMError::from(format!(
                 "Cannot access variable {}",
                 storage_id
             )))
         }
     }
 
-    pub fn variable_mut(&mut self, storage_id: StorageId) -> KsResult<&mut Variable> {
+    pub fn variable_mut(&mut self, storage_id: StorageId) -> VMResult<&mut Variable> {
         if let Some(Some(variable)) = self.storage.get_mut(storage_id as usize) {
             Ok(variable)
         } else {
-            Err(KsError::runtime(&format!(
+            Err(VMError::from(format!(
                 "Cannot access variable {}",
                 storage_id
             )))
         }
     }
 
-    pub fn storage_add_owner(&mut self, storage_id: StorageId) -> KsResult<()> {
+    pub fn storage_add_owner(&mut self, storage_id: StorageId) -> VMResult<()> {
         let variable = self.variable_mut(storage_id)?;
         variable.owners += 1;
         Ok(())
     }
 
-    pub fn storage_remove_owner(&mut self, storage_id: StorageId) -> KsResult<()> {
+    pub fn storage_remove_owner(&mut self, storage_id: StorageId) -> VMResult<()> {
         let owners = {
             let variable = self.variable_mut(storage_id)?;
             variable.owners = variable.owners.saturating_sub(1);
@@ -86,7 +83,7 @@ impl GVS {
         self.free_collection.push(collection_id);
     }
 
-    fn free_string(&mut self, storage_id: StorageId) -> KsResult<()> {
+    fn free_string(&mut self, storage_id: StorageId) -> VMResult<()> {
         let collection_id = {
             let variable = self.variable(storage_id)?;
             variable.value
@@ -97,7 +94,7 @@ impl GVS {
         Ok(())
     }
 
-    fn free_stack(&mut self, storage_id: StorageId) -> KsResult<()> {
+    fn free_stack(&mut self, storage_id: StorageId) -> VMResult<()> {
         self.collection_iter(
             storage_id,
             |gvs, current_storage_id| {
@@ -135,7 +132,7 @@ impl GVS {
         Ok(())
     }
 
-    fn free(&mut self, storage_id: StorageId) -> KsResult<()> {
+    fn free(&mut self, storage_id: StorageId) -> VMResult<()> {
         let variable = self.variable(storage_id)?;
 
         if variable.is_stack() {
@@ -149,33 +146,33 @@ impl GVS {
         Ok(())
     }
 
-    pub fn collection_string(&self, collection_id: CollectionId) -> KsResult<&str> {
+    pub fn collection_string(&self, collection_id: CollectionId) -> VMResult<&str> {
         if let Some(Collection::String(string)) = self.collections.get(collection_id as usize) {
             Ok(string)
         } else {
-            Err(KsError::runtime(&format!(
+            Err(VMError::from(format!(
                 "Cannot get collection string {}",
                 collection_id
             )))
         }
     }
 
-    pub fn collection_stack(&self, collection_id: CollectionId) -> KsResult<&[Slot]> {
+    pub fn collection_stack(&self, collection_id: CollectionId) -> VMResult<&[Slot]> {
         if let Some(Collection::Stack(stack)) = self.collections.get(collection_id as usize) {
             Ok(stack)
         } else {
-            Err(KsError::runtime(&format!(
+            Err(VMError::from(format!(
                 "Cannot get collection stack {}",
                 collection_id
             )))
         }
     }
 
-    pub fn collection_stack_mut(&mut self, collection_id: CollectionId) -> KsResult<&mut [Slot]> {
+    pub fn collection_stack_mut(&mut self, collection_id: CollectionId) -> VMResult<&mut [Slot]> {
         if let Some(Collection::Stack(stack)) = self.collections.get_mut(collection_id as usize) {
             Ok(stack)
         } else {
-            Err(KsError::runtime(&format!(
+            Err(VMError::from(format!(
                 "Cannot get collection stack {}",
                 collection_id
             )))
@@ -225,18 +222,16 @@ impl GVS {
         storage_id: StorageId,
         mut variable_func: VARIABLE,
         mut stack_func: STACK,
-    ) -> KsResult<()>
+    ) -> VMResult<()>
     where
-        VARIABLE: FnMut(&mut Self, StorageId) -> KsResult<()>,
-        STACK: FnMut(&mut Self, StorageId) -> KsResult<()>,
+        VARIABLE: FnMut(&mut Self, StorageId) -> VMResult<()>,
+        STACK: FnMut(&mut Self, StorageId) -> VMResult<()>,
     {
         let collection_id = {
             let variable = self.variable(storage_id)?;
 
             if !variable.is_stack() {
-                return Err(KsError::runtime(
-                    "Cannot iterate over non collection variable",
-                ));
+                return Err(VMError::from("Cannot iterate over non collection variable"));
             }
 
             if variable.is_function() {

@@ -1,4 +1,4 @@
-use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
+use crate::{VMError, VMResult};
 
 const EMPTY_COLLECTION: u32 = 0xFFFFFFFF;
 
@@ -49,11 +49,11 @@ impl Function {
         collection_id << 32 | pointer
     }
 
-    pub fn collection_id(&self) -> KsResult<usize> {
+    pub fn collection_id(&self) -> VMResult<usize> {
         if let Some(collection_id) = self.collection_id {
             Ok(collection_id as usize)
         } else {
-            Err(KsError::runtime(
+            Err(VMError::from(
                 "Function does not have any captured variables",
             ))
         }

@@ -1,6 +1,6 @@
-use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
-
 use crate::types::{CollectionId, Owners};
+
+use crate::{VMError, VMResult};
 
 use super::function::Function;
 
@@ -77,11 +77,11 @@ impl Variable {
         self.value == 1
     }
 
-    pub fn as_function(&self) -> KsResult<Function> {
+    pub fn as_function(&self) -> VMResult<Function> {
         if self.value_type == FUNCTION_TYPE {
             Ok(Function::from(self.value))
         } else {
-            Err(KsError::runtime("Variable is not a function"))
+            Err(VMError::from("Variable is not a function"))
         }
     }
 
@@ -112,11 +112,11 @@ impl Variable {
         self.value_type == FUNCTION_TYPE
     }
 
-    pub fn as_f64(&self) -> KsResult<f64> {
+    pub fn as_f64(&self) -> VMResult<f64> {
         match self.value_type {
             INT_TYPE => Ok(self.value as i64 as f64),
             FLOAT_TYPE => Ok(f64::from_bits(self.value)),
-            _ => Err(KsError::runtime("Cannot convert to float")),
+            _ => Err(VMError::from("Cannot convert to float")),
         }
     }
 }
