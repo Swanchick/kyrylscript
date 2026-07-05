@@ -19,11 +19,7 @@ impl From<u32> for Function {
 impl From<u64> for Function {
     fn from(value: u64) -> Self {
         let pointer = value as u32;
-        println!("POINTER: {}", pointer);
-
         let collection_id = (value >> 32) as u32;
-
-        println!("COLLECTION_ID: {}", collection_id);
 
         let collection_id = if collection_id == EMPTY_COLLECTION {
             None

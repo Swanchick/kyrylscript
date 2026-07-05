@@ -8,7 +8,7 @@ use super::call_stack::CallStack;
 use super::environment::variable::{
     BOOLEAN_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STACK_TYPE, STRING_TYPE,
 };
-use super::environment::{GVS, Stack, Variable};
+use super::environment::{Stack, Variable, GVS};
 use super::types::{CaptureSize, CollectionId, Offset, Pointer, Slot, StorageId};
 use super::{Constant, Instruction};
 
@@ -525,14 +525,10 @@ impl Runner {
             string.len() as i64
         };
 
-        println!("Hello World 2");
-
         Ok(collection_len)
     }
 
     fn collection_len(&mut self, gvs: &mut GVS) -> KsResult<()> {
-        println!("Hello World 1");
-
         let (collection_id, value_type) = {
             let variable = self.acc.last(gvs)?;
 

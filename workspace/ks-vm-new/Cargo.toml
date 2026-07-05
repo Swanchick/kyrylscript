@@ -9,3 +9,7 @@ path = "src/lib.rs"
 
 [dependencies]
 ks-global = { path = "../ks-global" }
+
+[features]
+default = ["std"]
+std = []
