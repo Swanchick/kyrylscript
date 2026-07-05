@@ -1,15 +1,15 @@
-use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
-
 use ks_vm_new::types::Pointer;
 use ks_vm_new::{Assign, KsCall, NativeCall, NativeHelper, NativeRegistry, Runner, STRING_TYPE};
-use ks_vm_new::{CallStack, Collection, Constant, Function, GVS, Instruction, Stack, Variable};
+use ks_vm_new::{
+    CallStack, Collection, Constant, Function, GVS, Instruction, Stack, VMError, VMResult, Variable,
+};
 
 use crate::drivers::KsDriver;
 use crate::drivers::utils::operation;
 use paste::paste;
 
 #[test]
-fn load_const_null() -> KsResult<()> {
+fn load_const_null() -> VMResult<()> {
     let mut variable = Variable::null();
     variable.owners = 1;
 
@@ -23,7 +23,7 @@ fn load_const_null() -> KsResult<()> {
 }
 
 #[test]
-fn load_const_int() -> KsResult<()> {
+fn load_const_int() -> VMResult<()> {
     let int = 10i64;
     let mut variable = Variable::from(int);
     variable.owners = 1;
@@ -38,7 +38,7 @@ fn load_const_int() -> KsResult<()> {
 }
 
 #[test]
-fn load_const_float() -> KsResult<()> {
+fn load_const_float() -> VMResult<()> {
     let float = 3.14;
     let mut variable = Variable::from(float);
     variable.owners = 1;
@@ -53,7 +53,7 @@ fn load_const_float() -> KsResult<()> {
 }
 
 #[test]
-fn load_const_string() -> KsResult<()> {
+fn load_const_string() -> VMResult<()> {
     let string = String::from("Hello World");
     let mut variable = Variable::string(0);
     variable.owners = 1;
@@ -69,7 +69,7 @@ fn load_const_string() -> KsResult<()> {
 }
 
 #[test]
-fn load_const_boolean() -> KsResult<()> {
+fn load_const_boolean() -> VMResult<()> {
     let boolean = false;
     let mut variable = Variable::from(boolean);
     variable.owners = 1;
@@ -84,7 +84,7 @@ fn load_const_boolean() -> KsResult<()> {
 }
 
 #[test]
-fn load_const_with_free_storage() -> KsResult<()> {
+fn load_const_with_free_storage() -> VMResult<()> {
     let integer = 100;
     let variable = Variable::from(integer).with_owners(1);
 
@@ -111,7 +111,7 @@ fn load_const_with_free_storage() -> KsResult<()> {
 }
 
 #[test]
-fn load_var() -> KsResult<()> {
+fn load_var() -> VMResult<()> {
     let mut int = Variable::from(67);
     int.owners += 1;
     let storage_id = 0;
@@ -138,7 +138,7 @@ fn load_var() -> KsResult<()> {
 }
 
 #[test]
-fn load_var_invalid_storage_id() -> KsResult<()> {
+fn load_var_invalid_storage_id() -> VMResult<()> {
     let storage_id = 5;
     let runner = KsDriver::runner_default(
         None,
@@ -152,27 +152,27 @@ fn load_var_invalid_storage_id() -> KsResult<()> {
     let err = KsDriver::runner_configured(runner, None, Instruction::LoadVar(0)).unwrap_err();
     assert_eq!(
         err,
-        KsError::runtime(&format!("Cannot access variable {}", storage_id))
+        VMError::from(format!("Cannot access variable {}", storage_id))
     );
 
     Ok(())
 }
 
 #[test]
-fn load_var_invalid_slot() -> KsResult<()> {
+fn load_var_invalid_slot() -> VMResult<()> {
     let slot = 10;
 
     let err = KsDriver::runner(Instruction::LoadVar(slot)).unwrap_err();
     assert_eq!(
         err,
-        KsError::runtime(&format!("Cannot get storage_id by slot {}", slot))
+        VMError::from(format!("Cannot get storage_id by slot {}", slot))
     );
 
     Ok(())
 }
 
 #[test]
-fn jump_positive() -> KsResult<()> {
+fn jump_positive() -> VMResult<()> {
     let runner = KsDriver::runner_default(None, None, false, None, None, None);
     let jump_offset = 32;
 
@@ -185,7 +185,7 @@ fn jump_positive() -> KsResult<()> {
 }
 
 #[test]
-fn jump_negative() -> KsResult<()> {
+fn jump_negative() -> VMResult<()> {
     let initial_pc = 64;
     let jump_offset = -5;
 
@@ -204,7 +204,7 @@ fn jump_negative() -> KsResult<()> {
 operation!(add, Instruction::Add, +);
 
 #[test]
-fn add_string_string() -> KsResult<()> {
+fn add_string_string() -> VMResult<()> {
     let string_left = String::from("Hello,");
     let string_right = String::from(" world!");
     let string_result = format!("{}{}", string_left, string_right);
@@ -256,7 +256,7 @@ operation!(minus, Instruction::Minus, -);
 operation!(mul, Instruction::Mul, *);
 
 #[test]
-fn div_int_int() -> KsResult<()> {
+fn div_int_int() -> VMResult<()> {
     let int_left = 10;
     let int_right = 20;
 
@@ -278,7 +278,7 @@ fn div_int_int() -> KsResult<()> {
 }
 
 #[test]
-fn div_int_float() -> KsResult<()> {
+fn div_int_float() -> VMResult<()> {
     let int_left = 10;
     let float_right = 3.14;
 
@@ -300,7 +300,7 @@ fn div_int_float() -> KsResult<()> {
 }
 
 #[test]
-fn div_float_int() -> KsResult<()> {
+fn div_float_int() -> VMResult<()> {
     let float_left = 3.14;
     let int_right = 10;
 
@@ -322,7 +322,7 @@ fn div_float_int() -> KsResult<()> {
 }
 
 #[test]
-fn div_float_float() -> KsResult<()> {
+fn div_float_float() -> VMResult<()> {
     let float_left = 3.14;
     let float_right = 1.23;
 
@@ -344,7 +344,7 @@ fn div_float_float() -> KsResult<()> {
 }
 
 #[test]
-fn div_zero_division_error() -> KsResult<()> {
+fn div_zero_division_error() -> VMResult<()> {
     let float_left = 3.14;
     let float_right = 0.0;
 
@@ -370,7 +370,7 @@ fn div_zero_division_error() -> KsResult<()> {
 
     let err = KsDriver::runner_configured(runner, gvs, Instruction::Div).unwrap_err();
 
-    assert_eq!(err, KsError::runtime("Zero division error"));
+    assert_eq!(err, VMError::from("Zero division error"));
 
     Ok(())
 }
@@ -378,7 +378,7 @@ fn div_zero_division_error() -> KsResult<()> {
 operation!(eq, Instruction::Eq, ==);
 
 #[test]
-fn eq_string_string() -> KsResult<()> {
+fn eq_string_string() -> VMResult<()> {
     let string_left = String::from("Hello,");
     let string_right = String::from(" world!");
 
@@ -432,7 +432,7 @@ operation!(less, Instruction::Less, <);
 operation!(not_eq, Instruction::NotEq, !=);
 
 #[test]
-fn not_eq_string_string() -> KsResult<()> {
+fn not_eq_string_string() -> VMResult<()> {
     let string_left = String::from("Hello,");
     let string_right = String::from(" world!");
 
@@ -479,7 +479,7 @@ fn not_eq_string_string() -> KsResult<()> {
 }
 
 #[test]
-fn and_true() -> KsResult<()> {
+fn and_true() -> VMResult<()> {
     let left = true;
     let right = true;
 
@@ -501,7 +501,7 @@ fn and_true() -> KsResult<()> {
 }
 
 #[test]
-fn and_false() -> KsResult<()> {
+fn and_false() -> VMResult<()> {
     let left = true;
     let right = false;
 
@@ -523,7 +523,7 @@ fn and_false() -> KsResult<()> {
 }
 
 #[test]
-fn or_true() -> KsResult<()> {
+fn or_true() -> VMResult<()> {
     let left = false;
     let right = true;
 
@@ -545,7 +545,7 @@ fn or_true() -> KsResult<()> {
 }
 
 #[test]
-fn or_false() -> KsResult<()> {
+fn or_false() -> VMResult<()> {
     let left = false;
     let right = false;
 
@@ -567,7 +567,7 @@ fn or_false() -> KsResult<()> {
 }
 
 #[test]
-fn not_true() -> KsResult<()> {
+fn not_true() -> VMResult<()> {
     let value = true;
 
     let mut variable_left = Variable::from(value);
@@ -601,7 +601,7 @@ fn not_true() -> KsResult<()> {
 }
 
 #[test]
-fn not_false() -> KsResult<()> {
+fn not_false() -> VMResult<()> {
     let value = false;
 
     let mut variable_left = Variable::from(value);
@@ -635,7 +635,7 @@ fn not_false() -> KsResult<()> {
 }
 
 #[test]
-fn increment() -> KsResult<()> {
+fn increment() -> VMResult<()> {
     let value = 10;
 
     let mut variable_left = Variable::from(value);
@@ -667,7 +667,7 @@ fn increment() -> KsResult<()> {
 }
 
 #[test]
-fn decrement() -> KsResult<()> {
+fn decrement() -> VMResult<()> {
     let value = 10;
 
     let mut variable_left = Variable::from(value);
@@ -699,7 +699,7 @@ fn decrement() -> KsResult<()> {
 }
 
 #[test]
-fn clone_primitive() -> KsResult<()> {
+fn clone_primitive() -> VMResult<()> {
     let value = 10;
 
     let mut variable = Variable::from(value);
@@ -733,7 +733,7 @@ fn clone_primitive() -> KsResult<()> {
 }
 
 #[test]
-fn clone_collection_string() -> KsResult<()> {
+fn clone_collection_string() -> VMResult<()> {
     let value = String::from("Hello World");
 
     let mut variable = Variable::string(0);
@@ -783,7 +783,7 @@ fn clone_collection_string() -> KsResult<()> {
 }
 
 #[test]
-fn clone_collection() -> KsResult<()> {
+fn clone_collection() -> VMResult<()> {
     let value = vec![0, 1, 2, 3];
     let mut variable = Variable::collection(0).with_owners(2);
     let storage = vec![
@@ -856,7 +856,7 @@ fn clone_collection() -> KsResult<()> {
 }
 
 #[test]
-fn load_collection() -> KsResult<()> {
+fn load_collection() -> VMResult<()> {
     let collection = Collection::Stack(vec![0, 1, 2, 3]);
     let mut storage = vec![
         Some(Variable::from(1).with_owners(1)),
@@ -898,7 +898,7 @@ fn load_collection() -> KsResult<()> {
 }
 
 #[test]
-fn store() -> KsResult<()> {
+fn store() -> VMResult<()> {
     let storage = vec![Some(Variable::from(10).with_owners(1))];
     let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
 
@@ -917,7 +917,7 @@ fn store() -> KsResult<()> {
 }
 
 #[test]
-fn free_primitive() -> KsResult<()> {
+fn free_primitive() -> VMResult<()> {
     let storage = vec![
         Some(Variable::from(10).with_owners(1)),
         Some(Variable::from(20).with_owners(1)),
@@ -945,7 +945,7 @@ fn free_primitive() -> KsResult<()> {
 }
 
 #[test]
-fn free_string() -> KsResult<()> {
+fn free_string() -> VMResult<()> {
     let storage = vec![Some(Variable::string(0).with_owners(1))];
     let collections = vec![Collection::String(String::from("Hello World"))];
 
@@ -974,7 +974,7 @@ fn free_string() -> KsResult<()> {
 }
 
 #[test]
-fn free_collection() -> KsResult<()> {
+fn free_collection() -> VMResult<()> {
     let storage = vec![
         Some(Variable::from(10).with_owners(1)),
         Some(Variable::from(20).with_owners(1)),
@@ -1009,7 +1009,7 @@ fn free_collection() -> KsResult<()> {
 }
 
 #[test]
-fn free_collection_matrix() -> KsResult<()> {
+fn free_collection_matrix() -> VMResult<()> {
     let storage = vec![
         Some(Variable::from(10).with_owners(1)),
         Some(Variable::from(20).with_owners(1)),
@@ -1074,7 +1074,7 @@ fn free_collection_matrix() -> KsResult<()> {
 }
 
 #[test]
-fn clear_acc() -> KsResult<()> {
+fn clear_acc() -> VMResult<()> {
     let storage = vec![
         Some(Variable::from(10).with_owners(1)),
         Some(Variable::from(20).with_owners(1)),
@@ -1109,7 +1109,7 @@ fn clear_acc() -> KsResult<()> {
 }
 
 #[test]
-fn jump_if_false_if_actually_false() -> KsResult<()> {
+fn jump_if_false_if_actually_false() -> VMResult<()> {
     let condition = Variable::from(false).with_owners(1);
 
     let gvs = KsDriver::gvs_storage(Some(vec![Some(condition)]), None, None, None);
@@ -1129,7 +1129,7 @@ fn jump_if_false_if_actually_false() -> KsResult<()> {
 }
 
 #[test]
-fn jump_if_false_if_actually_true() -> KsResult<()> {
+fn jump_if_false_if_actually_true() -> VMResult<()> {
     let condition = Variable::from(true).with_owners(1);
 
     let gvs = KsDriver::gvs_storage(Some(vec![Some(condition)]), None, None, None);
@@ -1149,7 +1149,7 @@ fn jump_if_false_if_actually_true() -> KsResult<()> {
 }
 
 #[test]
-fn jump_if_true_if_actually_false() -> KsResult<()> {
+fn jump_if_true_if_actually_false() -> VMResult<()> {
     let condition = Variable::from(false).with_owners(1);
 
     let gvs = KsDriver::gvs_storage(Some(vec![Some(condition)]), None, None, None);
@@ -1169,7 +1169,7 @@ fn jump_if_true_if_actually_false() -> KsResult<()> {
 }
 
 #[test]
-fn jump_if_true_if_actually_true() -> KsResult<()> {
+fn jump_if_true_if_actually_true() -> VMResult<()> {
     let condition = Variable::from(true).with_owners(1);
 
     let gvs = KsDriver::gvs_storage(Some(vec![Some(condition)]), None, None, None);
@@ -1189,7 +1189,7 @@ fn jump_if_true_if_actually_true() -> KsResult<()> {
 }
 
 #[test]
-fn call() -> KsResult<()> {
+fn call() -> VMResult<()> {
     let storage = vec![Some(Variable::from(Function::from(20u32)).with_owners(1))];
 
     let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
@@ -1210,7 +1210,7 @@ fn call() -> KsResult<()> {
 }
 
 #[test]
-fn return_instruction() -> KsResult<()> {
+fn return_instruction() -> VMResult<()> {
     let initial_pc = 20usize;
 
     let call_stack = CallStack::new(0, 0, 0);
@@ -1237,7 +1237,7 @@ fn return_instruction() -> KsResult<()> {
 }
 
 #[test]
-fn load_function_empty() -> KsResult<()> {
+fn load_function_empty() -> VMResult<()> {
     let function = Variable::from(Function::from(20u32)).with_owners(1);
 
     let storage = vec![Some(function.clone())];
@@ -1258,7 +1258,7 @@ fn load_function_empty() -> KsResult<()> {
 }
 
 #[test]
-fn load_function_capture() -> KsResult<()> {
+fn load_function_capture() -> VMResult<()> {
     let function = Variable::function(Function::new(20, 0)).with_owners(1);
 
     let storage = vec![
@@ -1286,7 +1286,7 @@ fn load_function_capture() -> KsResult<()> {
 }
 
 #[test]
-fn free_function_with_capture() -> KsResult<()> {
+fn free_function_with_capture() -> VMResult<()> {
     let storage = vec![
         Some(Variable::from(10).with_owners(1)),
         Some(Variable::from(20).with_owners(1)),
@@ -1321,7 +1321,7 @@ fn free_function_with_capture() -> KsResult<()> {
 }
 
 #[test]
-fn call_stack_should_own_collection() -> KsResult<()> {
+fn call_stack_should_own_collection() -> VMResult<()> {
     let storage = vec![
         Some(Variable::from(10).with_owners(1)),
         Some(Variable::from(20).with_owners(1)),
@@ -1352,7 +1352,7 @@ fn call_stack_should_own_collection() -> KsResult<()> {
 }
 
 #[test]
-fn load_capture() -> KsResult<()> {
+fn load_capture() -> VMResult<()> {
     let storage = vec![
         Some(Variable::from(Function::new(20u32, 0u32)).with_owners(1)),
         Some(Variable::from(10).with_owners(1)),
@@ -1381,7 +1381,7 @@ fn load_capture() -> KsResult<()> {
 }
 
 #[test]
-fn collection_len() -> KsResult<()> {
+fn collection_len() -> VMResult<()> {
     let storage = vec![
         Some(Variable::from(10).with_owners(1)),
         Some(Variable::from(20).with_owners(1)),
@@ -1413,7 +1413,7 @@ fn collection_len() -> KsResult<()> {
 }
 
 #[test]
-fn collection_len_string() -> KsResult<()> {
+fn collection_len_string() -> VMResult<()> {
     let storage = vec![Some(Variable::string(0).with_owners(2))];
 
     let string = String::from("Hello World");
@@ -1442,7 +1442,7 @@ fn collection_len_string() -> KsResult<()> {
 }
 
 #[test]
-fn load_from_collection_stack() -> KsResult<()> {
+fn load_from_collection_stack() -> VMResult<()> {
     let expected_variable = Variable::from(20).with_owners(2);
 
     let storage = vec![
@@ -1475,7 +1475,7 @@ fn load_from_collection_stack() -> KsResult<()> {
 }
 
 #[test]
-fn load_from_collection_string() -> KsResult<()> {
+fn load_from_collection_string() -> VMResult<()> {
     let storage = vec![
         Some(Variable::string(0).with_owners(2)),
         Some(Variable::from(1).with_owners(1)),
@@ -1511,7 +1511,7 @@ fn load_from_collection_string() -> KsResult<()> {
 }
 
 #[test]
-fn variable_assign() -> KsResult<()> {
+fn variable_assign() -> VMResult<()> {
     let expected_variable = Variable::from(20).with_owners(2);
 
     let storage = vec![
@@ -1547,7 +1547,7 @@ fn variable_assign() -> KsResult<()> {
 }
 
 #[test]
-fn collection_assign() -> KsResult<()> {
+fn collection_assign() -> VMResult<()> {
     let expected_collection = Collection::Stack(vec![0, 4, 2]);
     let expected_variable = Variable::from(362).with_owners(2);
 
@@ -1590,7 +1590,7 @@ fn collection_assign() -> KsResult<()> {
 }
 
 #[test]
-fn assign_variable() -> KsResult<()> {
+fn assign_variable() -> VMResult<()> {
     let storage = vec![
         Some(Variable::from(10).with_owners(1)),
         Some(Variable::from(20).with_owners(2)),
@@ -1618,7 +1618,7 @@ fn assign_variable() -> KsResult<()> {
 }
 
 #[test]
-fn assign_collection_from_variable() -> KsResult<()> {
+fn assign_collection_from_variable() -> VMResult<()> {
     let storage = vec![
         Some(Variable::from(10).with_owners(1)),
         Some(Variable::from(20).with_owners(1)),
@@ -1653,7 +1653,7 @@ fn assign_collection_from_variable() -> KsResult<()> {
 }
 
 #[test]
-fn assign_collection_from_collection() -> KsResult<()> {
+fn assign_collection_from_collection() -> VMResult<()> {
     let storage = vec![
         Some(Variable::from(10).with_owners(1)),
         Some(Variable::from(20).with_owners(1)),
@@ -1702,7 +1702,7 @@ fn assign_collection_from_collection() -> KsResult<()> {
 }
 
 #[test]
-fn native_call_was_added() -> KsResult<()> {
+fn native_call_was_added() -> VMResult<()> {
     let mut gvs = GVS::new();
     let mut native_stack = Vec::new();
     let mut runner = Runner::new();
@@ -1728,7 +1728,7 @@ struct TestPrint {
 }
 
 impl KsCall for TestPrint {
-    fn call(&mut self, arguments: usize, helper: NativeHelper) -> KsResult<()> {
+    fn call(&mut self, arguments: usize, helper: NativeHelper) -> VMResult<()> {
         let gvs = helper.gvs;
 
         for _ in 0..arguments {
@@ -1746,7 +1746,7 @@ impl KsCall for TestPrint {
 }
 
 #[test]
-fn call_native() -> KsResult<()> {
+fn call_native() -> VMResult<()> {
     let mut native_registry = NativeRegistry::new();
     native_registry.functions.push(Box::new(TestPrint {
         output: String::new(),

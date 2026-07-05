@@ -2,7 +2,7 @@ macro_rules! operation {
     ($operation:ident, $instruction:expr, $op:tt) => {
         paste! {
             #[test]
-            fn [<$operation _int_int>]() -> KsResult<()> {
+            fn [<$operation _int_int>]() -> VMResult<()> {
                 let int_left = 10;
                 let int_right = 10;
 
@@ -20,7 +20,7 @@ macro_rules! operation {
         }
         paste! {
             #[test]
-            fn [<$operation _int_float>]() -> KsResult<()> {
+            fn [<$operation _int_float>]() -> VMResult<()> {
                 let int_left = 10;
                 let float_right = 3.14;
 
@@ -39,7 +39,7 @@ macro_rules! operation {
 
         paste! {
             #[test]
-            fn [<$operation _float_int>]() -> KsResult<()> {
+            fn [<$operation _float_int>]() -> VMResult<()> {
                 let float_left = 3.14;
                 let int_right = 10;
 
@@ -58,7 +58,7 @@ macro_rules! operation {
 
         paste! {
             #[test]
-            fn [<$operation _float_float>]() -> KsResult<()> {
+            fn [<$operation _float_float>]() -> VMResult<()> {
                 let float_left = 3.14;
                 let float_right = 1.23;
 

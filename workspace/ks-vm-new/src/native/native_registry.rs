@@ -1,9 +1,6 @@
-use ks_global::utils::ks_error::KsError;
-use ks_global::utils::ks_result::KsResult;
-
 use super::{KsCall, NativeHelper};
 use crate::types::Arguments;
-use crate::{GVS, Runner};
+use crate::{GVS, Runner, VMError, VMResult};
 
 pub struct NativeRegistry {
     pub functions: Vec<Box<dyn KsCall>>,
@@ -22,14 +19,11 @@ impl NativeRegistry {
         arguments: Arguments,
         runner: &mut Runner,
         gvs: &mut GVS,
-    ) -> KsResult<()> {
-        let function = self
-            .functions
-            .get_mut(index)
-            .ok_or(KsError::runtime(&format!(
-                "Cannot find function with index {}",
-                index
-            )))?;
+    ) -> VMResult<()> {
+        let function = self.functions.get_mut(index).ok_or(VMError::from(format!(
+            "Cannot find function with index {}",
+            index
+        )))?;
 
         let helper = NativeHelper { runner, gvs };
 
