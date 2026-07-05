@@ -58,6 +58,22 @@ impl KsDriver {
         Ok(compiler)
     }
 
+    pub fn compiler_new_with_native(
+        &self,
+        native: HashMap<String, (usize, usize)>,
+    ) -> KsResult<CompilerNew> {
+        let statements = self.parser()?;
+        let mut compiler = CompilerNew::new();
+
+        for (name, (native_id, arguments)) in native {
+            compiler.register_native(name, native_id, arguments);
+        }
+
+        compiler.compile(statements)?;
+
+        Ok(compiler)
+    }
+
     pub fn runner(instruction: Instruction) -> KsResult<RunnerDriver> {
         let mut gvs = GVS::new();
         let mut runner = Runner::new();

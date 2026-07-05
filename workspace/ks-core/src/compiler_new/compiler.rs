@@ -4,6 +4,7 @@ use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 use ks_vm_new::{Constant, Instruction, Program};
 
+use crate::compiler_new::types::Arguments;
 use crate::parser::expression::Expression;
 use crate::parser::identifier_tail::IdentifierTail;
 use crate::parser::operator::Operator;
@@ -13,7 +14,7 @@ use crate::parser::statement::Statement;
 use super::collection::Collection;
 use super::environment::Environment;
 use super::slot::Slot;
-use super::types::{CollectionId, Pointer, VariableId};
+use super::types::{CollectionId, NativeId, Pointer, VariableId};
 
 pub struct CompilerNew {
     scopes: Vec<Vec<Instruction>>,
@@ -30,6 +31,10 @@ impl CompilerNew {
             environment: Environment::new(),
             function_depth: 0,
         }
+    }
+
+    pub fn register_native(&mut self, name: String, native_id: NativeId, arguments: Arguments) {
+        self.environment.register_native(name, native_id, arguments);
     }
 
     pub fn program(self) -> Program {
@@ -496,12 +501,28 @@ impl CompilerNew {
         Ok(())
     }
 
-    fn identifier_call(&mut self, mut expressions: Vec<Expression>, assign: bool) -> KsResult<()> {
+    fn identifier_call(
+        &mut self,
+        mut expressions: Vec<Expression>,
+        assign: bool,
+        last_name: &mut Option<String>,
+    ) -> KsResult<()> {
         if assign {
             return Err(KsError::parse("Cannot call in assign statement"));
         }
         while let Some(expression) = expressions.pop() {
             self.compile_expression(expression)?;
+        }
+
+        if let Some(name) = last_name {
+            if let Some((native_id, arguments)) = self.environment.native_function(name) {
+                let native_id = *native_id;
+                let arguments = *arguments;
+
+                self.insert(Instruction::CallNative(native_id, arguments))?;
+
+                return Ok(());
+            }
         }
 
         self.insert(Instruction::Call)?;
@@ -558,13 +579,21 @@ impl CompilerNew {
 
     fn identifier(&mut self, identifier: Vec<IdentifierTail>, assign: bool) -> KsResult<()> {
         let mut last_collection_id: Option<CollectionId> = None;
+        let mut last_name: Option<String> = None;
 
         for segment in identifier {
             match segment {
                 IdentifierTail::Name(name) => {
+                    if let Some(_) = self.environment.native_function(&name) {
+                        last_name = Some(name.clone());
+                        continue;
+                    }
+
                     self.identifier_name(name, &mut last_collection_id, assign)
                 }
-                IdentifierTail::Call(expressions) => self.identifier_call(expressions, assign),
+                IdentifierTail::Call(expressions) => {
+                    self.identifier_call(expressions, assign, &mut last_name)
+                }
                 IdentifierTail::Index(expression) => {
                     self.identifier_index(expression, &mut last_collection_id, assign)
                 }
