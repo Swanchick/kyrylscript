@@ -921,3 +921,25 @@ fn function_curring() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn native_call() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::String(String::from("Hello World"))),
+        Instruction::CallNative(0, 1),
+        Instruction::ClearAcc,
+    ];
+
+    let test_program = Program::new(instructions, HashMap::<String, usize>::new());
+
+    let mut native_function = HashMap::new();
+    native_function.insert(String::from("println"), (0, 1));
+
+    let driver = KsDriver::new("compiler/native_call.ks");
+    let compiler = driver.compiler_new_with_native(native_function)?;
+    let program = compiler.program();
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
