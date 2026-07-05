@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use alloc::string::String;
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum Constant {
     Integer(i64),

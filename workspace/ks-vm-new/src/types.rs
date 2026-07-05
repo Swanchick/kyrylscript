@@ -1,3 +1,5 @@
+use crate::utils::VMError;
+
 pub type CaptureSize = usize;
 pub type Offset = i32;
 pub type VariableId = u64;
@@ -11,3 +13,5 @@ pub type Owners = u32;
 
 pub type NativeId = usize;
 pub type Arguments = usize;
+
+pub type VMResult<T> = Result<T, VMError>;

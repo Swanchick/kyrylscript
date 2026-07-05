@@ -49,10 +49,6 @@ impl Environment {
         Ok(self.function_variables_len(variables) as u64)
     }
 
-    pub fn functions(self) -> HashMap<String, Pointer> {
-        self.functions
-    }
-
     pub fn temp_collection(&mut self) -> Option<CollectionId> {
         self.temp_collection.take()
     }

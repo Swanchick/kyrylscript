@@ -1,9 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use ks_global::utils::ks_result::KsResult;
-
-use ks_vm_new::{Constant, Instruction};
+use ks_vm_new::{Constant, Instruction, VMResult};
 use ks_vm_new::{KsCall, NativeHelper, NativeRegistry, STRING_TYPE};
 
 use crate::drivers::KsDriver;
@@ -13,7 +11,7 @@ struct TestPrint {
 }
 
 impl KsCall for TestPrint {
-    fn call(&mut self, arguments: usize, helper: NativeHelper) -> KsResult<()> {
+    fn call(&mut self, arguments: usize, helper: NativeHelper) -> VMResult<()> {
         let gvs = helper.gvs;
 
         let mut storage_ids = helper.runner.acc.size_pop(arguments);
@@ -38,7 +36,7 @@ impl KsCall for TestPrint {
 }
 
 #[test]
-fn call_native() -> KsResult<()> {
+fn call_native() -> VMResult<()> {
     let mut native = NativeRegistry::new();
     let output = Rc::new(RefCell::new(String::new()));
     native.functions.push(Box::new(TestPrint {

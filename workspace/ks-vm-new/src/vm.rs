@@ -1,8 +1,7 @@
-use std::collections::HashMap;
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 
-use ks_global::utils::ks_result::KsResult;
-
-use crate::{GVS, Instruction, NativeCall, NativeRegistry, Program, Runner};
+use crate::{GVS, Instruction, NativeCall, NativeRegistry, Program, Runner, VMResult};
 
 pub struct VM {
     program: Program,
@@ -14,7 +13,7 @@ pub struct VM {
 impl From<Vec<Instruction>> for VM {
     fn from(instructions: Vec<Instruction>) -> Self {
         Self {
-            program: Program::new(instructions, HashMap::new()),
+            program: Program::new(instructions),
             runners: Vec::new(),
             gvs: GVS::new(),
             native: NativeRegistry::new(),
@@ -48,7 +47,7 @@ impl VM {
         self.runners.push(runner);
     }
 
-    fn call_native(&mut self, native_call: NativeCall) -> KsResult<()> {
+    fn call_native(&mut self, native_call: NativeCall) -> VMResult<()> {
         self.native.call(
             native_call.native_id,
             native_call.arguments,
@@ -59,7 +58,7 @@ impl VM {
         Ok(())
     }
 
-    pub fn step(&mut self) -> KsResult<()> {
+    pub fn step(&mut self) -> VMResult<()> {
         let instructions = self.program.instructions();
         let mut native_calls = Vec::new();
 

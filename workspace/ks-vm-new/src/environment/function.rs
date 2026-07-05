@@ -1,4 +1,4 @@
-use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
+use crate::{VMError, VMResult};
 
 const EMPTY_COLLECTION: u32 = 0xFFFFFFFF;
 
@@ -19,11 +19,7 @@ impl From<u32> for Function {
 impl From<u64> for Function {
     fn from(value: u64) -> Self {
         let pointer = value as u32;
-        println!("POINTER: {}", pointer);
-
         let collection_id = (value >> 32) as u32;
-
-        println!("COLLECTION_ID: {}", collection_id);
 
         let collection_id = if collection_id == EMPTY_COLLECTION {
             None
@@ -53,11 +49,11 @@ impl Function {
         collection_id << 32 | pointer
     }
 
-    pub fn collection_id(&self) -> KsResult<usize> {
+    pub fn collection_id(&self) -> VMResult<usize> {
         if let Some(collection_id) = self.collection_id {
             Ok(collection_id as usize)
         } else {
-            Err(KsError::runtime(
+            Err(VMError::from(
                 "Function does not have any captured variables",
             ))
         }

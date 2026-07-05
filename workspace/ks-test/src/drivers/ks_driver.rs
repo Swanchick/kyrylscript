@@ -4,12 +4,12 @@ use ks_core::compiler_new::compiler::CompilerNew;
 use ks_core::lexer::lexer::Lexer;
 use ks_core::parser::parser::Parser;
 use ks_core::parser::statement::Statement;
-use ks_global::utils::ks_error::KsError;
+
 use ks_global::utils::ks_result::KsResult;
 use ks_std::ks_register_std;
 use ks_vm_new::{
     Assign, CallStack, Collection, GVS, Instruction, NativeRegistry, Program, Runner, Stack, VM,
-    Variable,
+    VMError, VMResult, Variable,
 };
 
 use super::runner_driver::RunnerDriver;
@@ -74,7 +74,7 @@ impl KsDriver {
         Ok(compiler)
     }
 
-    pub fn runner(instruction: Instruction) -> KsResult<RunnerDriver> {
+    pub fn runner(instruction: Instruction) -> VMResult<RunnerDriver> {
         let mut gvs = GVS::new();
         let mut runner = Runner::new();
 
@@ -88,7 +88,7 @@ impl KsDriver {
         gvs: Option<GVS>,
         native: Option<NativeRegistry>,
         instructions: Vec<Instruction>,
-    ) -> KsResult<VM> {
+    ) -> VMResult<VM> {
         let instructions_len = instructions.len();
 
         let gvs = if let Some(gvs) = gvs { gvs } else { GVS::new() };
@@ -103,12 +103,7 @@ impl KsDriver {
             NativeRegistry::new()
         };
 
-        let mut vm = VM::new(
-            Program::new(instructions, HashMap::new()),
-            vec![runner],
-            gvs,
-            native,
-        );
+        let mut vm = VM::new(Program::new(instructions), vec![runner], gvs, native);
 
         for _ in 0..instructions_len {
             vm.step()?;
@@ -207,7 +202,7 @@ impl KsDriver {
         runner: Option<Runner>,
         gvs: Option<GVS>,
         instruction: Instruction,
-    ) -> KsResult<RunnerDriver> {
+    ) -> VMResult<RunnerDriver> {
         let mut gvs = if let Some(gvs) = gvs { gvs } else { GVS::new() };
         let mut runner = if let Some(runner) = runner {
             runner
@@ -224,7 +219,7 @@ impl KsDriver {
         right: Variable,
         result: Variable,
         instruction: Instruction,
-    ) -> KsResult<()> {
+    ) -> VMResult<()> {
         let runner = KsDriver::runner_default(
             Some(Stack::from(vec![0, 1])),
             Some(Stack::from(vec![0, 1])),
@@ -238,15 +233,15 @@ impl KsDriver {
         let driver = KsDriver::runner_configured(runner, gvs, instruction)?;
 
         if driver.runner.program_counter != 1 {
-            return Err(KsError::runtime("Wrong program_counter"));
+            return Err(VMError::from("Wrong program_counter"));
         }
 
         if driver.runner.acc.len() != 1 {
-            return Err(KsError::runtime("Wrong acc size"));
+            return Err(VMError::from("Wrong acc size"));
         }
 
         if driver.runner.acc.get(0).unwrap() != &2 {
-            return Err(KsError::runtime("Acc doesn't have the variable"));
+            return Err(VMError::from("Acc doesn't have the variable"));
         }
 
         let gvs_variable1_left = driver.gvs.storage[0].clone().unwrap();
@@ -254,17 +249,15 @@ impl KsDriver {
         let gvs_variable1_result = driver.gvs.storage[2].clone().unwrap();
 
         if gvs_variable1_left.owners != 1 {
-            return Err(KsError::runtime("Left varaible has wrong amount of owners"));
+            return Err(VMError::from("Left varaible has wrong amount of owners"));
         }
 
         if gvs_variable1_right.owners != 1 {
-            return Err(KsError::runtime(
-                "Right varaible has wrong amount of owners",
-            ));
+            return Err(VMError::from("Right varaible has wrong amount of owners"));
         }
 
         if gvs_variable1_result != result {
-            return Err(KsError::runtime(&format!(
+            return Err(VMError::from(format!(
                 "Wrong result {:?}",
                 gvs_variable1_result
             )));

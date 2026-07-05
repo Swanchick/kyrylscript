@@ -1,3 +1,8 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+
 mod assign;
 mod call_stack;
 mod environment;
@@ -21,3 +26,6 @@ pub use ir::program::Program;
 pub use native::{KsCall, NativeCall, NativeHelper, NativeRegistry};
 pub use runner::Runner;
 pub use vm::VM;
+
+pub use types::VMResult;
+pub use utils::VMError;
