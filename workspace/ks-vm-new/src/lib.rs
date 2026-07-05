@@ -26,3 +26,6 @@ pub use ir::program::Program;
 pub use native::{KsCall, NativeCall, NativeHelper, NativeRegistry};
 pub use runner::Runner;
 pub use vm::VM;
+
+pub use types::VMResult;
+pub use utils::VMError;

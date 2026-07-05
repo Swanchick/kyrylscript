@@ -1,4 +1,3 @@
-// pub mod hash;
-// mod ks_map;
+pub mod vm_error;
 
-// pub use ks_map::KsMap;
+pub use vm_error::VMError;

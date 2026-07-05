@@ -1,14 +1,11 @@
-use ks_global::utils::ks_error::KsError;
-use ks_global::utils::ks_result::KsResult;
-
 use crate::types::{Arguments, NativeId};
-use crate::{Assign, Function, NativeCall};
+use crate::{Assign, Function, NativeCall, VMError, VMResult};
 
 use super::call_stack::CallStack;
 use super::environment::variable::{
     BOOLEAN_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STACK_TYPE, STRING_TYPE,
 };
-use super::environment::{Stack, Variable, GVS};
+use super::environment::{GVS, Stack, Variable};
 use super::types::{CaptureSize, CollectionId, Offset, Pointer, Slot, StorageId};
 use super::{Constant, Instruction};
 
@@ -54,7 +51,7 @@ impl Runner {
         Variable::string(collection_id)
     }
 
-    fn load_const(&mut self, gvs: &mut GVS, constant: Constant) -> KsResult<()> {
+    fn load_const(&mut self, gvs: &mut GVS, constant: Constant) -> VMResult<()> {
         let variable = match constant {
             Constant::Null => Variable::null(),
             Constant::Integer(value) => Variable::from(value),
@@ -68,14 +65,14 @@ impl Runner {
         Ok(())
     }
 
-    fn load_var(&mut self, gvs: &mut GVS, slot: Slot) -> KsResult<()> {
+    fn load_var(&mut self, gvs: &mut GVS, slot: Slot) -> VMResult<()> {
         let storage_id = self.stack.storage_id(slot)?;
         self.acc.push_storage_id(gvs, storage_id)?;
 
         Ok(())
     }
 
-    fn jump(&mut self, offset: Offset) -> KsResult<()> {
+    fn jump(&mut self, offset: Offset) -> VMResult<()> {
         self.program_counter = if offset < 0 {
             self.program_counter
                 .saturating_sub(offset.unsigned_abs() as Pointer)
@@ -88,7 +85,7 @@ impl Runner {
         Ok(())
     }
 
-    fn add_strings(gvs: &mut GVS, left: CollectionId, right: CollectionId) -> KsResult<u64> {
+    fn add_strings(gvs: &mut GVS, left: CollectionId, right: CollectionId) -> VMResult<u64> {
         let mut left = gvs.collection_string(left)?.to_string();
         let right = gvs.collection_string(right)?;
 
@@ -98,7 +95,7 @@ impl Runner {
         Ok(collection_id)
     }
 
-    fn add(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn add(&mut self, gvs: &mut GVS) -> VMResult<()> {
         let right = self.acc.pop(gvs)?;
         let left = self.acc.pop(gvs)?;
 
@@ -111,7 +108,7 @@ impl Runner {
                 let collection_id = Self::add_strings(gvs, left.value, right.value)?;
                 Ok(Variable::string(collection_id))
             }
-            _ => Err(KsError::runtime("Invalid type")),
+            _ => Err("Invalid type"),
         }?;
 
         self.acc.push(gvs, variable)?;
@@ -124,7 +121,7 @@ impl Runner {
         gvs: &mut GVS,
         operation_int: impl Fn(i64, i64) -> RI,
         operation_float: impl Fn(f64, f64) -> RF,
-    ) -> KsResult<()>
+    ) -> VMResult<()>
     where
         Variable: From<RI> + From<RF>,
     {
@@ -139,7 +136,7 @@ impl Runner {
             (INT_TYPE, FLOAT_TYPE) | (FLOAT_TYPE, INT_TYPE) | (FLOAT_TYPE, FLOAT_TYPE) => Ok(
                 Variable::from(operation_float(left.as_f64()?, right.as_f64()?)),
             ),
-            _ => Err(KsError::runtime("Invalid type")),
+            _ => Err("Invalid type"),
         }?;
 
         self.acc.push(gvs, variable)?;
@@ -147,30 +144,30 @@ impl Runner {
         Ok(())
     }
 
-    fn minus(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn minus(&mut self, gvs: &mut GVS) -> VMResult<()> {
         self.binary_op(gvs, |l, r| l - r, |l, r| l - r)?;
         Ok(())
     }
 
-    fn mul(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn mul(&mut self, gvs: &mut GVS) -> VMResult<()> {
         self.binary_op(gvs, |l, r| l * r, |l, r| l * r)?;
         Ok(())
     }
 
-    fn check_zero_division(&self, gvs: &mut GVS) -> KsResult<()> {
+    fn check_zero_division(&self, gvs: &mut GVS) -> VMResult<()> {
         let variable = self.acc.last(gvs)?;
         let float_value = variable.as_f64()?;
 
         if (variable.value_type == INT_TYPE || variable.value_type == FLOAT_TYPE)
             && float_value == 0.0
         {
-            return Err(KsError::runtime("Zero division error"));
+            return Err(VMError::from("Zero division error"));
         }
 
         Ok(())
     }
 
-    fn div(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn div(&mut self, gvs: &mut GVS) -> VMResult<()> {
         self.check_zero_division(gvs)?;
         let right = self.acc.pop(gvs)?;
         let left = self.acc.pop(gvs)?;
@@ -180,7 +177,7 @@ impl Runner {
             | (INT_TYPE, FLOAT_TYPE)
             | (FLOAT_TYPE, INT_TYPE)
             | (FLOAT_TYPE, FLOAT_TYPE) => Ok(Variable::from(left.as_f64()? / right.as_f64()?)),
-            _ => Err(KsError::runtime("Invalid type")),
+            _ => Err("Invalid type"),
         }?;
 
         self.acc.push(gvs, variable)?;
@@ -188,27 +185,27 @@ impl Runner {
         Ok(())
     }
 
-    fn greater_eq(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn greater_eq(&mut self, gvs: &mut GVS) -> VMResult<()> {
         self.binary_op(gvs, |l, r| l >= r, |l, r| l >= r)?;
         Ok(())
     }
 
-    fn greater(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn greater(&mut self, gvs: &mut GVS) -> VMResult<()> {
         self.binary_op(gvs, |l, r| l > r, |l, r| l > r)?;
         Ok(())
     }
 
-    fn less_eq(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn less_eq(&mut self, gvs: &mut GVS) -> VMResult<()> {
         self.binary_op(gvs, |l, r| l <= r, |l, r| l <= r)?;
         Ok(())
     }
 
-    fn less(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn less(&mut self, gvs: &mut GVS) -> VMResult<()> {
         self.binary_op(gvs, |l, r| l < r, |l, r| l < r)?;
         Ok(())
     }
 
-    fn equal(&mut self, gvs: &mut GVS) -> KsResult<Variable> {
+    fn equal(&mut self, gvs: &mut GVS) -> VMResult<Variable> {
         let right = self.acc.pop(gvs)?;
         let left = self.acc.pop(gvs)?;
 
@@ -222,19 +219,19 @@ impl Runner {
                 let right_string = gvs.collection_string(right.value)?;
                 Ok(Variable::from(left_string == right_string))
             }
-            _ => Err(KsError::runtime("Invalid type")),
+            _ => Err("Invalid type"),
         }?;
 
         Ok(variable)
     }
 
-    fn eq(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn eq(&mut self, gvs: &mut GVS) -> VMResult<()> {
         let variable = self.equal(gvs)?;
         self.acc.push(gvs, variable)?;
         Ok(())
     }
 
-    fn not_eq(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn not_eq(&mut self, gvs: &mut GVS) -> VMResult<()> {
         let variable = self.equal(gvs)?;
         let variable = Variable::from(!variable.as_boolean());
         self.acc.push(gvs, variable)?;
@@ -242,7 +239,7 @@ impl Runner {
         Ok(())
     }
 
-    fn bool_op(&mut self, gvs: &mut GVS, operation: impl Fn(bool, bool) -> bool) -> KsResult<()> {
+    fn bool_op(&mut self, gvs: &mut GVS, operation: impl Fn(bool, bool) -> bool) -> VMResult<()> {
         let right = self.acc.pop(gvs)?;
         let left = self.acc.pop(gvs)?;
 
@@ -251,7 +248,7 @@ impl Runner {
                 left.as_boolean(),
                 right.as_boolean(),
             ))),
-            _ => Err(KsError::runtime("Invalid type")),
+            _ => Err("Invalid type"),
         }?;
 
         self.acc.push(gvs, variable)?;
@@ -259,26 +256,26 @@ impl Runner {
         Ok(())
     }
 
-    fn and(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn and(&mut self, gvs: &mut GVS) -> VMResult<()> {
         self.bool_op(gvs, |l, r| l && r)?;
         Ok(())
     }
 
-    fn or(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn or(&mut self, gvs: &mut GVS) -> VMResult<()> {
         self.bool_op(gvs, |l, r| l || r)?;
         Ok(())
     }
 
-    fn not(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn not(&mut self, gvs: &mut GVS) -> VMResult<()> {
         let variable = self.acc.pop(gvs)?;
 
         match variable.value_type {
             BOOLEAN_TYPE => self.acc.push(gvs, Variable::from(!variable.as_boolean())),
-            _ => Err(KsError::runtime("Invalid value_type for not operator")),
+            _ => Err(VMError::from("Invalid value_type for not operator")),
         }
     }
 
-    fn increment(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn increment(&mut self, gvs: &mut GVS) -> VMResult<()> {
         let variable = self.acc.last_mut(gvs)?;
 
         variable.value = match variable.value_type {
@@ -293,15 +290,13 @@ impl Runner {
                 value += 1.0;
                 Ok(value.to_bits())
             }
-            _ => Err(KsError::runtime(
-                "Invalid value_type for increment operator",
-            )),
+            _ => Err("Invalid value_type for increment operator"),
         }?;
 
         Ok(())
     }
 
-    fn decrement(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn decrement(&mut self, gvs: &mut GVS) -> VMResult<()> {
         let variable = self.acc.last_mut(gvs)?;
 
         variable.value = match variable.value_type {
@@ -316,15 +311,13 @@ impl Runner {
                 value -= 1.0;
                 Ok(value.to_bits())
             }
-            _ => Err(KsError::runtime(
-                "Invalid value_type for decrement operator",
-            )),
+            _ => Err("Invalid value_type for decrement operator"),
         }?;
 
         Ok(())
     }
 
-    fn clone_string(&mut self, gvs: &mut GVS, variable: &mut Variable) -> KsResult<()> {
+    fn clone_string(&mut self, gvs: &mut GVS, variable: &mut Variable) -> VMResult<()> {
         let collection_id = variable.value;
         let string = gvs.collection_string(collection_id)?;
         let collection_id = gvs.collection_store_string(string.to_string());
@@ -333,7 +326,7 @@ impl Runner {
         Ok(())
     }
 
-    fn clone_stack(&mut self, gvs: &mut GVS, variable: &mut Variable) -> KsResult<()> {
+    fn clone_stack(&mut self, gvs: &mut GVS, variable: &mut Variable) -> VMResult<()> {
         let collection_id = variable.value;
         let stack = gvs.collection_stack(collection_id)?.to_vec();
 
@@ -345,7 +338,7 @@ impl Runner {
                 let storage_id = gvs.store(variable);
                 Ok(storage_id)
             })
-            .collect::<KsResult<Vec<StorageId>>>()?;
+            .collect::<VMResult<Vec<StorageId>>>()?;
 
         let collection_id = gvs.collection_store_stack(stack);
         variable.value = collection_id;
@@ -353,7 +346,7 @@ impl Runner {
         Ok(())
     }
 
-    fn clone(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn clone(&mut self, gvs: &mut GVS) -> VMResult<()> {
         let mut variable = self.acc.pop(gvs)?;
         variable.owners = 0;
 
@@ -361,7 +354,7 @@ impl Runner {
             INT_TYPE | FLOAT_TYPE | NULL_TYPE | BOOLEAN_TYPE => Ok(()),
             STRING_TYPE => self.clone_string(gvs, &mut variable),
             STACK_TYPE => self.clone_stack(gvs, &mut variable),
-            _ => Err(KsError::runtime("Invalid value_type for clone")),
+            _ => Err(VMError::from("Invalid value_type for clone")),
         }?;
 
         self.acc.push(gvs, variable)?;
@@ -369,7 +362,7 @@ impl Runner {
         Ok(())
     }
 
-    fn load_collection(&mut self, gvs: &mut GVS, size: usize) -> KsResult<()> {
+    fn load_collection(&mut self, gvs: &mut GVS, size: usize) -> VMResult<()> {
         let stack = self.acc.size_pop(size);
         let collection_id = gvs.collection_store_stack(stack);
 
@@ -378,16 +371,16 @@ impl Runner {
         Ok(())
     }
 
-    fn store(&mut self) -> KsResult<()> {
+    fn store(&mut self) -> VMResult<()> {
         if let Some(storage_id) = self.acc.data.pop() {
             self.stack.data.push(storage_id);
             Ok(())
         } else {
-            Err(KsError::runtime("No storage_id in acc stack"))
+            Err(VMError::from("No storage_id in acc stack"))
         }
     }
 
-    fn free(&mut self, gvs: &mut GVS, size: usize) -> KsResult<()> {
+    fn free(&mut self, gvs: &mut GVS, size: usize) -> VMResult<()> {
         for _ in 0..size {
             self.stack.free_last(gvs)?;
         }
@@ -395,7 +388,7 @@ impl Runner {
         Ok(())
     }
 
-    fn clear_acc(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn clear_acc(&mut self, gvs: &mut GVS) -> VMResult<()> {
         while let Some(storage_id) = self.acc.data.pop() {
             gvs.storage_remove_owner(storage_id)?;
         }
@@ -403,11 +396,11 @@ impl Runner {
         Ok(())
     }
 
-    fn jump_if(&mut self, gvs: &mut GVS, offset: i32, boolean: bool) -> KsResult<()> {
+    fn jump_if(&mut self, gvs: &mut GVS, offset: i32, boolean: bool) -> VMResult<()> {
         let variable = self.acc.pop(gvs)?;
 
         if variable.value_type != BOOLEAN_TYPE {
-            return Err(KsError::runtime("Invalid value type, expected boolean"));
+            return Err(VMError::from("Invalid value type, expected boolean"));
         }
 
         if variable.as_boolean() == boolean {
@@ -417,7 +410,7 @@ impl Runner {
         Ok(())
     }
 
-    fn call(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn call(&mut self, gvs: &mut GVS) -> VMResult<()> {
         let storage_id = self.acc.pop_data()?;
 
         let variable_function = gvs.variable(storage_id)?;
@@ -436,20 +429,18 @@ impl Runner {
         Ok(())
     }
 
-    fn on_return(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn on_return(&mut self, gvs: &mut GVS) -> VMResult<()> {
         if let Some(call_stack) = self.call_stack.pop() {
             gvs.storage_remove_owner(call_stack.storage_id)?;
             self.program_counter = call_stack.return_pointer;
 
             Ok(())
         } else {
-            Err(KsError::runtime(
-                "CallStack is empty, cannot execute return",
-            ))
+            Err(VMError::from("CallStack is empty, cannot execute return"))
         }
     }
 
-    fn load_function(&mut self, gvs: &mut GVS, captures: CaptureSize) -> KsResult<()> {
+    fn load_function(&mut self, gvs: &mut GVS, captures: CaptureSize) -> VMResult<()> {
         let collection_id = if captures == 0 {
             None
         } else {
@@ -474,17 +465,17 @@ impl Runner {
         Ok(())
     }
 
-    fn last_function(&self, gvs: &mut GVS) -> KsResult<Function> {
+    fn last_function(&self, gvs: &mut GVS) -> VMResult<Function> {
         if let Some(call_stack) = self.call_stack.last() {
             let variable = gvs.variable(call_stack.storage_id)?;
             let function = variable.as_function()?;
             Ok(function)
         } else {
-            Err(KsError::runtime("Call stack is empty"))
+            Err(VMError::from("Call stack is empty"))
         }
     }
 
-    fn load_capture(&mut self, gvs: &mut GVS, slot_id: StorageId) -> KsResult<()> {
+    fn load_capture(&mut self, gvs: &mut GVS, slot_id: StorageId) -> VMResult<()> {
         let function = self.last_function(gvs)?;
 
         let collection_id = function.collection_id()?;
@@ -495,7 +486,7 @@ impl Runner {
 
             Ok(())
         } else {
-            Err(KsError::runtime(&format!(
+            Err(VMError::from(format!(
                 "The function does not have captured variable with slot_id {}",
                 slot_id
             )))
@@ -506,7 +497,7 @@ impl Runner {
         &mut self,
         gvs: &mut GVS,
         collection_id: CollectionId,
-    ) -> KsResult<i64> {
+    ) -> VMResult<i64> {
         let collection_len = {
             let collection = gvs.collection_stack(collection_id)?;
             collection.len() as i64
@@ -519,7 +510,7 @@ impl Runner {
         &mut self,
         gvs: &mut GVS,
         collection_id: CollectionId,
-    ) -> KsResult<i64> {
+    ) -> VMResult<i64> {
         let collection_len = {
             let string = gvs.collection_string(collection_id)?;
             string.len() as i64
@@ -528,7 +519,7 @@ impl Runner {
         Ok(collection_len)
     }
 
-    fn collection_len(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn collection_len(&mut self, gvs: &mut GVS) -> VMResult<()> {
         let (collection_id, value_type) = {
             let variable = self.acc.last(gvs)?;
 
@@ -538,7 +529,7 @@ impl Runner {
         let collection_len = match value_type {
             STACK_TYPE => self.collection_len_stack(gvs, collection_id),
             STRING_TYPE => self.collection_len_string(gvs, collection_id),
-            _ => Err(KsError::runtime("Variable is not a stack!")),
+            _ => Err(VMError::from("Variable is not a stack!")),
         }?;
 
         self.acc.pop(gvs)?;
@@ -554,17 +545,14 @@ impl Runner {
         gvs: &mut GVS,
         collection_id: CollectionId,
         index: usize,
-    ) -> KsResult<()> {
+    ) -> VMResult<()> {
         let collection = gvs.collection_stack(collection_id)?;
 
         if let Some(storage_id) = collection.get(index) {
             self.acc.push_storage_id(gvs, *storage_id)?;
             Ok(())
         } else {
-            Err(KsError::runtime(&format!(
-                "No value by that index {}",
-                index
-            )))
+            Err(VMError::from(format!("No value by that index {}", index)))
         }
     }
 
@@ -573,7 +561,7 @@ impl Runner {
         gvs: &mut GVS,
         collection_id: CollectionId,
         index: usize,
-    ) -> KsResult<()> {
+    ) -> VMResult<()> {
         let collection = gvs.collection_string(collection_id)?;
 
         let string = collection.to_string();
@@ -587,17 +575,14 @@ impl Runner {
 
             Ok(())
         } else {
-            Err(KsError::runtime(&format!(
-                "No value by that index {}",
-                index
-            )))
+            Err(VMError::from(format!("No value by that index {}", index)))
         }
     }
 
-    fn load_from_collection(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn load_from_collection(&mut self, gvs: &mut GVS) -> VMResult<()> {
         let index_variable = self.acc.pop(gvs)?;
         if index_variable.value_type != INT_TYPE {
-            return Err(KsError::runtime("Index variable is not an integer"));
+            return Err(VMError::from("Index variable is not an integer"));
         }
 
         let collection_variable = self.acc.pop(gvs)?;
@@ -608,13 +593,13 @@ impl Runner {
         match collection_variable.value_type {
             STACK_TYPE => self.load_from_collection_stack(gvs, collection_id, index),
             STRING_TYPE => self.load_from_collection_string(gvs, collection_id, index),
-            _ => Err(KsError::runtime("This is not a collection")),
+            _ => Err(VMError::from("This is not a collection")),
         }?;
 
         Ok(())
     }
 
-    fn assign_for_variable(&mut self, gvs: &mut GVS, slot_id: StorageId) -> KsResult<()> {
+    fn assign_for_variable(&mut self, gvs: &mut GVS, slot_id: StorageId) -> VMResult<()> {
         let slot_id = slot_id as usize;
 
         let storage_id = self.stack.data[slot_id];
@@ -632,13 +617,13 @@ impl Runner {
         gvs: &mut GVS,
         collection_id: CollectionId,
         index: usize,
-    ) -> KsResult<()> {
+    ) -> VMResult<()> {
         let storage_id = {
             let collection = gvs.collection_stack(collection_id)?;
             if let Some(storage_id) = collection.get(index) {
                 Ok(*storage_id)
             } else {
-                Err(KsError::runtime("No storage_id in collection"))
+                Err(VMError::from("No storage_id in collection"))
             }
         }?;
 
@@ -652,13 +637,13 @@ impl Runner {
         Ok(())
     }
 
-    fn assign(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn assign(&mut self, gvs: &mut GVS) -> VMResult<()> {
         match self.assign {
             Assign::Variable(slot_id) => self.assign_for_variable(gvs, slot_id),
             Assign::Collection(collection_id, index) => {
                 self.assign_for_collection(gvs, collection_id, index)
             }
-            Assign::None => Err(KsError::runtime("No assign available")),
+            Assign::None => Err(VMError::from("No assign available")),
         }?;
 
         self.assign = Assign::None;
@@ -666,7 +651,7 @@ impl Runner {
         Ok(())
     }
 
-    fn assign_variable(&mut self, slot_id: Slot) -> KsResult<()> {
+    fn assign_variable(&mut self, slot_id: Slot) -> VMResult<()> {
         self.assign = Assign::Variable(slot_id);
         Ok(())
     }
@@ -676,12 +661,12 @@ impl Runner {
         gvs: &mut GVS,
         slot_id: Slot,
         index: usize,
-    ) -> KsResult<()> {
+    ) -> VMResult<()> {
         let storage_id = self.stack.storage_id(slot_id)?;
         let variable = gvs.variable(storage_id)?;
 
         if variable.value_type != STACK_TYPE {
-            return Err(KsError::runtime("Cannot extract slot_id from not stack"));
+            return Err(VMError::from("Cannot extract slot_id from not stack"));
         }
 
         self.assign = Assign::Collection(variable.value, index);
@@ -695,16 +680,16 @@ impl Runner {
         collection_id: CollectionId,
         collection_index: usize,
         index: usize,
-    ) -> KsResult<()> {
+    ) -> VMResult<()> {
         let collection = gvs.collection_stack(collection_id)?;
         let storage_id = collection
             .get(collection_index)
-            .ok_or_else(|| KsError::runtime("No storage_id in collection"))?;
+            .ok_or_else(|| "No storage_id in collection")?;
 
         let variable = gvs.variable(*storage_id)?;
 
         if variable.value_type != STACK_TYPE {
-            return Err(KsError::runtime("Cannot extract slot_id from not stack"));
+            return Err(VMError::from("Cannot extract slot_id from not stack"));
         }
 
         self.assign = Assign::Collection(variable.value, index);
@@ -712,7 +697,7 @@ impl Runner {
         Ok(())
     }
 
-    fn assign_collection(&mut self, gvs: &mut GVS) -> KsResult<()> {
+    fn assign_collection(&mut self, gvs: &mut GVS) -> VMResult<()> {
         let index_variable = self.acc.pop(gvs)?;
         let index = index_variable.value as usize;
 
@@ -721,7 +706,7 @@ impl Runner {
             Assign::Collection(collection_id, collection_index) => {
                 self.assign_collection_from_collection(gvs, collection_id, collection_index, index)
             }
-            Assign::None => Err(KsError::runtime("No assign available for collection")),
+            Assign::None => Err(VMError::from("No assign available for collection")),
         }?;
 
         Ok(())
@@ -733,7 +718,7 @@ impl Runner {
         native_id: NativeId,
         arguments: Arguments,
         runner_id: usize,
-    ) -> KsResult<()> {
+    ) -> VMResult<()> {
         let native_call = NativeCall::new(native_id, arguments, runner_id);
         native_stack.push(native_call);
         Ok(())
@@ -745,7 +730,7 @@ impl Runner {
         instruction: Instruction,
         gvs: &mut GVS,
         native_stack: &mut Vec<NativeCall>,
-    ) -> KsResult<()> {
+    ) -> VMResult<()> {
         match instruction {
             Instruction::LoadConst(constant) => self.load_const(gvs, constant),
             Instruction::LoadVar(slot) => self.load_var(gvs, slot),

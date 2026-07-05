@@ -56,9 +56,6 @@ dependencies = [
 [[package]]
 name = "ks-vm-new"
 version = "0.5.0"
-dependencies = [
- "ks-global",
-]
 
 [[package]]
 name = "paste"
