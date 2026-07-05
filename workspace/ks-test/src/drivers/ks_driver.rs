@@ -103,12 +103,7 @@ impl KsDriver {
             NativeRegistry::new()
         };
 
-        let mut vm = VM::new(
-            Program::new(instructions, HashMap::new()),
-            vec![runner],
-            gvs,
-            native,
-        );
+        let mut vm = VM::new(Program::new(instructions), vec![runner], gvs, native);
 
         for _ in 0..instructions_len {
             vm.step()?;

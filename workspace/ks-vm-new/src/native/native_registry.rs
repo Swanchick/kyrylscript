@@ -1,3 +1,10 @@
+// #[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+// #[cfg(not(feature = "std"))]
+use alloc::boxed::Box;
+// #[cfg(not(feature = "std"))]
+use alloc::format;
+
 use super::{KsCall, NativeHelper};
 use crate::types::Arguments;
 use crate::{GVS, Runner, VMError, VMResult};

@@ -38,7 +38,7 @@ impl CompilerNew {
     }
 
     pub fn program(self) -> Program {
-        Program::new(self.instructions, self.environment.functions())
+        Program::new(self.instructions)
     }
 
     pub fn compile(&mut self, statements: Vec<Statement>) -> KsResult<()> {

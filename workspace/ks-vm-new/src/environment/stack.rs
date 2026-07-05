@@ -1,5 +1,9 @@
-use crate::types::{Slot, StorageId};
+// #[cfg(not(feature = "std"))]
+use alloc::format;
+// #[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 
+use crate::types::{Slot, StorageId};
 use crate::{VMError, VMResult};
 
 use super::{GVS, Variable};

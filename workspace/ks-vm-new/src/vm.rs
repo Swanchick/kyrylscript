@@ -1,4 +1,5 @@
-use std::collections::HashMap;
+// #[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 
 use crate::{GVS, Instruction, NativeCall, NativeRegistry, Program, Runner, VMResult};
 
@@ -12,7 +13,7 @@ pub struct VM {
 impl From<Vec<Instruction>> for VM {
     fn from(instructions: Vec<Instruction>) -> Self {
         Self {
-            program: Program::new(instructions, HashMap::new()),
+            program: Program::new(instructions),
             runners: Vec::new(),
             gvs: GVS::new(),
             native: NativeRegistry::new(),

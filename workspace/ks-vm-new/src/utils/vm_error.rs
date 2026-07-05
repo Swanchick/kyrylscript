@@ -1,3 +1,6 @@
+// #[cfg(not(feature = "std"))]
+use alloc::string::{String, ToString};
+
 #[derive(Debug, PartialEq)]
 pub struct VMError {
     pub message: String,

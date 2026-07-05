@@ -1,3 +1,12 @@
+// #[cfg(not(feature = "std"))]
+use alloc::format;
+// #[cfg(not(feature = "std"))]
+use alloc::string::String;
+// #[cfg(not(feature = "std"))]
+use alloc::vec;
+// #[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+
 use crate::environment::variable::{FUNCTION_TYPE, STACK_TYPE};
 use crate::types::{CollectionId, Slot, StorageId};
 use crate::{Collection, VMError, VMResult};
