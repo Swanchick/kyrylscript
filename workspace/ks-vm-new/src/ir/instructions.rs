@@ -1,5 +1,7 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec;
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 
 use crate::types::{Arguments, CaptureSize, NativeId, Offset, VariableId};
 
