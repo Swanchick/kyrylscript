@@ -17,11 +17,13 @@ impl Program {
         &self.instructions
     }
 
-    pub fn serialize<'a>(self) -> Vec<u8> {
+    pub fn serialize(self) -> Vec<u8> {
         let mut out = Vec::<u8>::new();
+        for instruction in self.instructions {
+            let mut bytes = instruction.to_bytes();
+            out.append(&mut bytes);
+        }
 
-        for instruction in self.instructions {}
-
-        todo!()
+        out
     }
 }
