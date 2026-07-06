@@ -6,58 +6,58 @@ use crate::types::{Arguments, CaptureSize, NativeId, Offset, VariableId};
 use super::constant::Constant;
 
 // Arithmetic (0x00-0x0F)
-const ADD: u8 = 0x00;
-const SUB: u8 = 0x01;
-const MUL: u8 = 0x02;
-const DIV: u8 = 0x03;
-const INC: u8 = 0x04;
-const DEC: u8 = 0x05;
+pub const ADD: u8 = 0x00;
+pub const SUB: u8 = 0x01;
+pub const MUL: u8 = 0x02;
+pub const DIV: u8 = 0x03;
+pub const INC: u8 = 0x04;
+pub const DEC: u8 = 0x05;
 
 // Comparison (0x10-0x1F)
-const EQ: u8 = 0x10;
-const NE: u8 = 0x11;
-const GT: u8 = 0x12;
-const GE: u8 = 0x13;
-const LT: u8 = 0x14; // LITHUANIA LET'S GOOOOOO
-const LE: u8 = 0x15;
+pub const EQ: u8 = 0x10;
+pub const NE: u8 = 0x11;
+pub const GT: u8 = 0x12;
+pub const GE: u8 = 0x13;
+pub const LT: u8 = 0x14; // LITHUANIA LET'S GOOOOOO
+pub const LE: u8 = 0x15;
 
 // Logic (0x20-0x2F)
-const AND: u8 = 0x20;
-const OR: u8 = 0x21;
-const NOT: u8 = 0x22;
+pub const AND: u8 = 0x20;
+pub const OR: u8 = 0x21;
+pub const NOT: u8 = 0x22;
 
 // Control (0x30-0x3F)
-const RET: u8 = 0x30;
-const JZ: u8 = 0x31;
-const JNZ: u8 = 0x32;
-const JMP: u8 = 0x33;
+pub const RET: u8 = 0x30;
+pub const JZ: u8 = 0x31;
+pub const JNZ: u8 = 0x32;
+pub const JMP: u8 = 0x33;
 
 // Stack (0x40-0x4F)
-const CPY: u8 = 0x40;
-const CLR: u8 = 0x41;
-const FREE: u8 = 0x42;
-const CALL: u8 = 0x43;
-const NCALL: u8 = 0x44;
+pub const CPY: u8 = 0x40;
+pub const CLR: u8 = 0x41;
+pub const FREE: u8 = 0x42;
+pub const CALL: u8 = 0x43;
+pub const NCALL: u8 = 0x44;
 
 // Constants (0x50-0x5F)
-const LDI: u8 = 0x50;
-const LDF: u8 = 0x51;
-const LDS: u8 = 0x52;
-const LBT: u8 = 0x53;
-const LBF: u8 = 0x54;
-const LDN: u8 = 0x55;
-const LDFN: u8 = 0x56;
-const LDC: u8 = 0x57;
+pub const LDI: u8 = 0x50;
+pub const LDF: u8 = 0x51;
+pub const LDS: u8 = 0x52;
+pub const LBT: u8 = 0x53;
+pub const LBF: u8 = 0x54;
+pub const LDN: u8 = 0x55;
+pub const LDFN: u8 = 0x56;
+pub const LDC: u8 = 0x57;
 
 // MEMORY (0x60-0x6F)
-const STR: u8 = 0x60;
-const ASN: u8 = 0x61;
-const ASV: u8 = 0x62;
-const ASC: u8 = 0x63;
-const LDV: u8 = 0x64;
-const LDCP: u8 = 0x65;
-const LDFC: u8 = 0x66;
-const LEN: u8 = 0x67;
+pub const STR: u8 = 0x60;
+pub const ASN: u8 = 0x61;
+pub const ASV: u8 = 0x62;
+pub const ASC: u8 = 0x63;
+pub const LDV: u8 = 0x64;
+pub const LDCP: u8 = 0x65;
+pub const LDFC: u8 = 0x66;
+pub const LEN: u8 = 0x67;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Instruction {
