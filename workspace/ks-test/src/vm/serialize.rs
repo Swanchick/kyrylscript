@@ -105,7 +105,7 @@ fn free() {
 
 #[test]
 fn jump_if_false() {
-    let mut expected = vec![JNZ];
+    let mut expected = vec![JZ];
     expected.extend_from_slice(&123u32.to_le_bytes());
 
     assert_eq!(Instruction::JumpIfFalse(123).to_bytes(), expected);
@@ -113,7 +113,7 @@ fn jump_if_false() {
 
 #[test]
 fn jump_if_true() {
-    let mut expected = vec![JZ];
+    let mut expected = vec![JNZ];
     expected.extend_from_slice(&123u32.to_le_bytes());
 
     assert_eq!(Instruction::JumpIfTrue(123).to_bytes(), expected);
