@@ -15,6 +15,7 @@ default-members = ["workspace/ks-test"]
 [workspace.dependencies]
 core = { path = "workspace/ks-core" }
 vm = { path = "workspace/ks-vm" }
+vm-new = { path = "workspace/ks-vm-new" }
 
 [workspace.package]
 version = "0.5.0"
