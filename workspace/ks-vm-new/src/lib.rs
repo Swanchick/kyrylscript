@@ -6,7 +6,7 @@ extern crate alloc;
 mod assign;
 mod call_stack;
 mod environment;
-mod ir;
+pub mod ir;
 mod native;
 mod runner;
 mod stats;
