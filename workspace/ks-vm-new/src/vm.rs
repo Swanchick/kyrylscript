@@ -1,7 +1,10 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
-use crate::{GVS, Instruction, NativeCall, NativeRegistry, Program, Runner, VMResult};
+#[cfg(not(feature = "std"))]
+use alloc::boxed::Box;
+
+use crate::{GVS, Instruction, KsCall, NativeCall, NativeRegistry, Program, Runner, VMResult};
 
 pub struct VM {
     program: Program,
@@ -77,6 +80,10 @@ impl VM {
         }
 
         Ok(())
+    }
+
+    pub fn add_native(&mut self, native: Box<dyn KsCall>) {
+        self.native.functions.push(native);
     }
 
     pub fn init(&mut self) {
