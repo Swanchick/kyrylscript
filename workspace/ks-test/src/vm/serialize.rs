@@ -6,87 +6,87 @@ use ks_vm_new::ir::instructions::{
 use ks_vm_new::{Constant, Instruction};
 
 #[test]
-fn serialize_add() {
+fn add() {
     assert_eq!(Instruction::Add.to_bytes(), vec![ADD]);
 }
 
 #[test]
-fn serialize_minus() {
+fn minus() {
     assert_eq!(Instruction::Minus.to_bytes(), vec![SUB]);
 }
 
 #[test]
-fn serialize_mul() {
+fn mul() {
     assert_eq!(Instruction::Mul.to_bytes(), vec![MUL]);
 }
 
 #[test]
-fn serialize_div() {
+fn div() {
     assert_eq!(Instruction::Div.to_bytes(), vec![DIV]);
 }
 
 #[test]
-fn serialize_eq() {
+fn eq() {
     assert_eq!(Instruction::Eq.to_bytes(), vec![EQ]);
 }
 
 #[test]
-fn serialize_not_eq() {
+fn not_eq() {
     assert_eq!(Instruction::NotEq.to_bytes(), vec![NE]);
 }
 
 #[test]
-fn serialize_greater() {
+fn greater() {
     assert_eq!(Instruction::Greater.to_bytes(), vec![GT]);
 }
 
 #[test]
-fn serialize_greater_eq() {
+fn greater_eq() {
     assert_eq!(Instruction::GreaterEq.to_bytes(), vec![GE]);
 }
 
 #[test]
-fn serialize_less() {
+fn less() {
     assert_eq!(Instruction::Less.to_bytes(), vec![LT]);
 }
 
 #[test]
-fn serialize_less_eq() {
+fn less_eq() {
     assert_eq!(Instruction::LessEq.to_bytes(), vec![LE]);
 }
 
 #[test]
-fn serialize_and() {
+fn and() {
     assert_eq!(Instruction::And.to_bytes(), vec![AND]);
 }
 
 #[test]
-fn serialize_or() {
+fn or() {
     assert_eq!(Instruction::Or.to_bytes(), vec![OR]);
 }
 
 #[test]
-fn serialize_not() {
+fn not() {
     assert_eq!(Instruction::Not.to_bytes(), vec![NOT]);
 }
 
 #[test]
-fn serialize_increment() {
+fn increment() {
     assert_eq!(Instruction::Increment.to_bytes(), vec![INC]);
 }
 
 #[test]
-fn serialize_decrement() {
+fn decrement() {
     assert_eq!(Instruction::Decrement.to_bytes(), vec![DEC]);
 }
 
 #[test]
-fn serialize_clone() {
+fn clone() {
     assert_eq!(Instruction::Clone.to_bytes(), vec![CPY]);
 }
 
 #[test]
-fn serialize_clear_acc() {
+fn clear_acc() {
     assert_eq!(Instruction::ClearAcc.to_bytes(), vec![CLR]);
 }
 
@@ -96,7 +96,7 @@ fn serialize_return() {
 }
 
 #[test]
-fn serialize_free() {
+fn free() {
     let mut expected = vec![FREE];
     expected.extend_from_slice(&42u64.to_le_bytes());
 
@@ -104,7 +104,7 @@ fn serialize_free() {
 }
 
 #[test]
-fn serialize_jump_if_false() {
+fn jump_if_false() {
     let mut expected = vec![JNZ];
     expected.extend_from_slice(&123u32.to_le_bytes());
 
@@ -112,7 +112,7 @@ fn serialize_jump_if_false() {
 }
 
 #[test]
-fn serialize_jump_if_true() {
+fn jump_if_true() {
     let mut expected = vec![JZ];
     expected.extend_from_slice(&123u32.to_le_bytes());
 
@@ -120,7 +120,7 @@ fn serialize_jump_if_true() {
 }
 
 #[test]
-fn serialize_jump() {
+fn jump() {
     let mut expected = vec![JMP];
     expected.extend_from_slice(&123u32.to_le_bytes());
 
@@ -128,17 +128,17 @@ fn serialize_jump() {
 }
 
 #[test]
-fn serialize_store() {
+fn store() {
     assert_eq!(Instruction::Store.to_bytes(), vec![STR]);
 }
 
 #[test]
-fn serialize_assign() {
+fn assign() {
     assert_eq!(Instruction::Assign.to_bytes(), vec![ASN]);
 }
 
 #[test]
-fn serialize_assign_variable() {
+fn assign_variable() {
     let mut expected = vec![ASV];
     expected.extend_from_slice(&5u64.to_le_bytes());
 
@@ -146,12 +146,12 @@ fn serialize_assign_variable() {
 }
 
 #[test]
-fn serialize_assign_collection() {
+fn assign_collection() {
     assert_eq!(Instruction::AssignCollection.to_bytes(), vec![ASC]);
 }
 
 #[test]
-fn serialize_load_const_integer() {
+fn load_const_integer() {
     let mut expected = vec![LDI];
     expected.extend_from_slice(&42u64.to_le_bytes());
 
@@ -162,7 +162,7 @@ fn serialize_load_const_integer() {
 }
 
 #[test]
-fn serialize_load_const_float() {
+fn load_const_float() {
     let mut expected = vec![LDF];
     expected.extend_from_slice(&42.5f64.to_bits().to_le_bytes());
 
@@ -173,7 +173,7 @@ fn serialize_load_const_float() {
 }
 
 #[test]
-fn serialize_load_const_true() {
+fn load_const_true() {
     assert_eq!(
         Instruction::LoadConst(Constant::Boolean(true)).to_bytes(),
         vec![LBT]
@@ -181,7 +181,7 @@ fn serialize_load_const_true() {
 }
 
 #[test]
-fn serialize_load_const_false() {
+fn load_const_false() {
     assert_eq!(
         Instruction::LoadConst(Constant::Boolean(false)).to_bytes(),
         vec![LBF]
@@ -189,12 +189,12 @@ fn serialize_load_const_false() {
 }
 
 #[test]
-fn serialize_load_const_null() {
+fn load_const_null() {
     assert_eq!(Instruction::LoadConst(Constant::Null).to_bytes(), vec![LDN]);
 }
 
 #[test]
-fn serialize_load_const_string() {
+fn load_const_string() {
     let mut expected = vec![LDS];
     expected.extend_from_slice(&5u32.to_le_bytes());
     expected.extend_from_slice(b"hello");
@@ -206,7 +206,7 @@ fn serialize_load_const_string() {
 }
 
 #[test]
-fn serialize_load_var() {
+fn load_var() {
     let mut expected = vec![LDV];
     expected.extend_from_slice(&7u64.to_le_bytes());
 
@@ -214,12 +214,12 @@ fn serialize_load_var() {
 }
 
 #[test]
-fn serialize_call() {
+fn call() {
     assert_eq!(Instruction::Call.to_bytes(), vec![CALL]);
 }
 
 #[test]
-fn serialize_call_native() {
+fn call_native() {
     let mut expected = vec![NCALL];
     expected.extend_from_slice(&1u32.to_le_bytes());
     expected.extend_from_slice(&2u32.to_le_bytes());
@@ -228,7 +228,7 @@ fn serialize_call_native() {
 }
 
 #[test]
-fn serialize_load_capture() {
+fn load_capture() {
     let mut expected = vec![LDCP];
     expected.extend_from_slice(&9u64.to_le_bytes());
 
@@ -236,7 +236,7 @@ fn serialize_load_capture() {
 }
 
 #[test]
-fn serialize_load_function() {
+fn load_function() {
     let mut expected = vec![LDFN];
     expected.extend_from_slice(&3u32.to_le_bytes());
 
@@ -244,7 +244,7 @@ fn serialize_load_function() {
 }
 
 #[test]
-fn serialize_load_collection() {
+fn load_collection() {
     let mut expected = vec![LDC];
     expected.extend_from_slice(&8u32.to_le_bytes());
 
@@ -252,11 +252,11 @@ fn serialize_load_collection() {
 }
 
 #[test]
-fn serialize_load_from_collection() {
+fn load_from_collection() {
     assert_eq!(Instruction::LoadFromCollection.to_bytes(), vec![LDFC]);
 }
 
 #[test]
-fn serialize_collection_len() {
+fn collection_len() {
     assert_eq!(Instruction::CollectionLen.to_bytes(), vec![LEN]);
 }
