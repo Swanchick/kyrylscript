@@ -172,7 +172,7 @@ impl Instruction {
             Self::Clone => vec![CPY],
             Self::ClearAcc => vec![CLR],
             Self::Return => vec![RET],
-            Self::Free(size) => self.opcode_value(FREE, *size as u64),
+            Self::Free(size) => self.opcode_value_u32(FREE, *size as u32),
             Self::JumpIfFalse(offset) => self.opcode_value_u32(JZ, *offset as u32),
             Self::JumpIfTrue(offset) => self.opcode_value_u32(JNZ, *offset as u32),
             Self::Jump(offset) => self.opcode_value_u32(JMP, *offset as u32),
