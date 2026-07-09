@@ -1,6 +1,6 @@
 use ks_vm_new::ir::instructions::{
-    ADD, AND, CALL, CLR, CPY, DEC, DIV, EQ, FREE, GE, GT, INC, JNZ, JZ, LBF, LBT, LDF, LDI, LDN,
-    LDS, LE, LT, MUL, NCALL, NE, NOT, OR, RET, SUB,
+    ADD, AND, ASC, ASN, CALL, CLR, CPY, DEC, DIV, EQ, FREE, GE, GT, INC, JNZ, JZ, LBF, LBT, LDF,
+    LDFC, LDI, LDN, LDS, LE, LEN, LT, MUL, NCALL, NE, NOT, OR, RET, STR, SUB,
 };
 use ks_vm_new::{Constant, Instruction, Program, VMResult};
 
@@ -112,3 +112,9 @@ fn lds() -> VMResult<()> {
 }
 
 deserialize_instruction!(ldn, Instruction::LoadConst(Constant::Null), LDN);
+
+deserialize_instruction!(str, Instruction::Store, STR);
+deserialize_instruction!(asn, Instruction::Assign, ASN);
+deserialize_instruction!(asc, Instruction::AssignCollection, ASC);
+deserialize_instruction!(ldfc, Instruction::LoadFromCollection, LDFC);
+deserialize_instruction!(len, Instruction::CollectionLen, LEN);
