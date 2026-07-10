@@ -59,7 +59,7 @@ pub const ASC: u8 = 0x63;
 pub const LDV: u8 = 0x64;
 pub const LDCP: u8 = 0x65;
 pub const LDFC: u8 = 0x66;
-pub const LEN: u8 = 0x67;
+pub const LEN: u8 = 0x67; // bruh
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Instruction {

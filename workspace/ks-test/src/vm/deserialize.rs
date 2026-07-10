@@ -1,6 +1,7 @@
 use ks_vm_new::ir::instructions::{
-    ADD, AND, ASC, ASN, CALL, CLR, CPY, DEC, DIV, EQ, FREE, GE, GT, INC, JNZ, JZ, LBF, LBT, LDF,
-    LDFC, LDI, LDN, LDS, LE, LEN, LT, MUL, NCALL, NE, NOT, OR, RET, STR, SUB,
+    ADD, AND, ASC, ASN, ASV, CALL, CLR, CPY, DEC, DIV, EQ, FREE, GE, GT, INC, JNZ, JZ, LBF, LBT,
+    LDC, LDCP, LDF, LDFC, LDFN, LDI, LDN, LDS, LDV, LE, LEN, LT, MUL, NCALL, NE, NOT, OR, RET, STR,
+    SUB,
 };
 use ks_vm_new::{Constant, Instruction, Program, VMResult};
 
@@ -73,7 +74,7 @@ deserialize_instruction!(call, Instruction::Call, CALL);
 deserialize_instructions!(
     ncall,
     Instruction::CallNative(1, 2),
-    vec![NCALL, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x2]
+    vec![NCALL, 0x1, 0x0, 0x0, 0x0, 0x2, 0x0, 0x0, 0x1]
 );
 
 deserialize_instructions!(
@@ -113,8 +114,40 @@ fn lds() -> VMResult<()> {
 
 deserialize_instruction!(ldn, Instruction::LoadConst(Constant::Null), LDN);
 
+deserialize_instructions!(
+    ldfn,
+    Instruction::LoadFunction(5),
+    vec![LDFN, 0x5, 0x0, 0x0, 0x0]
+);
+
+deserialize_instructions!(
+    ldc,
+    Instruction::LoadCollection(67),
+    vec![LDC, 0x43, 0x0, 0x0, 0x0]
+);
+
 deserialize_instruction!(str, Instruction::Store, STR);
 deserialize_instruction!(asn, Instruction::Assign, ASN);
+
+deserialize_instructions!(
+    asv,
+    Instruction::AssignVariable(10),
+    vec![ASV, 0xA, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]
+);
+
 deserialize_instruction!(asc, Instruction::AssignCollection, ASC);
+
+deserialize_instructions!(
+    ldv,
+    Instruction::LoadVar(10),
+    vec![LDV, 0xA, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]
+);
+
+deserialize_instructions!(
+    ldcp,
+    Instruction::LoadCapture(10),
+    vec![LDCP, 0xA, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]
+);
+
 deserialize_instruction!(ldfc, Instruction::LoadFromCollection, LDFC);
 deserialize_instruction!(len, Instruction::CollectionLen, LEN);
