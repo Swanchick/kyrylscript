@@ -25,7 +25,6 @@ impl Program {
     pub fn deserialize(buffer: Vec<u8>) -> VMResult<Self> {
         let deserialize = Deserialize::from(buffer);
         let program = deserialize.deserialize()?;
-
         Ok(program)
     }
 

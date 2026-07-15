@@ -1,7 +1,7 @@
 use ks_vm_new::ir::instructions::{
-    ADD, AND, ASC, ASN, ASV, CALL, CLR, CPY, DEC, DIV, EQ, FREE, GE, GT, INC, JNZ, JZ, LBF, LBT,
-    LDC, LDCP, LDF, LDFC, LDFN, LDI, LDN, LDS, LDV, LE, LEN, LT, MUL, NCALL, NE, NOT, OR, RET, STR,
-    SUB,
+    ADD, AND, ASC, ASN, ASV, CALL, CLR, CPY, DEC, DIV, EQ, FREE, GE, GT, INC, JMP, JNZ, JZ, LBF,
+    LBT, LDC, LDCP, LDF, LDFC, LDFN, LDI, LDN, LDS, LDV, LE, LEN, LT, MUL, NCALL, NE, NOT, OR, RET,
+    STR, SUB,
 };
 use ks_vm_new::{Constant, Instruction, Program, VMResult};
 
@@ -61,11 +61,17 @@ deserialize_instructions!(
     vec![JZ, 0xA, 0x0, 0x0, 0x0]
 );
 deserialize_instructions!(
+    jz_negative,
+    Instruction::JumpIfFalse(-10),
+    vec![JZ, 0xF6, 0xFF, 0xFF, 0xFF]
+);
+
+deserialize_instructions!(
     jnz,
     Instruction::JumpIfTrue(16),
     vec![JNZ, 0x10, 0x0, 0x0, 0x0]
 );
-deserialize_instructions!(jmp, Instruction::Jump(100), vec![JNZ, 0x64, 0x0, 0x0, 0x0]);
+deserialize_instructions!(jmp, Instruction::Jump(100), vec![JMP, 0x64, 0x0, 0x0, 0x0]);
 
 deserialize_instruction!(cpy, Instruction::Clone, CPY);
 deserialize_instruction!(clr, Instruction::ClearAcc, CLR);
@@ -74,7 +80,7 @@ deserialize_instruction!(call, Instruction::Call, CALL);
 deserialize_instructions!(
     ncall,
     Instruction::CallNative(1, 2),
-    vec![NCALL, 0x1, 0x0, 0x0, 0x0, 0x2, 0x0, 0x0, 0x1]
+    vec![NCALL, 0x1, 0x0, 0x0, 0x0, 0x2, 0x0, 0x0, 0x0]
 );
 
 deserialize_instructions!(
