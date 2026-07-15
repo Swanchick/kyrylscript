@@ -1,9 +1,8 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
-use crate::{VMError, VMResult};
-
-use super::instructions::ADD;
+use crate::VMResult;
+use crate::ir::deserialize::Deserialize;
 
 use super::instructions::Instruction;
 
@@ -12,29 +11,20 @@ pub struct Program {
     instructions: Vec<Instruction>,
 }
 
-impl Program {
-    pub fn new(instructions: Vec<Instruction>) -> Self {
+impl From<Vec<Instruction>> for Program {
+    fn from(instructions: Vec<Instruction>) -> Self {
         Self { instructions }
     }
+}
 
+impl Program {
     pub fn instructions(&self) -> &[Instruction] {
         &self.instructions
     }
 
-    pub fn add(&mut self, instruction: Instruction) -> VMResult<()> {
-        self.instructions.push(instruction);
-        Ok(())
-    }
-
     pub fn deserialize(buffer: Vec<u8>) -> VMResult<Self> {
-        let mut program = Program::new(Vec::new());
-
-        for opcode in buffer {
-            match opcode {
-                ADD => program.add(Instruction::Add),
-                _ => Err(VMError::from("Invalid opcode")),
-            }?;
-        }
+        let deserialize = Deserialize::from(buffer);
+        let program = deserialize.deserialize()?;
 
         Ok(program)
     }

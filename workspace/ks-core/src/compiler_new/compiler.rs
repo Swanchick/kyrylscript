@@ -38,7 +38,7 @@ impl CompilerNew {
     }
 
     pub fn program(self) -> Program {
-        Program::new(self.instructions)
+        Program::from(self.instructions)
     }
 
     pub fn compile(&mut self, statements: Vec<Statement>) -> KsResult<()> {

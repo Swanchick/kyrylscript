@@ -9,7 +9,7 @@ macro_rules! deserialize_instruction {
     ($test: ident, $instruction: expr, $opcode: expr) => {
         #[test]
         fn $test() -> VMResult<()> {
-            let test_program = Program::new(vec![$instruction]);
+            let test_program = Program::from(vec![$instruction]);
             let buffer = vec![$opcode];
             let program = Program::deserialize(buffer)?;
 
@@ -24,7 +24,7 @@ macro_rules! deserialize_instructions {
     ($test: ident, $instruction: expr, $opcodes: expr) => {
         #[test]
         fn $test() -> VMResult<()> {
-            let test_program = Program::new(vec![$instruction]);
+            let test_program = Program::from(vec![$instruction]);
             let buffer = $opcodes;
             let program = Program::deserialize(buffer)?;
 
@@ -98,7 +98,7 @@ fn lds() -> VMResult<()> {
     let mut string_bytes = string.clone().as_bytes().to_vec();
     let mut buffer = vec![LDS];
 
-    let test_program = Program::new(vec![Instruction::LoadConst(Constant::String(
+    let test_program = Program::from(vec![Instruction::LoadConst(Constant::String(
         String::from(string),
     ))]);
 

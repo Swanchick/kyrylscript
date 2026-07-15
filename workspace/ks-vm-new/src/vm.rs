@@ -16,7 +16,7 @@ pub struct VM {
 impl From<Vec<Instruction>> for VM {
     fn from(instructions: Vec<Instruction>) -> Self {
         Self {
-            program: Program::new(instructions),
+            program: Program::from(instructions),
             runners: Vec::new(),
             gvs: GVS::new(),
             native: NativeRegistry::new(),
