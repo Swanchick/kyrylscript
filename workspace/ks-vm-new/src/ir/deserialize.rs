@@ -2,8 +2,9 @@
 use alloc::vec::Vec;
 
 use crate::ir::instructions::{
-    ADD, AND, CALL, CLR, CPY, DEC, DIV, EQ, FREE, GE, GT, INC, JMP, JNZ, JZ, LBF, LBT, LDF, LDI,
-    LDS, LE, LT, MUL, NCALL, NE, NOT, OR, RET, SUB,
+    ADD, AND, ASC, ASN, ASV, CALL, CLR, CPY, DEC, DIV, EQ, FREE, GE, GT, INC, JMP, JNZ, JZ, LBF,
+    LBT, LDC, LDCP, LDF, LDFC, LDFN, LDI, LDN, LDS, LDV, LE, LEN, LT, MUL, NCALL, NE, NOT, OR, RET,
+    STR, SUB,
 };
 use crate::{Constant, Instruction, Program};
 use crate::{VMError, VMResult};
@@ -147,6 +148,17 @@ impl Deserialize {
                 LBT => self.add(Instruction::LoadConst(Constant::Boolean(true))),
                 LBF => self.add(Instruction::LoadConst(Constant::Boolean(false))),
                 LDS => self.load_string(),
+                LDN => self.add(Instruction::LoadConst(Constant::Null)),
+                LDFN => self.add_u32(|num| Instruction::LoadFunction(num as usize)),
+                LDC => self.add_u32(|num| Instruction::LoadCollection(num as usize)),
+                STR => self.add(Instruction::Store),
+                ASN => self.add(Instruction::Assign),
+                ASV => self.add_u64(|num| Instruction::AssignVariable(num)),
+                ASC => self.add(Instruction::AssignCollection),
+                LDV => self.add_u64(|num| Instruction::LoadVar(num)),
+                LDCP => self.add_u64(|num| Instruction::LoadCapture(num)),
+                LDFC => self.add(Instruction::LoadFromCollection),
+                LEN => self.add(Instruction::CollectionLen),
                 _ => Err(VMError::from("Invalid opcode")),
             }?;
         }
