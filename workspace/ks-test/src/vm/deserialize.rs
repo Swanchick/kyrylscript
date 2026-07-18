@@ -111,6 +111,8 @@ fn lds() -> VMResult<()> {
     buffer.append(&mut string_length);
     buffer.append(&mut string_bytes);
 
+    println!("{:X?}", buffer);
+
     let program = Program::deserialize(buffer)?;
 
     assert_eq!(program, test_program);

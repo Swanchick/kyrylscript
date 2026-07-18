@@ -2,8 +2,8 @@
 use alloc::vec::Vec;
 
 use crate::ir::instructions::{
-    ADD, AND, CALL, CLR, CPY, DEC, DIV, EQ, FREE, GE, GT, INC, JMP, JNZ, JZ, LDI, LE, LT, MUL,
-    NCALL, NE, NOT, OR, RET, SUB,
+    ADD, AND, CALL, CLR, CPY, DEC, DIV, EQ, FREE, GE, GT, INC, JMP, JNZ, JZ, LBF, LBT, LDF, LDI,
+    LDS, LE, LT, MUL, NCALL, NE, NOT, OR, RET, SUB,
 };
 use crate::{Constant, Instruction, Program};
 use crate::{VMError, VMResult};
@@ -29,18 +29,27 @@ impl From<Vec<u8>> for Deserialize {
 }
 
 impl Deserialize {
+    fn step(&mut self, steps: usize) -> VMResult<()> {
+        let new_pc = self
+            .pc
+            .checked_add(steps)
+            .ok_or_else(|| "The PC has been overflowed!")?;
+
+        self.pc = new_pc;
+
+        Ok(())
+    }
+
     fn add(&mut self, instruction: Instruction) -> VMResult<()> {
         self.instructions.push(instruction);
-        self.pc = self.pc.saturating_add(1);
+        self.step(SINGLE_INSTRUCTION_SIZE)?;
 
         Ok(())
     }
 
     fn parse_u32(&mut self, pc: usize) -> VMResult<u32> {
         let bytes = &self.buffer[pc..pc + NUMBER_U32_SIZE];
-        let bytes = bytes
-            .try_into()
-            .map_err(|_| VMError::from("Invalid u32 number"))?;
+        let bytes = bytes.try_into().map_err(|_| "Invalid u32 number")?;
 
         let number = u32::from_le_bytes(bytes);
 
@@ -49,9 +58,7 @@ impl Deserialize {
 
     fn parse_u64(&mut self, pc: usize) -> VMResult<u64> {
         let bytes = &self.buffer[pc..pc + NUMBER_U64_SIZE];
-        let bytes = bytes
-            .try_into()
-            .map_err(|_| VMError::from("Invalid u32 number"))?;
+        let bytes = bytes.try_into().map_err(|_| "Invalid u64 number")?;
 
         let number = u64::from_le_bytes(bytes);
 
@@ -62,8 +69,7 @@ impl Deserialize {
         let number = self.parse_u32(self.pc + SINGLE_INSTRUCTION_SIZE)?;
         let instruction = instruction(number);
         self.add(instruction)?;
-
-        self.pc = self.pc.saturating_add(NUMBER_U32_SIZE);
+        self.step(NUMBER_U32_SIZE)?;
 
         Ok(())
     }
@@ -72,22 +78,38 @@ impl Deserialize {
         let number = self.parse_u64(self.pc + SINGLE_INSTRUCTION_SIZE)?;
         let instruction = instruction(number);
         self.add(instruction)?;
-        self.pc = self.pc.saturating_add(NUMBER_U64_SIZE);
+        self.step(NUMBER_U64_SIZE)?;
 
         Ok(())
     }
 
     fn ncall(&mut self) -> VMResult<()> {
         let native_id = self.parse_u32(self.pc + SINGLE_INSTRUCTION_SIZE)?;
-        self.pc = self.pc.saturating_add(NUMBER_U32_SIZE);
+        self.step(NUMBER_U32_SIZE)?;
+
         let arguments = self.parse_u32(self.pc + SINGLE_INSTRUCTION_SIZE)?;
-        self.pc = self.pc.saturating_add(NUMBER_U32_SIZE);
+        self.step(NUMBER_U32_SIZE)?;
 
         self.add(Instruction::CallNative(
             native_id as usize,
             arguments as usize,
         ))?;
 
+        Ok(())
+    }
+
+    fn load_string(&mut self) -> VMResult<()> {
+        let pc = self.pc + SINGLE_INSTRUCTION_SIZE;
+        let string_length = self.parse_u32(pc)? as usize;
+        self.step(NUMBER_U32_SIZE)?;
+
+        let pc = self.pc + SINGLE_INSTRUCTION_SIZE;
+        let bytes = &self.buffer[pc..pc + string_length];
+        let string = String::from_utf8(bytes.to_vec()).map_err(|_| "Invalid string bytes")?;
+
+        self.step(string_length)?;
+
+        self.add(Instruction::LoadConst(Constant::String(string)))?;
         Ok(())
     }
 
@@ -119,6 +141,12 @@ impl Deserialize {
                 CALL => self.add(Instruction::Call),
                 NCALL => self.ncall(),
                 LDI => self.add_u64(|num| Instruction::LoadConst(Constant::Integer(num as i64))),
+                LDF => {
+                    self.add_u64(|num| Instruction::LoadConst(Constant::Float(f64::from_bits(num))))
+                }
+                LBT => self.add(Instruction::LoadConst(Constant::Boolean(true))),
+                LBF => self.add(Instruction::LoadConst(Constant::Boolean(false))),
+                LDS => self.load_string(),
                 _ => Err(VMError::from("Invalid opcode")),
             }?;
         }
