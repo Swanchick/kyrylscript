@@ -1,4 +1,6 @@
 #[cfg(not(feature = "std"))]
+use alloc::string::String;
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
 use crate::ir::instructions::{
