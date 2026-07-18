@@ -98,7 +98,7 @@ fn serialize_return() {
 #[test]
 fn free() {
     let mut expected = vec![FREE];
-    expected.extend_from_slice(&42u64.to_le_bytes());
+    expected.extend_from_slice(&42u32.to_le_bytes());
 
     assert_eq!(Instruction::Free(42).to_bytes(), expected);
 }

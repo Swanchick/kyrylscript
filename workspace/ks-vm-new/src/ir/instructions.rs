@@ -59,7 +59,7 @@ pub const ASC: u8 = 0x63;
 pub const LDV: u8 = 0x64;
 pub const LDCP: u8 = 0x65;
 pub const LDFC: u8 = 0x66;
-pub const LEN: u8 = 0x67;
+pub const LEN: u8 = 0x67; // bruh
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Instruction {
@@ -172,7 +172,7 @@ impl Instruction {
             Self::Clone => vec![CPY],
             Self::ClearAcc => vec![CLR],
             Self::Return => vec![RET],
-            Self::Free(size) => self.opcode_value(FREE, *size as u64),
+            Self::Free(size) => self.opcode_value_u32(FREE, *size as u32),
             Self::JumpIfFalse(offset) => self.opcode_value_u32(JZ, *offset as u32),
             Self::JumpIfTrue(offset) => self.opcode_value_u32(JNZ, *offset as u32),
             Self::Jump(offset) => self.opcode_value_u32(JMP, *offset as u32),
