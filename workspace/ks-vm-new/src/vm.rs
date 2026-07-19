@@ -89,6 +89,10 @@ impl VM {
         Ok(())
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.runners.is_empty()
+    }
+
     pub fn add_native(&mut self, native: Box<dyn KsCall>) {
         self.native.functions.push(native);
     }
