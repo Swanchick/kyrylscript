@@ -60,13 +60,13 @@ impl KsDriver {
 
     pub fn compiler_new_with_native(
         &self,
-        native: HashMap<String, (usize, usize)>,
+        native: HashMap<String, usize>,
     ) -> KsResult<CompilerNew> {
         let statements = self.parser()?;
         let mut compiler = CompilerNew::new();
 
-        for (name, (native_id, arguments)) in native {
-            compiler.register_native(name, native_id, arguments);
+        for (name, native_id) in native {
+            compiler.register_native(name, native_id);
         }
 
         compiler.compile(statements)?;

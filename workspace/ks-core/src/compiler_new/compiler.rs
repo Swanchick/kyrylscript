@@ -4,7 +4,6 @@ use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 use ks_vm_new::{Constant, Instruction, Program};
 
-use crate::compiler_new::types::Arguments;
 use crate::parser::expression::Expression;
 use crate::parser::identifier_tail::IdentifierTail;
 use crate::parser::operator::Operator;
@@ -33,8 +32,8 @@ impl CompilerNew {
         }
     }
 
-    pub fn register_native(&mut self, name: String, native_id: NativeId, arguments: Arguments) {
-        self.environment.register_native(name, native_id, arguments);
+    pub fn register_native(&mut self, name: String, native_id: NativeId) {
+        self.environment.register_native(name, native_id);
     }
 
     pub fn program(self) -> Program {
@@ -510,15 +509,16 @@ impl CompilerNew {
         if assign {
             return Err(KsError::parse("Cannot call in assign statement"));
         }
+
+        let arguments = expressions.len();
+
         while let Some(expression) = expressions.pop() {
             self.compile_expression(expression)?;
         }
 
         if let Some(name) = last_name {
-            if let Some((native_id, arguments)) = self.environment.native_function(name) {
+            if let Some(native_id) = self.environment.native_function(name) {
                 let native_id = *native_id;
-                let arguments = *arguments;
-
                 self.insert(Instruction::CallNative(native_id, arguments))?;
 
                 return Ok(());

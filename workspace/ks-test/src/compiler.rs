@@ -930,7 +930,7 @@ fn native_call() -> KsResult<()> {
     let test_program = Program::from(instructions);
 
     let mut native_function = HashMap::new();
-    native_function.insert(String::from("println"), (0, 1));
+    native_function.insert(String::from("println"), 0);
 
     let driver = KsDriver::new("compiler/native_call.ks");
     let compiler = driver.compiler_new_with_native(native_function)?;

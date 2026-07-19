@@ -2,7 +2,7 @@ use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 use std::collections::HashMap;
 
-use crate::compiler_new::types::{Arguments, NativeId};
+use crate::compiler_new::types::NativeId;
 
 use super::collection::Collection;
 use super::slot::Slot;
@@ -11,7 +11,7 @@ use super::types::{CollectionId, Pointer, VariableId};
 pub struct Environment {
     functions: HashMap<String, Pointer>,
     variables: Vec<Vec<HashMap<String, Slot>>>,
-    native_function: HashMap<String, (NativeId, Arguments)>,
+    native_function: HashMap<String, NativeId>,
     collections: Vec<Collection>,
     temp_collection: Option<CollectionId>,
 }
@@ -27,11 +27,11 @@ impl Environment {
         }
     }
 
-    pub fn register_native(&mut self, name: String, native_id: NativeId, arguments: Arguments) {
-        self.native_function.insert(name, (native_id, arguments));
+    pub fn register_native(&mut self, name: String, native_id: NativeId) {
+        self.native_function.insert(name, native_id);
     }
 
-    pub fn native_function(&mut self, name: &String) -> Option<&(NativeId, Arguments)> {
+    pub fn native_function(&mut self, name: &String) -> Option<&NativeId> {
         self.native_function.get(name)
     }
 
