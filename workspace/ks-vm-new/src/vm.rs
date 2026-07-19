@@ -64,6 +64,7 @@ impl VM {
     pub fn step(&mut self) -> VMResult<()> {
         let instructions = self.program.instructions();
         let mut native_calls = Vec::new();
+        let mut empty_runner_ids = Vec::new();
 
         for runner_id in 0..self.runners.len() {
             let runner = &mut self.runners[runner_id];
@@ -72,11 +73,17 @@ impl VM {
             if let Some(instruction) = instructions.get(pc as usize) {
                 let instruction = instruction.clone();
                 runner.run(runner_id, instruction, &mut self.gvs, &mut native_calls)?;
+            } else {
+                empty_runner_ids.push(runner_id);
             }
         }
 
         while let Some(native_call) = native_calls.pop() {
             self.call_native(native_call)?;
+        }
+
+        while let Some(runner_id) = empty_runner_ids.pop() {
+            self.runners.remove(runner_id);
         }
 
         Ok(())
