@@ -1,10 +1,8 @@
 use std::collections::HashMap;
 
-use ks_core::kyryl_script;
 use ks_core::kyryl_script::KyrylScript;
 use ks_core::parser::data_type::DataType;
 use ks_global::utils::ks_result::KsResult;
-use ks_std::ks_register_std;
 use ks_vm_new::Constant;
 use ks_vm_new::Instruction;
 use ks_vm_new::Program;

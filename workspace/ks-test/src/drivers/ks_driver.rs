@@ -1,6 +1,3 @@
-use std::collections::HashMap;
-
-use ks_core::kyryl_script;
 use ks_core::lexer::lexer::Lexer;
 use ks_core::parser::parser::Parser;
 use ks_core::parser::statement::Statement;
