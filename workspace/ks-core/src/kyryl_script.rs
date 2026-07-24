@@ -8,6 +8,7 @@ use crate::compiler::compiler::Compiler;
 use crate::compiler_new::compiler::CompilerNew;
 use crate::lexer::lexer::Lexer;
 use crate::parser::parser::Parser;
+use crate::parser::statement::Statement;
 
 pub struct KyrylScript {
     parser: Parser,
@@ -28,6 +29,21 @@ impl KyrylScript {
 
     pub fn compiler_mut(&mut self) -> &mut CompilerNew {
         &mut self.compiler
+    }
+
+    pub fn take_compiler(self) -> CompilerNew {
+        self.compiler
+    }
+
+    pub fn statements(&mut self, path: &str) -> KsResult<Vec<Statement>> {
+        let mut lexer = Lexer::load(path)?;
+        lexer.lexer()?;
+
+        let tokens = lexer.get_tokens().to_vec();
+        let token_pos = lexer.get_token_pos().to_vec();
+
+        self.parser.set_tokens(tokens, token_pos);
+        self.parser.start()
     }
 
     pub fn compile_from_file(&mut self, path: &str) -> KsResult<HashMap<String, Function>> {

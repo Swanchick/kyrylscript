@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use ks_core::kyryl_script;
 use ks_core::lexer::lexer::Lexer;
 use ks_core::parser::parser::Parser;
 use ks_core::parser::statement::Statement;
@@ -51,23 +52,19 @@ impl KsDriver {
     }
 
     pub fn compiler_new(&self) -> KsResult<CompilerNew> {
+        let mut kyryl_script = KyrylScript::new();
+        ks_register_std(&mut kyryl_script);
+        let mut compiler = kyryl_script.take_compiler();
         let statements = self.parser()?;
-        let mut compiler = CompilerNew::new();
+
         compiler.compile(statements)?;
 
         Ok(compiler)
     }
 
-    pub fn compiler_new_with_native(
-        &self,
-        native: HashMap<String, usize>,
-    ) -> KsResult<CompilerNew> {
-        let statements = self.parser()?;
-        let mut compiler = CompilerNew::new();
-
-        for (name, native_id) in native {
-            compiler.register_native(&name, native_id);
-        }
+    pub fn compiler_new_environment(&self, mut kyryl_script: KyrylScript) -> KsResult<CompilerNew> {
+        let statements = kyryl_script.statements(&self.path)?;
+        let mut compiler = kyryl_script.take_compiler();
 
         compiler.compile(statements)?;
 
