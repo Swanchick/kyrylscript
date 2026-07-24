@@ -121,9 +121,9 @@ impl Instruction {
             Constant::Float(float) => self.opcode_value(LDF, float.to_bits()),
             Constant::Boolean(boolean) => {
                 if *boolean {
-                    vec![LBT]
+                    return vec![LBT];
                 } else {
-                    vec![LBF]
+                    return vec![LBF];
                 }
             }
             Constant::String(string) => {
