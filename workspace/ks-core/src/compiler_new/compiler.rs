@@ -32,8 +32,9 @@ impl CompilerNew {
         }
     }
 
-    pub fn register_native(&mut self, name: String, native_id: NativeId) {
-        self.environment.register_native(name, native_id);
+    pub fn register_native(&mut self, name: &str, native_id: NativeId) {
+        self.environment
+            .register_native(name.to_string(), native_id);
     }
 
     pub fn program(self) -> Program {

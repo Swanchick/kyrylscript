@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use ks_core::kyryl_script::KyrylScript;
+use ks_core::parser::data_type::DataType;
 use ks_global::utils::ks_result::KsResult;
 use ks_vm_new::Constant;
 use ks_vm_new::Instruction;
@@ -929,11 +931,22 @@ fn native_call() -> KsResult<()> {
 
     let test_program = Program::from(instructions);
 
+    let mut kyryl_script = KyrylScript::new();
+
+    kyryl_script.compiler_mut().register_native("println", 0);
+    kyryl_script.parser_mut().register_variable(
+        "println",
+        DataType::RustFunction {
+            return_type: Box::new(DataType::void()),
+        },
+        true,
+    );
+
     let mut native_function = HashMap::new();
     native_function.insert(String::from("println"), 0);
 
     let driver = KsDriver::new("compiler/native_call.ks");
-    let compiler = driver.compiler_new_with_native(native_function)?;
+    let compiler = driver.compiler_new_environment(kyryl_script)?;
     let program = compiler.program();
 
     assert_eq!(test_program, program);
