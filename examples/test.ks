@@ -1,5 +1,3 @@
-function multiple_parameters(a int, b int) {
-    println(a, " ", b);
-}
+let a = 10;
 
-multiple_parameters(10, 20);
+println(a);

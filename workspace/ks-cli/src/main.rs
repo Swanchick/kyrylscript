@@ -1,4 +1,4 @@
-use std::env::args;
+use std::{env::args, println};
 
 use ks_core::kyryl_script::KyrylScript;
 use ks_global::utils::ks_result::KsResult;
@@ -15,10 +15,12 @@ fn main() -> KsResult<()> {
 
         ks_register_std(parser);
 
-        let compilation = kyryl_script.compile_from_file(path)?;
+        let program = kyryl_script.compile_from_file_new(path)?;
 
-        let mut vm = VirtualMachine::from(compilation);
-        vm.initialize()?;
+        println!("{:X?}", program);
+
+        // let mut vm = VirtualMachine::from(compilation);
+        // vm.initialize()?;
     }
 
     Ok(())
