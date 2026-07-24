@@ -11,17 +11,23 @@ use crate::parser::parser::Parser;
 
 pub struct KyrylScript {
     parser: Parser,
+    compiler: CompilerNew,
 }
 
 impl KyrylScript {
     pub fn new() -> KyrylScript {
         KyrylScript {
             parser: Parser::new(),
+            compiler: CompilerNew::new(),
         }
     }
 
     pub fn parser_mut(&mut self) -> &mut Parser {
         &mut self.parser
+    }
+
+    pub fn compiler_mut(&mut self) -> &mut CompilerNew {
+        &mut self.compiler
     }
 
     pub fn compile_from_file(&mut self, path: &str) -> KsResult<HashMap<String, Function>> {
@@ -51,7 +57,7 @@ impl KyrylScript {
         Ok(compiler.to_functions())
     }
 
-    pub fn compile_from_file_new(&mut self, path: &str) -> KsResult<Vec<u8>> {
+    pub fn compile_from_file_new(mut self, path: &str) -> KsResult<Vec<u8>> {
         let mut lexer = Lexer::load(path)?;
         lexer.lexer()?;
 
@@ -69,10 +75,18 @@ impl KyrylScript {
             )));
         }
 
-        let block = block?;
-        let mut compiler = CompilerNew::new();
-        compiler.compile(block)?;
+        let statements = block?;
+        let result = self.compiler.compile(statements);
+        if let Err(e) = result {
+            e.display();
+            return Err(KsError::runtime(&format!(
+                "KyrylScript Compiler Layer: \n{}",
+                e.message(),
+            )));
+        }
 
-        Ok(compiler.program().serialize())
+        let program = self.compiler.program();
+
+        Ok(program.serialize())
     }
 }

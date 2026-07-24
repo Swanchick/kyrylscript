@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use ks_core::compiler_new::compiler::CompilerNew;
 use ks_core::lexer::lexer::Lexer;
 use ks_core::parser::parser::Parser;
 use ks_core::parser::statement::Statement;
+use ks_core::{compiler_new::compiler::CompilerNew, kyryl_script::KyrylScript};
 
 use ks_global::utils::ks_result::KsResult;
 use ks_std::ks_register_std;
@@ -35,7 +35,7 @@ impl KsDriver {
         let lexer = self.lexer()?;
         let mut parser = Parser::new();
         parser.set_tokens(lexer.get_tokens().to_vec(), lexer.get_token_pos().to_vec());
-        ks_register_std(&mut parser);
+        ks_register_std(&mut KyrylScript::new());
         let statements = parser.start()?;
 
         Ok(statements)
@@ -45,7 +45,7 @@ impl KsDriver {
         let lexer = self.lexer()?;
         let mut parser = Parser::new();
         parser.set_tokens(lexer.get_tokens().to_vec(), lexer.get_token_pos().to_vec());
-        ks_register_std(&mut parser);
+        ks_register_std(&mut KyrylScript::new());
 
         Ok(parser)
     }
@@ -66,7 +66,7 @@ impl KsDriver {
         let mut compiler = CompilerNew::new();
 
         for (name, native_id) in native {
-            compiler.register_native(name, native_id);
+            compiler.register_native(&name, native_id);
         }
 
         compiler.compile(statements)?;
