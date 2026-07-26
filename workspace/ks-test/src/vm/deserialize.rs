@@ -84,10 +84,47 @@ deserialize_instructions!(
 );
 
 deserialize_instructions!(
-    ldi,
+    ldi1,
     Instruction::LoadConst(Constant::Integer(200)),
-    vec![LDI, 0xC8, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]
+    vec![LDI, 0x1, 0xC8]
 );
+
+deserialize_instructions!(
+    ldi2,
+    Instruction::LoadConst(Constant::Integer(51400)),
+    vec![LDI, 0x2, 0xC8, 0xC8]
+);
+
+deserialize_instructions!(
+    ldi3,
+    Instruction::LoadConst(Constant::Integer(13158600)),
+    vec![LDI, 0x3, 0xC8, 0xC8, 0xC8]
+);
+
+deserialize_instructions!(
+    ldi4,
+    Instruction::LoadConst(Constant::Integer(3368601800)),
+    vec![LDI, 0x4, 0xC8, 0xC8, 0xC8, 0xC8]
+);
+
+deserialize_instructions!(
+    ldi5,
+    Instruction::LoadConst(Constant::Integer(862362061000)),
+    vec![LDI, 0x5, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8]
+);
+
+deserialize_instructions!(
+    ld6,
+    Instruction::LoadConst(Constant::Integer(220764687616200)),
+    vec![LDI, 0x6, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8]
+);
+
+deserialize_instructions!(
+    ldi7,
+    Instruction::LoadConst(Constant::Integer(56515760029747400)),
+    vec![LDI, 0x7, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8]
+);
+
 deserialize_instructions!(
     ldf,
     Instruction::LoadConst(Constant::Float(3.14)),
