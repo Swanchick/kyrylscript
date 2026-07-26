@@ -15,6 +15,8 @@ const SINGLE_INSTRUCTION_SIZE: usize = 1;
 const NUMBER_U32_SIZE: usize = 4;
 const NUMBER_U64_SIZE: usize = 8;
 
+const EMPTY_U64_ARRAY: [u8; 8] = [0; 8];
+
 pub struct Deserialize {
     buffer: Vec<u8>,
     instructions: Vec<Instruction>,
@@ -86,6 +88,33 @@ impl Deserialize {
         Ok(())
     }
 
+    fn parse_u8(&mut self, pc: usize) -> u8 {
+        self.buffer[pc]
+    }
+
+    fn parse_u64_dynamic(&mut self, pc: usize, size: usize) -> u64 {
+        let bytes = &self.buffer[pc..pc + size];
+        let mut full = EMPTY_U64_ARRAY;
+        full[..bytes.len()].copy_from_slice(bytes);
+        let number = u64::from_le_bytes(full);
+        number
+    }
+
+    fn add_u64_dynamic(&mut self, instruction: impl Fn(u64) -> Instruction) -> VMResult<()> {
+        let size = self.parse_u8(self.pc + SINGLE_INSTRUCTION_SIZE) as usize;
+        let number = self.parse_u64_dynamic(
+            self.pc + SINGLE_INSTRUCTION_SIZE + SINGLE_INSTRUCTION_SIZE,
+            size,
+        );
+
+        let instruction = instruction(number);
+        self.add(instruction)?;
+        self.step(SINGLE_INSTRUCTION_SIZE)?;
+        self.step(size)?;
+
+        Ok(())
+    }
+
     fn ncall(&mut self) -> VMResult<()> {
         let native_id = self.parse_u32(self.pc + SINGLE_INSTRUCTION_SIZE)?;
         self.step(NUMBER_U32_SIZE)?;
@@ -143,7 +172,8 @@ impl Deserialize {
                 FREE => self.add_u32(|num| Instruction::Free(num as usize)),
                 CALL => self.add(Instruction::Call),
                 NCALL => self.ncall(),
-                LDI => self.add_u64(|num| Instruction::LoadConst(Constant::Integer(num as i64))),
+                LDI => self
+                    .add_u64_dynamic(|num| Instruction::LoadConst(Constant::Integer(num as i64))),
                 LDF => {
                     self.add_u64(|num| Instruction::LoadConst(Constant::Float(f64::from_bits(num))))
                 }
@@ -155,10 +185,10 @@ impl Deserialize {
                 LDC => self.add_u32(|num| Instruction::LoadCollection(num as usize)),
                 STR => self.add(Instruction::Store),
                 ASN => self.add(Instruction::Assign),
-                ASV => self.add_u64(|num| Instruction::AssignVariable(num)),
+                ASV => self.add_u64_dynamic(|num| Instruction::AssignVariable(num)),
                 ASC => self.add(Instruction::AssignCollection),
-                LDV => self.add_u64(|num| Instruction::LoadVar(num)),
-                LDCP => self.add_u64(|num| Instruction::LoadCapture(num)),
+                LDV => self.add_u64_dynamic(|num| Instruction::LoadVar(num)),
+                LDCP => self.add_u64_dynamic(|num| Instruction::LoadCapture(num)),
                 LDFC => self.add(Instruction::LoadFromCollection),
                 LEN => self.add(Instruction::CollectionLen),
                 _ => Err(VMError::from("Invalid opcode")),

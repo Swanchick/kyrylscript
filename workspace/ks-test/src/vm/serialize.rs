@@ -140,7 +140,7 @@ fn assign() {
 #[test]
 fn assign_variable() {
     let mut expected = vec![ASV];
-    expected.extend_from_slice(&5u64.to_le_bytes());
+    expected.extend_from_slice(&[0x1, 0x5]);
 
     assert_eq!(Instruction::AssignVariable(5).to_bytes(), expected);
 }
@@ -151,12 +151,78 @@ fn assign_collection() {
 }
 
 #[test]
-fn load_const_integer() {
+fn load_const_integer_1() {
     let mut expected = vec![LDI];
-    expected.extend_from_slice(&42u64.to_le_bytes());
+    expected.extend_from_slice(&[0x1, 0xC8]);
 
     assert_eq!(
-        Instruction::LoadConst(Constant::Integer(42)).to_bytes(),
+        Instruction::LoadConst(Constant::Integer(200)).to_bytes(),
+        expected
+    );
+}
+
+#[test]
+fn load_const_integer_2() {
+    let mut expected = vec![LDI];
+    expected.extend_from_slice(&[0x2, 0xC8, 0xC8]);
+
+    assert_eq!(
+        Instruction::LoadConst(Constant::Integer(51400)).to_bytes(),
+        expected
+    );
+}
+
+#[test]
+fn load_const_integer_3() {
+    let mut expected = vec![LDI];
+    expected.extend_from_slice(&[0x3, 0xC8, 0xC8, 0xC8]);
+
+    assert_eq!(
+        Instruction::LoadConst(Constant::Integer(13158600)).to_bytes(),
+        expected
+    );
+}
+
+#[test]
+fn load_const_integer_4() {
+    let mut expected = vec![LDI];
+    expected.extend_from_slice(&[0x4, 0xC8, 0xC8, 0xC8, 0xC8]);
+
+    assert_eq!(
+        Instruction::LoadConst(Constant::Integer(3368601800)).to_bytes(),
+        expected
+    );
+}
+
+#[test]
+fn load_const_integer_5() {
+    let mut expected = vec![LDI];
+    expected.extend_from_slice(&[0x5, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8]);
+
+    assert_eq!(
+        Instruction::LoadConst(Constant::Integer(862362061000)).to_bytes(),
+        expected
+    );
+}
+
+#[test]
+fn load_const_integer_6() {
+    let mut expected = vec![LDI];
+    expected.extend_from_slice(&[0x6, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8]);
+
+    assert_eq!(
+        Instruction::LoadConst(Constant::Integer(220764687616200)).to_bytes(),
+        expected
+    );
+}
+
+#[test]
+fn load_const_integer_7() {
+    let mut expected = vec![LDI];
+    expected.extend_from_slice(&[0x7, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8]);
+
+    assert_eq!(
+        Instruction::LoadConst(Constant::Integer(56515760029747400)).to_bytes(),
         expected
     );
 }
@@ -208,7 +274,7 @@ fn load_const_string() {
 #[test]
 fn load_var() {
     let mut expected = vec![LDV];
-    expected.extend_from_slice(&7u64.to_le_bytes());
+    expected.extend_from_slice(&[0x1, 0x7]);
 
     assert_eq!(Instruction::LoadVar(7).to_bytes(), expected);
 }
@@ -230,7 +296,7 @@ fn call_native() {
 #[test]
 fn load_capture() {
     let mut expected = vec![LDCP];
-    expected.extend_from_slice(&9u64.to_le_bytes());
+    expected.extend_from_slice(&[0x1, 0x9]);
 
     assert_eq!(Instruction::LoadCapture(9).to_bytes(), expected);
 }
