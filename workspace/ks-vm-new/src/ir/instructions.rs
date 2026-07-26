@@ -1,5 +1,3 @@
-use std::println;
-
 #[cfg(not(feature = "std"))]
 use alloc::vec;
 #[cfg(not(feature = "std"))]
@@ -118,8 +116,6 @@ impl Instruction {
         let mut opcode = vec![opcode];
         let value = value.to_le_bytes().to_vec();
         let mut size = 0;
-
-        println!("OPCODE: {} ---> {:X?}", true_opcode, value);
 
         for current_number in 0..value.len() {
             let byte = value[BYTE_SIZE - current_number - 1];
