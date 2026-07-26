@@ -174,25 +174,13 @@ deserialize_instructions!(
 deserialize_instruction!(str, Instruction::Store, STR);
 deserialize_instruction!(asn, Instruction::Assign, ASN);
 
-deserialize_instructions!(
-    asv,
-    Instruction::AssignVariable(10),
-    vec![ASV, 0xA, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]
-);
+deserialize_instructions!(asv, Instruction::AssignVariable(10), vec![ASV, 0x1, 0xA]);
 
 deserialize_instruction!(asc, Instruction::AssignCollection, ASC);
 
-deserialize_instructions!(
-    ldv,
-    Instruction::LoadVar(10),
-    vec![LDV, 0xA, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]
-);
+deserialize_instructions!(ldv, Instruction::LoadVar(10), vec![LDV, 0x1, 0xA]);
 
-deserialize_instructions!(
-    ldcp,
-    Instruction::LoadCapture(10),
-    vec![LDCP, 0xA, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]
-);
+deserialize_instructions!(ldcp, Instruction::LoadCapture(10), vec![LDCP, 0x1, 0xA]);
 
 deserialize_instruction!(ldfc, Instruction::LoadFromCollection, LDFC);
 deserialize_instruction!(len, Instruction::CollectionLen, LEN);

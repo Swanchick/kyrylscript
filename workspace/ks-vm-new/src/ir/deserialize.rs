@@ -109,7 +109,8 @@ impl Deserialize {
 
         let instruction = instruction(number);
         self.add(instruction)?;
-        self.step(NUMBER_U64_SIZE)?;
+        self.step(SINGLE_INSTRUCTION_SIZE)?;
+        self.step(size)?;
 
         Ok(())
     }
@@ -184,10 +185,10 @@ impl Deserialize {
                 LDC => self.add_u32(|num| Instruction::LoadCollection(num as usize)),
                 STR => self.add(Instruction::Store),
                 ASN => self.add(Instruction::Assign),
-                ASV => self.add_u64(|num| Instruction::AssignVariable(num)),
+                ASV => self.add_u64_dynamic(|num| Instruction::AssignVariable(num)),
                 ASC => self.add(Instruction::AssignCollection),
-                LDV => self.add_u64(|num| Instruction::LoadVar(num)),
-                LDCP => self.add_u64(|num| Instruction::LoadCapture(num)),
+                LDV => self.add_u64_dynamic(|num| Instruction::LoadVar(num)),
+                LDCP => self.add_u64_dynamic(|num| Instruction::LoadCapture(num)),
                 LDFC => self.add(Instruction::LoadFromCollection),
                 LEN => self.add(Instruction::CollectionLen),
                 _ => Err(VMError::from("Invalid opcode")),

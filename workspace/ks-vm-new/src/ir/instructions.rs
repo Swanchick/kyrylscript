@@ -113,12 +113,13 @@ impl Instruction {
     }
 
     fn opcode_value_u64_dynamic(&self, opcode: u8, value: u64) -> Vec<u8> {
+        let true_opcode = opcode;
+
         let mut opcode = vec![opcode];
         let value = value.to_le_bytes().to_vec();
-
-        println!("2: {:X?}", value);
-
         let mut size = 0;
+
+        println!("OPCODE: {} ---> {:X?}", true_opcode, value);
 
         for current_number in 0..value.len() {
             let byte = value[BYTE_SIZE - current_number - 1];
@@ -205,15 +206,15 @@ impl Instruction {
             Self::Jump(offset) => self.opcode_value_u32(JMP, *offset as u32),
             Self::Store => vec![STR],
             Self::Assign => vec![ASN],
-            Self::AssignVariable(variable_id) => self.opcode_value_u64(ASV, *variable_id),
+            Self::AssignVariable(variable_id) => self.opcode_value_u64_dynamic(ASV, *variable_id),
             Self::AssignCollection => vec![ASC],
             Self::LoadConst(constant) => self.load_const(constant),
-            Self::LoadVar(variable_id) => self.opcode_value_u64(LDV, *variable_id),
+            Self::LoadVar(variable_id) => self.opcode_value_u64_dynamic(LDV, *variable_id),
             Self::Call => vec![CALL],
             Self::CallNative(native_id, arguments) => {
                 self.native(*native_id as u32, *arguments as u32)
             }
-            Self::LoadCapture(captured) => self.opcode_value_u64(LDCP, *captured),
+            Self::LoadCapture(captured) => self.opcode_value_u64_dynamic(LDCP, *captured),
             Self::LoadFunction(size) => self.opcode_value_u32(LDFN, *size as u32),
             Self::LoadCollection(size) => self.opcode_value_u32(LDC, *size as u32),
             Self::LoadFromCollection => vec![LDFC],
