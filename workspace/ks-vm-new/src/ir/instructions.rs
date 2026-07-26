@@ -1,3 +1,5 @@
+use std::println;
+
 #[cfg(not(feature = "std"))]
 use alloc::vec;
 #[cfg(not(feature = "std"))]
@@ -6,6 +8,8 @@ use alloc::vec::Vec;
 use crate::types::{Arguments, CaptureSize, NativeId, Offset, VariableId};
 
 use super::constant::Constant;
+
+const BYTE_SIZE: usize = 8;
 
 // Arithmetic (0x00-0x0F)
 pub const ADD: u8 = 0x00;
@@ -101,10 +105,33 @@ pub enum Instruction {
 }
 
 impl Instruction {
-    fn opcode_value(&self, opcode: u8, value: u64) -> Vec<u8> {
+    fn opcode_value_u64(&self, opcode: u8, value: u64) -> Vec<u8> {
         let mut opcode = vec![opcode];
-        let mut size = value.to_le_bytes().to_vec();
-        opcode.append(&mut size);
+        let mut value = value.to_le_bytes().to_vec();
+        opcode.append(&mut value);
+        opcode
+    }
+
+    fn opcode_value_u64_dynamic(&self, opcode: u8, value: u64) -> Vec<u8> {
+        let mut opcode = vec![opcode];
+        let value = value.to_le_bytes().to_vec();
+
+        println!("2: {:X?}", value);
+
+        let mut size = 0;
+
+        for current_number in 0..value.len() {
+            let byte = value[BYTE_SIZE - current_number - 1];
+            if byte != 0 {
+                size = BYTE_SIZE - current_number;
+                break;
+            }
+        }
+
+        let mut value = value[0..size].to_vec();
+
+        opcode.push(size as u8);
+        opcode.append(&mut value);
         opcode
     }
 
@@ -117,8 +144,8 @@ impl Instruction {
 
     fn load_const(&self, constant: &Constant) -> Vec<u8> {
         match constant {
-            Constant::Integer(integer) => self.opcode_value(LDI, *integer as u64),
-            Constant::Float(float) => self.opcode_value(LDF, float.to_bits()),
+            Constant::Integer(integer) => self.opcode_value_u64_dynamic(LDI, *integer as u64),
+            Constant::Float(float) => self.opcode_value_u64(LDF, float.to_bits()),
             Constant::Boolean(boolean) => {
                 if *boolean {
                     return vec![LBT];
@@ -178,15 +205,15 @@ impl Instruction {
             Self::Jump(offset) => self.opcode_value_u32(JMP, *offset as u32),
             Self::Store => vec![STR],
             Self::Assign => vec![ASN],
-            Self::AssignVariable(variable_id) => self.opcode_value(ASV, *variable_id),
+            Self::AssignVariable(variable_id) => self.opcode_value_u64(ASV, *variable_id),
             Self::AssignCollection => vec![ASC],
             Self::LoadConst(constant) => self.load_const(constant),
-            Self::LoadVar(variable_id) => self.opcode_value(LDV, *variable_id),
+            Self::LoadVar(variable_id) => self.opcode_value_u64(LDV, *variable_id),
             Self::Call => vec![CALL],
             Self::CallNative(native_id, arguments) => {
                 self.native(*native_id as u32, *arguments as u32)
             }
-            Self::LoadCapture(captured) => self.opcode_value(LDCP, *captured),
+            Self::LoadCapture(captured) => self.opcode_value_u64(LDCP, *captured),
             Self::LoadFunction(size) => self.opcode_value_u32(LDFN, *size as u32),
             Self::LoadCollection(size) => self.opcode_value_u32(LDC, *size as u32),
             Self::LoadFromCollection => vec![LDFC],
