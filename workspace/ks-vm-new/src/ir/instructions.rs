@@ -10,12 +10,12 @@ use super::constant::Constant;
 const BYTE_SIZE: usize = 8;
 
 // Arithmetic (0x00-0x0F)
-pub const ADD: u8 = 0x00;
-pub const SUB: u8 = 0x01;
-pub const MUL: u8 = 0x02;
-pub const DIV: u8 = 0x03;
-pub const INC: u8 = 0x04;
-pub const DEC: u8 = 0x05;
+pub const ADD: u8 = 0x01;
+pub const SUB: u8 = 0x02;
+pub const MUL: u8 = 0x03;
+pub const DIV: u8 = 0x04;
+pub const INC: u8 = 0x05;
+pub const DEC: u8 = 0x06;
 
 // Comparison (0x10-0x1F)
 pub const EQ: u8 = 0x10;
@@ -111,8 +111,6 @@ impl Instruction {
     }
 
     fn opcode_value_u64_dynamic(&self, opcode: u8, value: u64) -> Vec<u8> {
-        let true_opcode = opcode;
-
         let mut opcode = vec![opcode];
         let value = value.to_le_bytes().to_vec();
         let mut size = 0;
