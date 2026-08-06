@@ -3,3 +3,9 @@ name = "ks-programator"
 authors.workspace = true
 version.workspace = true
 edition = "2024"
+
+
+[dependencies]
+ks-core = { path = "../ks-core" }
+ks-global = { path = "../ks-global" }
+serialport = { version = "4", default-features = false }
