@@ -89,6 +89,12 @@ impl VM {
         Ok(())
     }
 
+    pub fn reset(&mut self, program: Program) {
+        self.runners.clear();
+        self.gvs = GVS::new();
+        self.program = program;
+    }
+
     pub fn is_empty(&self) -> bool {
         self.runners.is_empty()
     }

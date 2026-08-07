@@ -18,6 +18,12 @@ impl From<Vec<Instruction>> for Program {
 }
 
 impl Program {
+    pub fn new() -> Self {
+        Self {
+            instructions: Vec::new(),
+        }
+    }
+
     pub fn instructions(&self) -> &[Instruction] {
         &self.instructions
     }

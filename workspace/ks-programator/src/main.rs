@@ -9,6 +9,22 @@ use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
 
 fn register_parser_std(parser: &mut Parser) {
     parser.register_variable(
+        "digital_write",
+        DataType::RustFunction {
+            return_type: Box::new(DataType::void()),
+        },
+        true,
+    );
+
+    parser.register_variable(
+        "delay",
+        DataType::RustFunction {
+            return_type: Box::new(DataType::void()),
+        },
+        true,
+    );
+
+    parser.register_variable(
         "println",
         DataType::RustFunction {
             return_type: Box::new(DataType::void()),
@@ -18,7 +34,9 @@ fn register_parser_std(parser: &mut Parser) {
 }
 
 fn register_compiler_std(compiler: &mut CompilerNew) {
-    compiler.register_native("println", 0);
+    compiler.register_native("digital_write", 0);
+    compiler.register_native("delay", 1);
+    compiler.register_native("println", 2);
 }
 
 fn compile(path: &str) -> KsResult<Vec<u8>> {
