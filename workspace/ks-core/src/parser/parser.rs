@@ -812,7 +812,7 @@ impl Parser {
     fn parse_primary(&mut self) -> KsResult<Expression> {
         match self.advance() {
             Some(Token::True) => Ok(Expression::BooleanLiteral(true)),
-            Some(Token::False) => Ok(Expression::BooleanLiteral(true)),
+            Some(Token::False) => Ok(Expression::BooleanLiteral(false)),
             Some(Token::Function) => self.parse_expression_function(),
             Some(Token::Null) => Ok(Expression::NullLiteral),
             Some(Token::IntegerLiteral(value)) => Ok(Expression::IntegerLiteral(value)),
