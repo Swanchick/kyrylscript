@@ -4,7 +4,6 @@ use crate::lexer::token_pos::TokenPos;
 
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
-use ks_vm::variable::variable;
 
 use super::context::Context;
 use super::expression::Expression;

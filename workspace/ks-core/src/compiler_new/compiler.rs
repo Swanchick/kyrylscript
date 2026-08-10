@@ -42,8 +42,6 @@ impl CompilerNew {
     }
 
     pub fn compile(&mut self, statements: Vec<Statement>) -> KsResult<()> {
-        println!("STATEMENTS: {:#?}", statements);
-
         self.scope_enter();
         self.environment.enter()?;
 
@@ -734,8 +732,6 @@ impl CompilerNew {
     }
 
     fn compile_expression(&mut self, expression: Expression) -> KsResult<()> {
-        println!("EXPRESSION: {:?}", expression);
-
         match expression {
             Expression::NullLiteral => self.insert_constant(Constant::Null),
             Expression::BooleanLiteral(boolean) => self.insert_constant(Constant::Boolean(boolean)),
