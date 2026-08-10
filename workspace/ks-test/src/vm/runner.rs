@@ -178,7 +178,7 @@ fn jump_positive() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, None, Instruction::Jump(jump_offset))?;
 
-    assert_eq!(driver.runner.program_counter(), jump_offset as Pointer);
+    assert_eq!(driver.runner.program_counter(), jump_offset as Pointer + 1);
     assert_eq!(driver.runner.prevent_step, false);
 
     Ok(())
@@ -194,7 +194,7 @@ fn jump_negative() -> VMResult<()> {
 
     assert_eq!(
         driver.runner.program_counter(),
-        initial_pc.saturating_add_signed(jump_offset as isize) as Pointer
+        initial_pc.saturating_add_signed(jump_offset as isize) as Pointer + 1
     );
     assert_eq!(driver.runner.prevent_step, false);
 
@@ -1120,7 +1120,7 @@ fn jump_if_false_if_actually_false() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, Instruction::JumpIfFalse(jump_offset))?;
 
-    assert_eq!(driver.runner.program_counter(), jump_offset as usize);
+    assert_eq!(driver.runner.program_counter(), jump_offset as usize + 1);
     assert_eq!(driver.runner.prevent_step, false);
 
     assert_eq!(driver.runner.acc.len(), 0);
@@ -1180,7 +1180,7 @@ fn jump_if_true_if_actually_true() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, Instruction::JumpIfTrue(jump_offset))?;
 
-    assert_eq!(driver.runner.program_counter(), jump_offset as Pointer);
+    assert_eq!(driver.runner.program_counter(), jump_offset as Pointer + 1);
     assert_eq!(driver.runner.prevent_step, false);
 
     assert_eq!(driver.runner.acc.len(), 0);
