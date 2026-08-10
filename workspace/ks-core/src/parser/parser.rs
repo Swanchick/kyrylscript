@@ -4,6 +4,7 @@ use crate::lexer::token_pos::TokenPos;
 
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
+use ks_vm::variable::variable;
 
 use super::context::Context;
 use super::expression::Expression;
@@ -233,9 +234,10 @@ impl Parser {
                         segment_data_type = Some(current_data_type);
                         segments.push(IdentifierTail::Name(name.clone()));
 
+                        let is_native_function = self.is_native_function(&name)?;
                         let context = self.last_function_context_mut()?;
 
-                        if !context.variables.contains(&name) {
+                        if !context.variables.contains(&name) && !is_native_function {
                             context.captured_variables.push(name);
                         }
 
@@ -338,6 +340,12 @@ impl Parser {
         }
     }
 
+    fn is_native_function(&mut self, name: &str) -> KsResult<bool> {
+        let variable = self.semantic_analyzer.get_variable(name)?;
+
+        Ok(matches!(variable, DataType::RustFunction { .. }))
+    }
+
     pub fn parse_function(&mut self, public: bool) -> KsResult<Statement> {
         let function_name = self.consume_identifier()?;
 
@@ -380,10 +388,19 @@ impl Parser {
 
         let body = self.parse_block_statement()?;
         let mut context = self.exit_function()?;
-        let last_context = self.last_function_context_mut()?;
-        last_context.variables.push(function_name.clone());
+
+        {
+            let last_context = self.last_function_context_mut()?;
+            last_context.variables.push(function_name.clone());
+        }
 
         for capture in &mut context.captured_variables {
+            if self.is_native_function(capture)? {
+                continue;
+            }
+
+            let last_context = self.last_function_context_mut()?;
+
             if last_context.variables.contains(&capture) {
                 continue;
             }
@@ -916,11 +933,14 @@ impl Parser {
                     }
 
                     let block = self.parse_block_statement()?;
-
                     let mut context = self.exit_function()?;
-                    let last_context = self.last_function_context_mut()?;
 
                     for capture in &mut context.captured_variables {
+                        if self.is_native_function(capture)? {
+                            continue;
+                        }
+
+                        let last_context = self.last_function_context_mut()?;
                         if last_context.variables.contains(&capture) {
                             continue;
                         }
@@ -981,9 +1001,13 @@ impl Parser {
         let block = self.parse_block_statement()?;
 
         let mut context = self.exit_function()?;
-        let last_context = self.last_function_context_mut()?;
 
         for capture in &mut context.captured_variables {
+            if self.is_native_function(capture)? {
+                continue;
+            }
+
+            let last_context = self.last_function_context_mut()?;
             if last_context.variables.contains(&capture) {
                 continue;
             }

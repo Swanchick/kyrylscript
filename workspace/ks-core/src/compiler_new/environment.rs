@@ -32,6 +32,8 @@ impl Environment {
     }
 
     pub fn native_function(&mut self, name: &String) -> Option<&NativeId> {
+        println!("Native functions: {:?}", self.native_function);
+
         self.native_function.get(name)
     }
 

@@ -953,3 +953,44 @@ fn native_call() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn native_function_in_function_scope() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::Jump(6),
+        Instruction::LoadConst(Constant::Boolean(true)),
+        Instruction::LoadConst(Constant::Integer(1)),
+        Instruction::LoadConst(Constant::String(String::from("A"))),
+        Instruction::CallNative(0, 3),
+        Instruction::ClearAcc,
+        Instruction::Return,
+        Instruction::LoadConst(Constant::Integer(1)),
+        Instruction::LoadFunction(0),
+        Instruction::Store,
+        Instruction::LoadVar(0),
+        Instruction::Call,
+        Instruction::ClearAcc,
+    ];
+    let test_program = Program::from(instructions);
+
+    let mut kyryl_script = KyrylScript::new();
+
+    kyryl_script
+        .compiler_mut()
+        .register_native("digital_write", 0);
+    kyryl_script.parser_mut().register_variable(
+        "digital_write",
+        DataType::RustFunction {
+            return_type: Box::new(DataType::void()),
+        },
+        true,
+    );
+
+    let driver = KsDriver::new("compiler/native_function_in_function_scope.ks");
+    let compiler = driver.compiler_new_environment(kyryl_script)?;
+    let program = compiler.program();
+
+    assert_eq!(test_program, program);
+
+    Ok(())
+}
