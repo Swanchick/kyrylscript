@@ -42,6 +42,8 @@ impl CompilerNew {
     }
 
     pub fn compile(&mut self, statements: Vec<Statement>) -> KsResult<()> {
+        println!("STATEMENTS: {:#?}", statements);
+
         self.scope_enter();
         self.environment.enter()?;
 
@@ -193,9 +195,14 @@ impl CompilerNew {
         }
 
         for index in 0..captured.len() {
+            let captured_name = &captured[index];
+            if self.environment.native_function(captured_name).is_some() {
+                continue;
+            }
+
             self.insert(Instruction::LoadCapture(index as u64))?;
 
-            self.environment.define_variable(captured[index].clone())?;
+            self.environment.define_variable(captured_name.clone())?;
             self.insert(Instruction::Store)?;
         }
 
@@ -521,8 +528,9 @@ impl CompilerNew {
             if let Some(native_id) = self.environment.native_function(name) {
                 let native_id = *native_id;
                 self.insert(Instruction::CallNative(native_id, arguments))?;
-
                 return Ok(());
+            } else {
+                return Err(KsError::parse("Cannot find nativeId"));
             }
         }
 
@@ -589,7 +597,7 @@ impl CompilerNew {
                         last_name = Some(name.clone());
                         continue;
                     }
-
+                    last_name = None;
                     self.identifier_name(name, &mut last_collection_id, assign)
                 }
                 IdentifierTail::Call(expressions) => {
@@ -726,6 +734,8 @@ impl CompilerNew {
     }
 
     fn compile_expression(&mut self, expression: Expression) -> KsResult<()> {
+        println!("EXPRESSION: {:?}", expression);
+
         match expression {
             Expression::NullLiteral => self.insert_constant(Constant::Null),
             Expression::BooleanLiteral(boolean) => self.insert_constant(Constant::Boolean(boolean)),
