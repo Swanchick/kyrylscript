@@ -54,6 +54,7 @@ dependencies = [
  "ks-global",
  "ks-std",
  "ks-vm",
+ "ks-vm-new",
 ]
 
 [[package]]
