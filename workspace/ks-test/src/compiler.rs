@@ -390,7 +390,7 @@ fn while_statement() -> KsResult<()> {
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::GreaterEq,
-        Instruction::JumpIfTrue(-8),
+        Instruction::JumpIfTrue(-9),
     ];
 
     let test_program = Program::from(instructions);
@@ -698,7 +698,7 @@ fn scope_enter_exit() -> KsResult<()> {
         Instruction::Store,
         Instruction::Free(1),
         Instruction::LoadConst(Constant::Boolean(true)),
-        Instruction::JumpIfTrue(-4),
+        Instruction::JumpIfTrue(-5),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Store,
         Instruction::LoadConst(Constant::Integer(10)),
