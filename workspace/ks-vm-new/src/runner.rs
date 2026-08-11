@@ -738,8 +738,6 @@ impl Runner {
         gvs: &mut GVS,
         native_stack: &mut Vec<NativeCall>,
     ) -> VMResult<()> {
-        println!("Instruction: {:?}", instruction);
-
         match instruction {
             Instruction::LoadConst(constant) => self.load_const(gvs, constant),
             Instruction::LoadVar(slot) => self.load_var(gvs, slot),
