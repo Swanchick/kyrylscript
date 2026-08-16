@@ -426,7 +426,7 @@ fn for_statement() -> KsResult<()> {
         Instruction::LoadVar(0),
         Instruction::CollectionLen,
         Instruction::GreaterEq, // iterator >= list_iter.len()
-        Instruction::JumpIfFalse(-10),
+        Instruction::JumpIfFalse(-11),
         Instruction::Free(3),
     ];
 
@@ -724,7 +724,7 @@ fn scope_enter_exit() -> KsResult<()> {
         Instruction::LoadVar(3),
         Instruction::CollectionLen,
         Instruction::GreaterEq,
-        Instruction::JumpIfFalse(-13),
+        Instruction::JumpIfFalse(-14),
         Instruction::Free(3),
         Instruction::LoadConst(Constant::Integer(345)),
         Instruction::Store,

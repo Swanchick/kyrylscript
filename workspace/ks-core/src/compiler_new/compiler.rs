@@ -404,7 +404,7 @@ impl CompilerNew {
         let after_len = after_scope.len() as i32;
         self.scope_append(after_scope)?;
 
-        self.insert(Instruction::JumpIfFalse(-body_len - after_len))?;
+        self.insert(Instruction::JumpIfFalse(-body_len - after_len - 1))?;
 
         self.free()?;
 
