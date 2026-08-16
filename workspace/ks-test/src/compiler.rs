@@ -426,7 +426,7 @@ fn for_statement() -> KsResult<()> {
         Instruction::LoadVar(0),
         Instruction::CollectionLen,
         Instruction::GreaterEq, // iterator >= list_iter.len()
-        Instruction::JumpIfFalse(-10),
+        Instruction::JumpIfFalse(-11),
         Instruction::Free(3),
     ];
 
