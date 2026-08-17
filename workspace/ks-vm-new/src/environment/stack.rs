@@ -127,4 +127,12 @@ impl Stack {
             Err(VMError::from("No variable in stack"))
         }
     }
+
+    pub fn remove(&mut self, gvs: &mut GVS, index: usize) -> VMResult<Variable> {
+        let storage_id = self.data.remove(index);
+        let variable = gvs.variable(storage_id)?.clone();
+        gvs.storage_remove_owner(storage_id)?;
+
+        Ok(variable)
+    }
 }
