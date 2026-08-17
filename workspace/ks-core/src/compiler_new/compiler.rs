@@ -532,7 +532,7 @@ impl CompilerNew {
             }
         }
 
-        self.insert(Instruction::Call)?;
+        self.insert(Instruction::Call(arguments))?;
 
         Ok(())
     }

@@ -1197,7 +1197,32 @@ fn call() -> VMResult<()> {
     let acc = vec![0];
     let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, false, None, None, None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Call)?;
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Call(0))?;
+
+    assert_eq!(driver.runner.program_counter, 20);
+    assert_eq!(driver.runner.call_stack.len(), 1);
+    assert_eq!(driver.runner.call_stack[0].return_pointer, 0);
+    assert_eq!(driver.runner.call_stack[0].collection_id, 0);
+
+    assert_eq!(driver.runner.acc.len(), 0);
+
+    Ok(())
+}
+
+#[test]
+fn call_with_parameters() -> VMResult<()> {
+    let storage = vec![
+        Some(Variable::from(Function::from(20u32)).with_owners(1)),
+        Some(Variable::from(10)),
+        Some(Variable::from(20)),
+    ];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
+
+    let acc = vec![0, 1, 2];
+    let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, false, None, None, None);
+
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Call(2))?;
 
     assert_eq!(driver.runner.program_counter, 20);
     assert_eq!(driver.runner.call_stack.len(), 1);
@@ -1336,7 +1361,7 @@ fn call_stack_should_own_collection() -> VMResult<()> {
     let acc = vec![3];
     let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, false, None, None, None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Call)?;
+    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Call(0))?;
 
     assert_eq!(driver.runner.program_counter, 20);
     assert_eq!(driver.runner.call_stack.len(), 1);

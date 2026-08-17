@@ -281,7 +281,10 @@ fn load_var() {
 
 #[test]
 fn call() {
-    assert_eq!(Instruction::Call.to_bytes(), vec![CALL]);
+    assert_eq!(
+        Instruction::Call(2).to_bytes(),
+        vec![CALL, 0x2, 0x0, 0x0, 0x0]
+    );
 }
 
 #[test]

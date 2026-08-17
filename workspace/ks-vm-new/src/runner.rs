@@ -417,7 +417,7 @@ impl Runner {
         Ok(())
     }
 
-    fn call(&mut self, gvs: &mut GVS) -> VMResult<()> {
+    fn call(&mut self, gvs: &mut GVS, arguments: Arguments) -> VMResult<()> {
         let storage_id = self.acc.pop_data()?;
 
         let variable_function = gvs.variable(storage_id)?;
@@ -766,7 +766,7 @@ impl Runner {
             Instruction::ClearAcc => self.clear_acc(gvs),
             Instruction::JumpIfFalse(offset) => self.jump_if(gvs, offset, false),
             Instruction::JumpIfTrue(offset) => self.jump_if(gvs, offset, true),
-            Instruction::Call => self.call(gvs),
+            Instruction::Call(arguments) => self.call(gvs, arguments),
             Instruction::Return => self.on_return(gvs),
             Instruction::LoadFunction(captures) => self.load_function(gvs, captures),
             Instruction::LoadCapture(slot_id) => self.load_capture(gvs, slot_id),

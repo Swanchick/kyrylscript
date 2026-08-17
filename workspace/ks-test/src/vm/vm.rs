@@ -95,7 +95,7 @@ fn e2e_serialize() -> VMResult<()> {
         Instruction::LoadConst(Constant::Float(67.67)),
         Instruction::LoadConst(Constant::String(String::from("Six Seven"))),
         Instruction::LoadVar(67),
-        Instruction::Call,
+        Instruction::Call(67),
         Instruction::CallNative(67, 67),
         Instruction::LoadCapture(67),
         Instruction::LoadFunction(67),
