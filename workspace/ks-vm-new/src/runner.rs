@@ -417,12 +417,12 @@ impl Runner {
         Ok(())
     }
 
-    // TODO: Doesn't work yet, will fix it after swimming in the sea in spain
     fn call(&mut self, gvs: &mut GVS, arguments: Arguments) -> VMResult<()> {
-        let acc_len = self.acc.len();
-        let slot = self.acc.len() - 1 - arguments;
+        let slot = self.acc.len() - arguments - 1;
 
-        let variable = self.acc.remove(gvs, slot)?;
+        let storage_id = self.acc.remove(slot);
+
+        let variable = gvs.variable(storage_id)?;
         let function = variable.as_function()?;
 
         self.prevent_step = true;

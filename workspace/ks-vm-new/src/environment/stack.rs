@@ -128,11 +128,8 @@ impl Stack {
         }
     }
 
-    pub fn remove(&mut self, gvs: &mut GVS, index: usize) -> VMResult<Variable> {
+    pub fn remove(&mut self, index: usize) -> StorageId {
         let storage_id = self.data.remove(index);
-        let variable = gvs.variable(storage_id)?.clone();
-        gvs.storage_remove_owner(storage_id)?;
-
-        Ok(variable)
+        storage_id
     }
 }

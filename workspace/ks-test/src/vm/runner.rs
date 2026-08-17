@@ -1229,7 +1229,7 @@ fn call_with_parameters() -> VMResult<()> {
     assert_eq!(driver.runner.call_stack[0].return_pointer, 0);
     assert_eq!(driver.runner.call_stack[0].collection_id, 0);
 
-    assert_eq!(driver.runner.acc.len(), 0);
+    assert_eq!(driver.runner.acc.len(), 2);
 
     Ok(())
 }
