@@ -92,7 +92,7 @@ pub enum Instruction {
     AssignVariable(VariableId),
     LoadConst(Constant),
     LoadVar(VariableId),
-    Call,
+    Call(Arguments),
     CallNative(NativeId, Arguments),
     LoadCapture(VariableId),
     LoadFunction(CaptureSize),
@@ -204,7 +204,7 @@ impl Instruction {
             Self::AssignCollection => vec![ASC],
             Self::LoadConst(constant) => self.load_const(constant),
             Self::LoadVar(variable_id) => self.opcode_value_u64_dynamic(LDV, *variable_id),
-            Self::Call => vec![CALL],
+            Self::Call(arguments) => self.opcode_value_u32(CALL, *arguments as u32),
             Self::CallNative(native_id, arguments) => {
                 self.native(*native_id as u32, *arguments as u32)
             }

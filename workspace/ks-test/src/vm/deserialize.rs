@@ -76,7 +76,7 @@ deserialize_instructions!(jmp, Instruction::Jump(100), vec![JMP, 0x64, 0x0, 0x0,
 deserialize_instruction!(cpy, Instruction::Clone, CPY);
 deserialize_instruction!(clr, Instruction::ClearAcc, CLR);
 deserialize_instructions!(free, Instruction::Free(10), vec![FREE, 0xA, 0x0, 0x0, 0x0]);
-deserialize_instruction!(call, Instruction::Call, CALL);
+deserialize_instructions!(call, Instruction::Call(2), vec![CALL, 0x2, 0x0, 0x0, 0x0]);
 deserialize_instructions!(
     ncall,
     Instruction::CallNative(1, 2),

@@ -170,7 +170,7 @@ impl Deserialize {
                 CPY => self.add(Instruction::Clone),
                 CLR => self.add(Instruction::ClearAcc),
                 FREE => self.add_u32(|num| Instruction::Free(num as usize)),
-                CALL => self.add(Instruction::Call),
+                CALL => self.add_u32(|num| Instruction::Call(num as usize)),
                 NCALL => self.ncall(),
                 LDI => self
                     .add_u64_dynamic(|num| Instruction::LoadConst(Constant::Integer(num as i64))),

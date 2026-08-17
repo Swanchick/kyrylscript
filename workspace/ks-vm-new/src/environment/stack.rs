@@ -127,4 +127,9 @@ impl Stack {
             Err(VMError::from("No variable in stack"))
         }
     }
+
+    pub fn remove(&mut self, index: usize) -> StorageId {
+        let storage_id = self.data.remove(index);
+        storage_id
+    }
 }
