@@ -47,11 +47,11 @@ impl Runner {
     }
 
     fn step(&mut self, steps: isize) -> VMResult<()> {
-        self.pc
+        self.pc = self
+            .pc
             .checked_add_signed(steps)
             .ok_or("Stepped out of program memory")?;
 
-        self.step(1)?;
         Ok(())
     }
 
@@ -73,6 +73,8 @@ impl Runner {
     }
 
     fn load_integer_8(&mut self, gvs: &mut GVS, deserialize: Deserialize) -> VMResult<()> {
+        println!("PC {:?}", self.pc);
+
         let variable = Variable::from(deserialize.parse_u8()? as i64);
         self.acc.push(gvs, variable)?;
         self.step(3)?;

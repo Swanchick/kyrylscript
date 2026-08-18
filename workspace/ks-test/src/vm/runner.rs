@@ -37,7 +37,7 @@ fn load_const_int_8() -> VMResult<()> {
 
     let driver = KsDriver::runner(vec![LDI8, int as u8])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 3);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
 

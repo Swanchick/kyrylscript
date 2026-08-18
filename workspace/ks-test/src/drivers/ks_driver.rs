@@ -156,7 +156,7 @@ impl KsDriver {
         acc: Option<Stack>,
         stack: Option<Stack>,
         prevent_step: bool,
-        program_counter: Option<usize>,
+        pc: Option<usize>,
         call_stack: Option<Vec<CallStack>>,
         assign: Option<Assign>,
     ) -> Option<Runner> {
@@ -172,11 +172,7 @@ impl KsDriver {
             Stack::new()
         };
 
-        let program_counter = if let Some(program_counter) = program_counter {
-            program_counter
-        } else {
-            0
-        };
+        let pc = if let Some(pc) = pc { pc } else { 0 };
 
         let call_stack = if let Some(call_stack) = call_stack {
             call_stack
@@ -191,7 +187,7 @@ impl KsDriver {
         };
 
         Some(Runner {
-            program_counter,
+            pc,
             acc,
             stack,
             call_stack,
@@ -242,8 +238,8 @@ impl KsDriver {
 
         let driver = KsDriver::runner_configured(runner, gvs, instruction)?;
 
-        if driver.runner.program_counter != 1 {
-            return Err(VMError::from("Wrong program_counter"));
+        if driver.runner.pc != 1 {
+            return Err(VMError::from("Wrong pc"));
         }
 
         if driver.runner.acc.len() != 1 {
