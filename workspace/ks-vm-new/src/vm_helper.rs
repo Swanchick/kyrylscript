@@ -8,4 +8,5 @@ pub struct VMHelper<'a> {
     pub gvs: &'a mut GVS,
     pub native_stack: &'a mut Vec<NativeCall>,
     pub program: &'a [u8],
+    pub runner_id: usize,
 }
