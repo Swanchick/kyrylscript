@@ -5,6 +5,8 @@ use alloc::string::{String, ToString};
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
+use crate::ir::deserialize::{self, Deserialize};
+use crate::ir::instructions::{LBF, LBT, LDI, LDI8, LDN};
 use crate::types::{Arguments, NativeId};
 use crate::{Assign, Function, NativeCall, VMError, VMHelper, VMResult};
 
@@ -18,7 +20,7 @@ use super::types::{CaptureSize, CollectionId, Offset, Pointer, Slot, StorageId};
 
 #[derive(Debug)]
 pub struct Runner {
-    pub program_counter: Pointer,
+    pub pc: Pointer,
     pub acc: Stack,
     pub stack: Stack,
     pub call_stack: Vec<CallStack>,
@@ -35,7 +37,7 @@ impl Default for Runner {
 impl Runner {
     pub fn new() -> Self {
         Self {
-            program_counter: 0,
+            pc: 0,
             acc: Stack::new(),
             stack: Stack::new(),
             call_stack: Vec::new(),
@@ -44,12 +46,37 @@ impl Runner {
         }
     }
 
-    fn step(&mut self) {
-        if !self.prevent_step {
-            self.program_counter += 1;
-        }
+    fn step(&mut self, steps: isize) -> VMResult<()> {
+        self.pc
+            .checked_add_signed(steps)
+            .ok_or("Stepped out of program memory")?;
 
-        self.prevent_step = false;
+        self.step(1)?;
+        Ok(())
+    }
+
+    fn load_null(&mut self, gvs: &mut GVS) -> VMResult<()> {
+        self.acc.push(gvs, Variable::null())?;
+        self.step(1)?;
+        Ok(())
+    }
+
+    fn load_true(&mut self, gvs: &mut GVS) -> VMResult<()> {
+        self.acc.push(gvs, Variable::from(true))?;
+        Ok(())
+    }
+
+    fn load_false(&mut self, gvs: &mut GVS) -> VMResult<()> {
+        self.acc.push(gvs, Variable::from(false))?;
+        self.step(1)?;
+        Ok(())
+    }
+
+    fn load_integer_8(&mut self, gvs: &mut GVS, deserialize: Deserialize) -> VMResult<()> {
+        let variable = Variable::from(deserialize.parse_u8()? as i64);
+        self.acc.push(gvs, variable)?;
+        self.step(3)?;
+        Ok(())
     }
 
     fn load_const_string(gvs: &mut GVS, string: String) -> Variable {
@@ -80,11 +107,10 @@ impl Runner {
     }
 
     fn jump(&mut self, offset: Offset) -> VMResult<()> {
-        self.program_counter = if offset < 0 {
-            self.program_counter
-                .saturating_sub(offset.unsigned_abs() as Pointer)
+        self.pc = if offset < 0 {
+            self.pc.saturating_sub(offset.unsigned_abs() as Pointer)
         } else {
-            self.program_counter.saturating_add(offset as Pointer)
+            self.pc.saturating_add(offset as Pointer)
         };
 
         // self.prevent_step = true;
@@ -427,13 +453,13 @@ impl Runner {
 
         self.prevent_step = true;
 
-        let return_pointer = self.program_counter;
+        let return_pointer = self.pc;
         let stack_pointer = self.stack.len() as Pointer;
 
         let call_stack = CallStack::new(return_pointer, stack_pointer, storage_id);
         self.call_stack.push(call_stack);
 
-        self.program_counter = function.pointer as usize;
+        self.pc = function.pointer as usize;
 
         Ok(())
     }
@@ -441,7 +467,7 @@ impl Runner {
     fn on_return(&mut self, gvs: &mut GVS) -> VMResult<()> {
         if let Some(call_stack) = self.call_stack.pop() {
             gvs.storage_remove_owner(call_stack.storage_id)?;
-            self.program_counter = call_stack.return_pointer;
+            self.pc = call_stack.return_pointer;
 
             Ok(())
         } else {
@@ -733,53 +759,57 @@ impl Runner {
         Ok(())
     }
 
-    pub fn run<'a>(&mut self, vm_helper: VMHelper<'a>) -> VMResult<()> {
-        // match instruction {
-        //     Instruction::LoadConst(constant) => self.load_const(gvs, constant),
-        //     Instruction::LoadVar(slot) => self.load_var(gvs, slot),
-        //     Instruction::Jump(offset) => self.jump(offset),
-        //     Instruction::Add => self.add(gvs),
-        //     Instruction::Minus => self.minus(gvs),
-        //     Instruction::Mul => self.mul(gvs),
-        //     Instruction::Div => self.div(gvs),
-        //     Instruction::Eq => self.eq(gvs),
-        //     Instruction::GreaterEq => self.greater_eq(gvs),
-        //     Instruction::Greater => self.greater(gvs),
-        //     Instruction::LessEq => self.less_eq(gvs),
-        //     Instruction::Less => self.less(gvs),
-        //     Instruction::NotEq => self.not_eq(gvs),
-        //     Instruction::And => self.and(gvs),
-        //     Instruction::Or => self.or(gvs),
-        //     Instruction::Not => self.not(gvs),
-        //     Instruction::Increment => self.increment(gvs),
-        //     Instruction::Decrement => self.decrement(gvs),
-        //     Instruction::Clone => self.clone(gvs),
-        //     Instruction::LoadCollection(size) => self.load_collection(gvs, size),
-        //     Instruction::Store => self.store(),
-        //     Instruction::Free(size) => self.free(gvs, size),
-        //     Instruction::ClearAcc => self.clear_acc(gvs),
-        //     Instruction::JumpIfFalse(offset) => self.jump_if(gvs, offset, false),
-        //     Instruction::JumpIfTrue(offset) => self.jump_if(gvs, offset, true),
-        //     Instruction::Call => self.call(gvs),
-        //     Instruction::Return => self.on_return(gvs),
-        //     Instruction::LoadFunction(captures) => self.load_function(gvs, captures),
-        //     Instruction::LoadCapture(slot_id) => self.load_capture(gvs, slot_id),
-        //     Instruction::CollectionLen => self.collection_len(gvs),
-        //     Instruction::LoadFromCollection => self.load_from_collection(gvs),
-        //     Instruction::Assign => self.assign(gvs),
-        //     Instruction::AssignVariable(slot_id) => self.assign_variable(slot_id),
-        //     Instruction::AssignCollection => self.assign_collection(gvs),
-        //     Instruction::CallNative(native_id, arguments) => {
-        //         self.call_native(native_stack, native_id, arguments, runner_id)
-        //     }
-        // }?;
+    pub fn run<'a>(&mut self, helper: VMHelper<'a>) -> VMResult<()> {
+        let gvs = helper.gvs;
+        let deserialize = Deserialize::new(self.pc, helper.instructions);
 
-        self.step();
+        match helper.instruction {
+            LDN => self.load_null(gvs),
+            LBT => self.load_true(gvs),
+            LBF => self.load_false(gvs),
+            LDI8 => self.load_integer_8(gvs, deserialize),
+
+            // Instruction::LoadConst(constant) => self.load_const(gvs, constant),
+            // Instruction::LoadVar(slot) => self.load_var(gvs, slot),
+            // Instruction::Jump(offset) => self.jump(offset),
+            // Instruction::Add => self.add(gvs),
+            // Instruction::Minus => self.minus(gvs),
+            // Instruction::Mul => self.mul(gvs),
+            // Instruction::Div => self.div(gvs),
+            // Instruction::Eq => self.eq(gvs),
+            // Instruction::GreaterEq => self.greater_eq(gvs),
+            // Instruction::Greater => self.greater(gvs),
+            // Instruction::LessEq => self.less_eq(gvs),
+            // Instruction::Less => self.less(gvs),
+            // Instruction::NotEq => self.not_eq(gvs),
+            // Instruction::And => self.and(gvs),
+            // Instruction::Or => self.or(gvs),
+            // Instruction::Not => self.not(gvs),
+            // Instruction::Increment => self.increment(gvs),
+            // Instruction::Decrement => self.decrement(gvs),
+            // Instruction::Clone => self.clone(gvs),
+            // Instruction::LoadCollection(size) => self.load_collection(gvs, size),
+            // Instruction::Store => self.store(),
+            // Instruction::Free(size) => self.free(gvs, size),
+            // Instruction::ClearAcc => self.clear_acc(gvs),
+            // Instruction::JumpIfFalse(offset) => self.jump_if(gvs, offset, false),
+            // Instruction::JumpIfTrue(offset) => self.jump_if(gvs, offset, true),
+            // Instruction::Call => self.call(gvs),
+            // Instruction::Return => self.on_return(gvs),
+            // Instruction::LoadFunction(captures) => self.load_function(gvs, captures),
+            // Instruction::LoadCapture(slot_id) => self.load_capture(gvs, slot_id),
+            // Instruction::CollectionLen => self.collection_len(gvs),
+            // Instruction::LoadFromCollection => self.load_from_collection(gvs),
+            // Instruction::Assign => self.assign(gvs),
+            // Instruction::AssignVariable(slot_id) => self.assign_variable(slot_id),
+            // Instruction::AssignCollection => self.assign_collection(gvs),
+            // Instruction::CallNative(native_id, arguments) => {
+            //     self.call_native(native_stack, native_id, arguments, runner_id)
+            // }
+            //
+            _ => Err(VMError::from("Unknown instruction opcode")),
+        }?;
 
         Ok(())
-    }
-
-    pub fn program_counter(&self) -> Pointer {
-        self.program_counter
     }
 }

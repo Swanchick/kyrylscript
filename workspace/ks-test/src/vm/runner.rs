@@ -22,7 +22,7 @@ fn load_const_null() -> VMResult<()> {
 
     let driver = KsDriver::runner(vec![LDN])?;
 
-    assert_eq!(driver.runner.program_counter(), 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
 
@@ -37,7 +37,7 @@ fn load_const_int_8() -> VMResult<()> {
 
     let driver = KsDriver::runner(vec![LDI8, int as u8])?;
 
-    assert_eq!(driver.runner.program_counter(), 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
 
@@ -53,7 +53,7 @@ fn load_const_int_16() -> VMResult<()> {
 
     let driver = KsDriver::runner(vec![LDI16, le_int[0], le_int[1]])?;
 
-    assert_eq!(driver.runner.program_counter(), 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
 
@@ -69,7 +69,7 @@ fn load_const_int_32() -> VMResult<()> {
 
     let driver = KsDriver::runner(vec![LDI32, le_int[0], le_int[1], le_int[2], le_int[3]])?;
 
-    assert_eq!(driver.runner.program_counter(), 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
 
@@ -87,7 +87,7 @@ fn load_const_int() -> VMResult<()> {
         LDI, le_int[0], le_int[1], le_int[2], le_int[3], le_int[4], le_int[5], le_int[6], le_int[7],
     ])?;
 
-    assert_eq!(driver.runner.program_counter(), 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
 
@@ -113,7 +113,7 @@ fn load_const_float() -> VMResult<()> {
         le_float[7],
     ])?;
 
-    assert_eq!(driver.runner.program_counter(), 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
 
@@ -131,7 +131,7 @@ fn load_const_string() -> VMResult<()> {
 
     let driver = KsDriver::runner(instruction)?;
 
-    assert_eq!(driver.runner.program_counter(), 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
     assert_eq!(driver.gvs.collections[0], Collection::String(string));
@@ -146,7 +146,7 @@ fn load_const_boolean_false() -> VMResult<()> {
 
     let driver = KsDriver::runner(vec![LBF])?;
 
-    assert_eq!(driver.runner.program_counter(), 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
 
@@ -160,7 +160,7 @@ fn load_const_boolean_true() -> VMResult<()> {
 
     let driver = KsDriver::runner(vec![LBT])?;
 
-    assert_eq!(driver.runner.program_counter(), 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
 
@@ -179,7 +179,7 @@ fn load_const_with_free_storage() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(None, gvs, vec![LDI8, le_integer[0]])?;
 
-    assert_eq!(driver.runner.program_counter(), 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
 
@@ -212,7 +212,7 @@ fn load_var_8() -> VMResult<()> {
     let variable = driver.gvs.storage[0].clone().unwrap();
 
     assert_eq!(variable.owners, 2);
-    assert_eq!(driver.runner.program_counter(), 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
 
     Ok(())
@@ -239,7 +239,7 @@ fn load_var_16() -> VMResult<()> {
     let variable = driver.gvs.storage[0].clone().unwrap();
 
     assert_eq!(variable.owners, 2);
-    assert_eq!(driver.runner.program_counter(), 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
 
     Ok(())
@@ -266,7 +266,7 @@ fn load_var() -> VMResult<()> {
     let variable = driver.gvs.storage[0].clone().unwrap();
 
     assert_eq!(variable.owners, 2);
-    assert_eq!(driver.runner.program_counter(), 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
 
     Ok(())
@@ -313,7 +313,7 @@ fn jump_positive_8() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, None, vec![JMP8, jump_offset as u8])?;
 
-    assert_eq!(driver.runner.program_counter(), jump_offset as Pointer + 1);
+    assert_eq!(driver.runner.pc, jump_offset as Pointer + 1);
     assert_eq!(driver.runner.prevent_step, false);
 
     Ok(())
@@ -326,7 +326,7 @@ fn jump_positive_16() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, None, vec![JMP16, jump_offset as u8, 0])?;
 
-    assert_eq!(driver.runner.program_counter(), jump_offset as Pointer + 1);
+    assert_eq!(driver.runner.pc, jump_offset as Pointer + 1);
     assert_eq!(driver.runner.prevent_step, false);
 
     Ok(())
@@ -339,7 +339,7 @@ fn jump_positive() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, None, vec![JMP, jump_offset as u8, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.program_counter(), jump_offset as Pointer + 1);
+    assert_eq!(driver.runner.pc, jump_offset as Pointer + 1);
     assert_eq!(driver.runner.prevent_step, false);
 
     Ok(())
@@ -365,7 +365,7 @@ fn jump_negative() -> VMResult<()> {
     )?;
 
     assert_eq!(
-        driver.runner.program_counter(),
+        driver.runner.pc,
         initial_pc.saturating_add_signed(jump_offset as isize) as Pointer + 1
     );
     assert_eq!(driver.runner.prevent_step, false);
@@ -408,7 +408,7 @@ fn add_string_string() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![ADD])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.runner.acc.get(0), Some(&2));
 
@@ -561,7 +561,7 @@ fn eq_string_string() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![EQ])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.runner.acc.get(0), Some(&2));
 
@@ -615,7 +615,7 @@ fn not_eq_string_string() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![NE])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.runner.acc.get(0), Some(&2));
 
@@ -719,7 +719,7 @@ fn not_true() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![NOT])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.runner.acc.get(0).unwrap(), &1);
 
@@ -753,7 +753,7 @@ fn not_false() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![NOT])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.runner.acc.get(0).unwrap(), &1);
 
@@ -787,7 +787,7 @@ fn increment() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![INC])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.runner.acc.get(0).unwrap(), &0);
 
@@ -819,7 +819,7 @@ fn decrement() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![DEC])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.runner.acc.get(0).unwrap(), &0);
 
@@ -851,7 +851,7 @@ fn clone_primitive() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![CPY])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.runner.acc.get(0).unwrap(), &1);
 
@@ -893,7 +893,7 @@ fn clone_collection_string() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![CPY])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.runner.acc.get(0).unwrap(), &1);
 
@@ -964,7 +964,7 @@ fn clone_collection() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![CPY])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.runner.acc.get(0).unwrap(), &9);
 
@@ -1120,7 +1120,7 @@ fn store() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![STR])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.acc.len(), 0);
 
     assert_eq!(driver.runner.stack.len(), 1);
@@ -1144,7 +1144,7 @@ fn free_primitive() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![FREE, 3, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
 
     assert_eq!(driver.runner.stack.len(), 0);
 
@@ -1172,7 +1172,7 @@ fn free_primitive_8() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![FREE8, 3])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
 
     assert_eq!(driver.runner.stack.len(), 0);
 
@@ -1200,7 +1200,7 @@ fn free_primitive_16() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![FREE, 3, 0])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
 
     assert_eq!(driver.runner.stack.len(), 0);
 
@@ -1225,7 +1225,7 @@ fn free_string() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![FREE, 1, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
 
     assert_eq!(driver.runner.stack.len(), 0);
 
@@ -1260,7 +1260,7 @@ fn free_collection() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![FREE, 1, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
 
     assert_eq!(driver.runner.stack.len(), 0);
 
@@ -1309,7 +1309,7 @@ fn free_collection_matrix() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![FREE, 1, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
 
     assert_eq!(driver.runner.stack.len(), 0);
 
@@ -1360,7 +1360,7 @@ fn clear_acc() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![CLR])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
 
     assert_eq!(driver.runner.acc.len(), 0);
 
@@ -1389,7 +1389,7 @@ fn jump_if_false_if_actually_false() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![JZ, jump_offset as u8, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.program_counter(), jump_offset as usize + 1);
+    assert_eq!(driver.runner.pc, jump_offset as usize + 1);
     assert_eq!(driver.runner.prevent_step, false);
 
     assert_eq!(driver.runner.acc.len(), 0);
@@ -1409,7 +1409,7 @@ fn jump_if_false_if_actually_false_8() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![JZ8, jump_offset as u8])?;
 
-    assert_eq!(driver.runner.program_counter(), jump_offset as usize + 1);
+    assert_eq!(driver.runner.pc, jump_offset as usize + 1);
     assert_eq!(driver.runner.prevent_step, false);
 
     assert_eq!(driver.runner.acc.len(), 0);
@@ -1429,7 +1429,7 @@ fn jump_if_false_if_actually_false_16() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![JZ16, jump_offset as u8, 0])?;
 
-    assert_eq!(driver.runner.program_counter(), jump_offset as usize + 1);
+    assert_eq!(driver.runner.pc, jump_offset as usize + 1);
     assert_eq!(driver.runner.prevent_step, false);
 
     assert_eq!(driver.runner.acc.len(), 0);
@@ -1449,7 +1449,7 @@ fn jump_if_false_if_actually_true() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![JZ, jump_offset as u8, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.program_counter(), 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.prevent_step, false);
 
     assert_eq!(driver.runner.acc.len(), 0);
@@ -1469,7 +1469,7 @@ fn jump_if_true_if_actually_false() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![JNZ, jump_offset as u8, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.program_counter(), 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.prevent_step, false);
 
     assert_eq!(driver.runner.acc.len(), 0);
@@ -1489,7 +1489,7 @@ fn jump_if_true_if_actually_true() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![JNZ, jump_offset as u8, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.program_counter(), jump_offset as Pointer + 1);
+    assert_eq!(driver.runner.pc, jump_offset as Pointer + 1);
     assert_eq!(driver.runner.prevent_step, false);
 
     assert_eq!(driver.runner.acc.len(), 0);
@@ -1509,7 +1509,7 @@ fn jump_if_true_if_actually_true_8() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![JNZ8, jump_offset as u8])?;
 
-    assert_eq!(driver.runner.program_counter(), jump_offset as Pointer + 1);
+    assert_eq!(driver.runner.pc, jump_offset as Pointer + 1);
     assert_eq!(driver.runner.prevent_step, false);
 
     assert_eq!(driver.runner.acc.len(), 0);
@@ -1529,7 +1529,7 @@ fn jump_if_true_if_actually_true_16() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![JNZ16, jump_offset as u8, 0])?;
 
-    assert_eq!(driver.runner.program_counter(), jump_offset as Pointer + 1);
+    assert_eq!(driver.runner.pc, jump_offset as Pointer + 1);
     assert_eq!(driver.runner.prevent_step, false);
 
     assert_eq!(driver.runner.acc.len(), 0);
@@ -1548,7 +1548,7 @@ fn call() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![CALL, 0, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.program_counter, 20);
+    assert_eq!(driver.runner.pc, 20);
     assert_eq!(driver.runner.call_stack.len(), 1);
     assert_eq!(driver.runner.call_stack[0].return_pointer, 0);
     assert_eq!(driver.runner.call_stack[0].collection_id, 0);
@@ -1573,7 +1573,7 @@ fn call_with_parameters() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![CALL, 2, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.program_counter, 20);
+    assert_eq!(driver.runner.pc, 20);
     assert_eq!(driver.runner.call_stack.len(), 1);
     assert_eq!(driver.runner.call_stack[0].return_pointer, 0);
     assert_eq!(driver.runner.call_stack[0].collection_id, 0);
@@ -1598,7 +1598,7 @@ fn call_with_parameters_8() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![CALL8, 2])?;
 
-    assert_eq!(driver.runner.program_counter, 20);
+    assert_eq!(driver.runner.pc, 20);
     assert_eq!(driver.runner.call_stack.len(), 1);
     assert_eq!(driver.runner.call_stack[0].return_pointer, 0);
     assert_eq!(driver.runner.call_stack[0].collection_id, 0);
@@ -1623,7 +1623,7 @@ fn call_with_parameters_16() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![CALL16, 2, 0])?;
 
-    assert_eq!(driver.runner.program_counter, 20);
+    assert_eq!(driver.runner.pc, 20);
     assert_eq!(driver.runner.call_stack.len(), 1);
     assert_eq!(driver.runner.call_stack[0].return_pointer, 0);
     assert_eq!(driver.runner.call_stack[0].collection_id, 0);
@@ -1655,7 +1655,7 @@ fn return_instruction() -> VMResult<()> {
     let driver = KsDriver::runner_configured(runner, gvs, vec![RET])?;
 
     assert_eq!(driver.runner.call_stack.len(), 0);
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
 
     Ok(())
 }
@@ -1672,7 +1672,7 @@ fn load_function_empty() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDFN, 0, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.gvs.storage[0], Some(function));
 
     assert_eq!(driver.runner.acc.len(), 1);
@@ -1693,7 +1693,7 @@ fn load_function_empty_8() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDFN8, 0, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.gvs.storage[0], Some(function));
 
     assert_eq!(driver.runner.acc.len(), 1);
@@ -1714,7 +1714,7 @@ fn load_function_empty_16() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDFN16, 0, 0])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.gvs.storage[0], Some(function));
 
     assert_eq!(driver.runner.acc.len(), 1);
@@ -1739,7 +1739,7 @@ fn load_function_capture() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDFN, 2, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.gvs.storage[0], Some(function));
 
     assert_eq!(driver.runner.acc.len(), 1);
@@ -1769,7 +1769,7 @@ fn free_function_with_capture() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![FREE8, 1])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
 
     assert_eq!(driver.runner.stack.len(), 0);
 
@@ -1804,7 +1804,7 @@ fn call_stack_should_own_collection() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![CALL8, 0])?;
 
-    assert_eq!(driver.runner.program_counter, 20);
+    assert_eq!(driver.runner.pc, 20);
     assert_eq!(driver.runner.call_stack.len(), 1);
     assert_eq!(driver.runner.call_stack[0].return_pointer, 0);
     assert_eq!(driver.runner.call_stack[0].collection_id, 0);
@@ -1835,7 +1835,7 @@ fn load_capture() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDCP, 0, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
 
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.runner.acc.get(0), Some(&1));
@@ -1864,7 +1864,7 @@ fn load_capture_8() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDCP8, 0])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
 
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.runner.acc.get(0), Some(&1));
@@ -1893,7 +1893,7 @@ fn load_capture_16() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDCP16, 0, 0])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
 
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.runner.acc.get(0), Some(&1));
@@ -1925,7 +1925,7 @@ fn collection_len() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![LEN])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
 
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.runner.acc.get(0), Some(&4));
@@ -1954,7 +1954,7 @@ fn collection_len_string() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![LEN])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
 
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.runner.acc.get(0), Some(&1));
@@ -1987,7 +1987,7 @@ fn load_from_collection_stack() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDFC])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
 
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.runner.acc.get(0), Some(&1));
@@ -2020,7 +2020,7 @@ fn load_from_collection_string() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDFC])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
 
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.runner.acc.get(0), Some(&1));
@@ -2058,7 +2058,7 @@ fn variable_assign() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![ASN])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
 
     assert_eq!(driver.gvs.storage.len(), 2);
     assert_eq!(driver.gvs.storage[0], None);
@@ -2100,7 +2100,7 @@ fn collection_assign() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![ASN])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
 
     assert_eq!(driver.gvs.storage.len(), 5);
     assert_eq!(driver.gvs.storage[1], None);
@@ -2135,7 +2135,7 @@ fn assign_variable() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![ASV, 0, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.assign, Assign::Variable(0));
 
     Ok(())
@@ -2163,7 +2163,7 @@ fn assign_variable_8() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![ASV8, 0])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.assign, Assign::Variable(0));
 
     Ok(())
@@ -2191,7 +2191,7 @@ fn assign_variable_16() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![ASV16, 0, 0])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.assign, Assign::Variable(0));
 
     Ok(())
@@ -2224,7 +2224,7 @@ fn assign_collection_from_variable() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![ASC])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.assign, Assign::Collection(0, 1));
 
     assert_eq!(driver.runner.acc.len(), 0);
@@ -2273,7 +2273,7 @@ fn assign_collection_from_collection() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![ASC])?;
 
-    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.pc, 1);
     assert_eq!(driver.runner.assign, Assign::Collection(1, 2));
 
     assert_eq!(driver.runner.acc.len(), 0);

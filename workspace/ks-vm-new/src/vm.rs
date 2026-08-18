@@ -57,7 +57,7 @@ impl VM {
 
         for runner_id in 0..self.runners.len() {
             let runner = &mut self.runners[runner_id];
-            let pc = runner.program_counter();
+            let pc = runner.pc;
 
             if let Some(instruction) = instructions.get(pc) {
                 let instruction = *instruction;
