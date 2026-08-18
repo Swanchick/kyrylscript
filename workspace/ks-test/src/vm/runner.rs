@@ -1,7 +1,8 @@
+use ks_vm_new::ir::instructions::LDN;
 use ks_vm_new::types::Pointer;
-use ks_vm_new::{Assign, KsCall, NativeCall, NativeHelper, NativeRegistry, Runner, STRING_TYPE};
+use ks_vm_new::{Assign, KsCall, NativeHelper, NativeRegistry, STRING_TYPE};
 use ks_vm_new::{
-    CallStack, Collection, Constant, Function, GVS, Instruction, Stack, VMError, VMResult, Variable,
+    CallStack, Collection, Constant, Function, Instruction, Stack, VMError, VMResult, Variable,
 };
 
 use crate::drivers::KsDriver;
@@ -13,7 +14,7 @@ fn load_const_null() -> VMResult<()> {
     let mut variable = Variable::null();
     variable.owners = 1;
 
-    let driver = KsDriver::runner(Instruction::LoadConst(Constant::Null))?;
+    let driver = KsDriver::runner(vec![LDN])?;
 
     assert_eq!(driver.runner.program_counter(), 1);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
@@ -1728,24 +1729,26 @@ fn assign_collection_from_collection() -> VMResult<()> {
 
 #[test]
 fn native_call_was_added() -> VMResult<()> {
-    let mut gvs = GVS::new();
-    let mut native_stack = Vec::new();
-    let mut runner = Runner::new();
+    // let mut gvs = GVS::new();
+    // let mut native_stack = Vec::new();
+    // let mut runner = Runner::new();
 
-    let native_id = 1;
-    let arguments = 5;
+    // let native_id = 1;
+    // let arguments = 5;
 
-    runner.run(
-        0,
-        Instruction::CallNative(native_id, arguments),
-        &mut gvs,
-        &mut native_stack,
-    )?;
+    // runner.run(
+    //     0,
+    //     Instruction::CallNative(native_id, arguments),
+    //     &mut gvs,
+    //     &mut native_stack,
+    // )?;
 
-    assert_eq!(native_stack.len(), 1);
-    assert_eq!(native_stack[0], NativeCall::new(1, 5, 0));
+    // assert_eq!(native_stack.len(), 1);
+    // assert_eq!(native_stack[0], NativeCall::new(1, 5, 0));
 
-    Ok(())
+    // Ok(())
+    //
+    todo!("REFACTOR")
 }
 
 struct TestPrint {

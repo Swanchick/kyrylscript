@@ -1,46 +1,29 @@
 #[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
-
-use crate::VMResult;
-use crate::ir::deserialize::Deserialize;
+use alloc::vec::Box;
 
 use super::instructions::Instruction;
 
 #[derive(Debug, PartialEq)]
 pub struct Program {
-    instructions: Vec<Instruction>,
+    pub instructions: Box<[u8]>,
 }
 
-impl From<Vec<Instruction>> for Program {
-    fn from(instructions: Vec<Instruction>) -> Self {
-        Self { instructions }
+impl From<Vec<u8>> for Program {
+    fn from(value: Vec<u8>) -> Self {
+        Program {
+            instructions: value.into_boxed_slice(),
+        }
     }
 }
 
 impl Program {
-    pub fn new() -> Self {
-        Self {
-            instructions: Vec::new(),
-        }
-    }
-
-    pub fn instructions(&self) -> &[Instruction] {
-        &self.instructions
-    }
-
-    pub fn deserialize(buffer: Vec<u8>) -> VMResult<Self> {
-        let deserialize = Deserialize::from(buffer);
-        let program = deserialize.deserialize()?;
-        Ok(program)
-    }
-
-    pub fn serialize(self) -> Vec<u8> {
-        let mut out = Vec::<u8>::new();
-        for instruction in self.instructions {
+    pub fn serialize(instructions: Vec<Instruction>) -> Program {
+        let mut out = Vec::new();
+        for instruction in instructions {
             let mut bytes = instruction.to_bytes();
             out.append(&mut bytes);
         }
 
-        out
+        Program::from(out)
     }
 }

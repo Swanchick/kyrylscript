@@ -43,25 +43,34 @@ pub const FREE: u8 = 0x42;
 pub const CALL: u8 = 0x43;
 pub const NCALL: u8 = 0x44;
 
-// Constants (0x50-0x5F)
-pub const LDI: u8 = 0x50;
-pub const LDF: u8 = 0x51;
-pub const LDS: u8 = 0x52;
-pub const LBT: u8 = 0x53;
-pub const LBF: u8 = 0x54;
-pub const LDN: u8 = 0x55;
-pub const LDFN: u8 = 0x56;
-pub const LDC: u8 = 0x57;
+// MEMORY (0x50-0x5F)
+pub const STR: u8 = 0x50;
+pub const ASN: u8 = 0x51;
+pub const ASV: u8 = 0x52;
+pub const ASC: u8 = 0x53;
+pub const LDV: u8 = 0x54;
+pub const LDCP: u8 = 0x55;
+pub const LDFC: u8 = 0x56;
+pub const LEN: u8 = 0x57;
 
-// MEMORY (0x60-0x6F)
-pub const STR: u8 = 0x60;
-pub const ASN: u8 = 0x61;
-pub const ASV: u8 = 0x62;
-pub const ASC: u8 = 0x63;
-pub const LDV: u8 = 0x64;
-pub const LDCP: u8 = 0x65;
-pub const LDFC: u8 = 0x66;
-pub const LEN: u8 = 0x67; // bruh
+// Standard constants (0x60-0x6F)
+pub const LDI: u8 = 0x60;
+pub const LDF: u8 = 0x61;
+pub const LDS: u8 = 0x62;
+pub const LBT: u8 = 0x63;
+pub const LBF: u8 = 0x64;
+pub const LDN: u8 = 0x65;
+pub const LDFN: u8 = 0x66;
+pub const LDC: u8 = 0x67;
+
+// Small sized constants (0x70-0x7F)
+pub const LDI8: u8 = 0x70;
+pub const LDI16: u8 = 0x71;
+pub const LDI32: u8 = 0x72;
+pub const LDFN8: u8 = 0x73;
+pub const LDFN16: u8 = 0x74;
+pub const LDC8: u8 = 0x75;
+pub const LDC16: u8 = 0x76;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Instruction {
@@ -200,15 +209,15 @@ impl Instruction {
             Self::Jump(offset) => self.opcode_value_u32(JMP, *offset as u32),
             Self::Store => vec![STR],
             Self::Assign => vec![ASN],
-            Self::AssignVariable(variable_id) => self.opcode_value_u64_dynamic(ASV, *variable_id),
+            Self::AssignVariable(variable_id) => self.opcode_value_u32(ASV, *variable_id),
             Self::AssignCollection => vec![ASC],
             Self::LoadConst(constant) => self.load_const(constant),
-            Self::LoadVar(variable_id) => self.opcode_value_u64_dynamic(LDV, *variable_id),
+            Self::LoadVar(variable_id) => self.opcode_value_u32(LDV, *variable_id),
             Self::Call(arguments) => self.opcode_value_u32(CALL, *arguments as u32),
             Self::CallNative(native_id, arguments) => {
                 self.native(*native_id as u32, *arguments as u32)
             }
-            Self::LoadCapture(captured) => self.opcode_value_u64_dynamic(LDCP, *captured),
+            Self::LoadCapture(captured) => self.opcode_value_u32(LDCP, *captured),
             Self::LoadFunction(size) => self.opcode_value_u32(LDFN, *size as u32),
             Self::LoadCollection(size) => self.opcode_value_u32(LDC, *size as u32),
             Self::LoadFromCollection => vec![LDFC],

@@ -46,7 +46,7 @@ impl Environment {
     pub fn current(&self) -> KsResult<VariableId> {
         let variables = self.last_function()?;
 
-        Ok(self.function_variables_len(variables) as u64)
+        Ok(self.function_variables_len(variables) as u32)
     }
 
     pub fn temp_collection(&mut self) -> Option<CollectionId> {

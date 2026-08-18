@@ -4,24 +4,13 @@ use alloc::vec::Vec;
 #[cfg(not(feature = "std"))]
 use alloc::boxed::Box;
 
-use crate::{GVS, Instruction, KsCall, NativeCall, NativeRegistry, Program, Runner, VMResult};
+use crate::{GVS, KsCall, NativeCall, NativeRegistry, Program, Runner, VMHelper, VMResult};
 
 pub struct VM {
     program: Program,
     pub runners: Vec<Runner>,
     pub gvs: GVS,
     pub native: NativeRegistry,
-}
-
-impl From<Vec<Instruction>> for VM {
-    fn from(instructions: Vec<Instruction>) -> Self {
-        Self {
-            program: Program::from(instructions),
-            runners: Vec::new(),
-            gvs: GVS::new(),
-            native: NativeRegistry::new(),
-        }
-    }
 }
 
 impl From<Program> for VM {
@@ -62,23 +51,31 @@ impl VM {
     }
 
     pub fn step(&mut self) -> VMResult<()> {
-        let instructions = self.program.instructions();
-        let mut native_calls = Vec::new();
+        let instructions = self.program.instructions.as_ref();
+        let mut native_stack = Vec::new();
         let mut empty_runner_ids = Vec::new();
 
         for runner_id in 0..self.runners.len() {
             let runner = &mut self.runners[runner_id];
             let pc = runner.program_counter();
 
-            if let Some(instruction) = instructions.get(pc as usize) {
-                let instruction = instruction.clone();
-                runner.run(runner_id, instruction, &mut self.gvs, &mut native_calls)?;
+            if let Some(instruction) = instructions.get(pc) {
+                let instruction = *instruction;
+                let vm_helper = VMHelper {
+                    instruction,
+                    instructions,
+                    gvs: &mut self.gvs,
+                    native_stack: &mut native_stack,
+                    runner_id,
+                };
+
+                runner.run(vm_helper)?;
             } else {
                 empty_runner_ids.push(runner_id);
             }
         }
 
-        while let Some(native_call) = native_calls.pop() {
+        while let Some(native_call) = native_stack.pop() {
             self.call_native(native_call)?;
         }
 

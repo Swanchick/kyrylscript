@@ -7,7 +7,7 @@ use ks_global::utils::ks_result::KsResult;
 use ks_std::ks_register_std;
 use ks_vm_new::{
     Assign, CallStack, Collection, GVS, Instruction, NativeRegistry, Program, Runner, Stack, VM,
-    VMError, VMResult, Variable,
+    VMError, VMHelper, VMResult, Variable,
 };
 
 use super::runner_driver::RunnerDriver;
@@ -68,11 +68,19 @@ impl KsDriver {
         Ok(compiler)
     }
 
-    pub fn runner(instruction: Instruction) -> VMResult<RunnerDriver> {
+    pub fn runner(instructions: Vec<u8>) -> VMResult<RunnerDriver> {
         let mut gvs = GVS::new();
         let mut runner = Runner::new();
 
-        runner.run(0, instruction, &mut gvs, &mut Vec::new())?;
+        let vm_helper = VMHelper {
+            instruction: instructions[0],
+            instructions: &instructions,
+            gvs: &mut gvs,
+            native_stack: &mut Vec::new(),
+            runner_id: 0,
+        };
+
+        runner.run(vm_helper)?;
 
         Ok(RunnerDriver::new(runner, gvs))
     }

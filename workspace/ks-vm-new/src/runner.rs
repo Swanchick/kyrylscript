@@ -6,7 +6,7 @@ use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
 use crate::types::{Arguments, NativeId};
-use crate::{Assign, Function, NativeCall, VMError, VMResult};
+use crate::{Assign, Function, NativeCall, VMError, VMHelper, VMResult, vm_helper};
 
 use super::call_stack::CallStack;
 use super::environment::variable::{
@@ -733,52 +733,46 @@ impl Runner {
         Ok(())
     }
 
-    pub fn run(
-        &mut self,
-        runner_id: usize,
-        instruction: Instruction,
-        gvs: &mut GVS,
-        native_stack: &mut Vec<NativeCall>,
-    ) -> VMResult<()> {
-        match instruction {
-            Instruction::LoadConst(constant) => self.load_const(gvs, constant),
-            Instruction::LoadVar(slot) => self.load_var(gvs, slot),
-            Instruction::Jump(offset) => self.jump(offset),
-            Instruction::Add => self.add(gvs),
-            Instruction::Minus => self.minus(gvs),
-            Instruction::Mul => self.mul(gvs),
-            Instruction::Div => self.div(gvs),
-            Instruction::Eq => self.eq(gvs),
-            Instruction::GreaterEq => self.greater_eq(gvs),
-            Instruction::Greater => self.greater(gvs),
-            Instruction::LessEq => self.less_eq(gvs),
-            Instruction::Less => self.less(gvs),
-            Instruction::NotEq => self.not_eq(gvs),
-            Instruction::And => self.and(gvs),
-            Instruction::Or => self.or(gvs),
-            Instruction::Not => self.not(gvs),
-            Instruction::Increment => self.increment(gvs),
-            Instruction::Decrement => self.decrement(gvs),
-            Instruction::Clone => self.clone(gvs),
-            Instruction::LoadCollection(size) => self.load_collection(gvs, size),
-            Instruction::Store => self.store(),
-            Instruction::Free(size) => self.free(gvs, size),
-            Instruction::ClearAcc => self.clear_acc(gvs),
-            Instruction::JumpIfFalse(offset) => self.jump_if(gvs, offset, false),
-            Instruction::JumpIfTrue(offset) => self.jump_if(gvs, offset, true),
-            Instruction::Call(arguments) => self.call(gvs, arguments),
-            Instruction::Return => self.on_return(gvs),
-            Instruction::LoadFunction(captures) => self.load_function(gvs, captures),
-            Instruction::LoadCapture(slot_id) => self.load_capture(gvs, slot_id),
-            Instruction::CollectionLen => self.collection_len(gvs),
-            Instruction::LoadFromCollection => self.load_from_collection(gvs),
-            Instruction::Assign => self.assign(gvs),
-            Instruction::AssignVariable(slot_id) => self.assign_variable(slot_id),
-            Instruction::AssignCollection => self.assign_collection(gvs),
-            Instruction::CallNative(native_id, arguments) => {
-                self.call_native(native_stack, native_id, arguments, runner_id)
-            }
-        }?;
+    pub fn run<'a>(&mut self, vm_helper: VMHelper<'a>) -> VMResult<()> {
+        // match instruction {
+        //     Instruction::LoadConst(constant) => self.load_const(gvs, constant),
+        //     Instruction::LoadVar(slot) => self.load_var(gvs, slot),
+        //     Instruction::Jump(offset) => self.jump(offset),
+        //     Instruction::Add => self.add(gvs),
+        //     Instruction::Minus => self.minus(gvs),
+        //     Instruction::Mul => self.mul(gvs),
+        //     Instruction::Div => self.div(gvs),
+        //     Instruction::Eq => self.eq(gvs),
+        //     Instruction::GreaterEq => self.greater_eq(gvs),
+        //     Instruction::Greater => self.greater(gvs),
+        //     Instruction::LessEq => self.less_eq(gvs),
+        //     Instruction::Less => self.less(gvs),
+        //     Instruction::NotEq => self.not_eq(gvs),
+        //     Instruction::And => self.and(gvs),
+        //     Instruction::Or => self.or(gvs),
+        //     Instruction::Not => self.not(gvs),
+        //     Instruction::Increment => self.increment(gvs),
+        //     Instruction::Decrement => self.decrement(gvs),
+        //     Instruction::Clone => self.clone(gvs),
+        //     Instruction::LoadCollection(size) => self.load_collection(gvs, size),
+        //     Instruction::Store => self.store(),
+        //     Instruction::Free(size) => self.free(gvs, size),
+        //     Instruction::ClearAcc => self.clear_acc(gvs),
+        //     Instruction::JumpIfFalse(offset) => self.jump_if(gvs, offset, false),
+        //     Instruction::JumpIfTrue(offset) => self.jump_if(gvs, offset, true),
+        //     Instruction::Call => self.call(gvs),
+        //     Instruction::Return => self.on_return(gvs),
+        //     Instruction::LoadFunction(captures) => self.load_function(gvs, captures),
+        //     Instruction::LoadCapture(slot_id) => self.load_capture(gvs, slot_id),
+        //     Instruction::CollectionLen => self.collection_len(gvs),
+        //     Instruction::LoadFromCollection => self.load_from_collection(gvs),
+        //     Instruction::Assign => self.assign(gvs),
+        //     Instruction::AssignVariable(slot_id) => self.assign_variable(slot_id),
+        //     Instruction::AssignCollection => self.assign_collection(gvs),
+        //     Instruction::CallNative(native_id, arguments) => {
+        //         self.call_native(native_stack, native_id, arguments, runner_id)
+        //     }
+        // }?;
 
         self.step();
 

@@ -2,7 +2,7 @@ use crate::utils::VMError;
 
 pub type CaptureSize = usize;
 pub type Offset = i32;
-pub type VariableId = u64;
+pub type VariableId = u32;
 pub type Pointer = usize;
 
 pub type Slot = u64;
