@@ -203,7 +203,7 @@ impl KsDriver {
     pub fn runner_configured(
         runner: Option<Runner>,
         gvs: Option<GVS>,
-        instruction: Instruction,
+        instruction: Vec<u8>,
     ) -> VMResult<RunnerDriver> {
         let mut gvs = if let Some(gvs) = gvs { gvs } else { GVS::new() };
         let mut runner = if let Some(runner) = runner {
@@ -212,7 +212,15 @@ impl KsDriver {
             Runner::new()
         };
 
-        runner.run(0, instruction, &mut gvs, &mut Vec::new())?;
+        let vm_helper = VMHelper {
+            instruction: instruction[0],
+            instructions: &instruction,
+            gvs: &mut gvs,
+            native_stack: &mut Vec::new(),
+            runner_id: 0,
+        };
+
+        runner.run(vm_helper)?;
         Ok(RunnerDriver::new(runner, gvs))
     }
 
