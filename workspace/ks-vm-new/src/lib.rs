@@ -5,6 +5,7 @@ extern crate alloc;
 
 mod assign;
 mod call_stack;
+mod data_size;
 mod environment;
 pub mod ir;
 mod native;

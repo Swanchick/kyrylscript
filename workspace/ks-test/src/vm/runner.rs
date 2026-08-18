@@ -37,7 +37,7 @@ fn load_const_int_8() -> VMResult<()> {
 
     let driver = KsDriver::runner(vec![LDI8, int as u8])?;
 
-    assert_eq!(driver.runner.pc, 3);
+    assert_eq!(driver.runner.pc, 2);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
 
@@ -53,7 +53,7 @@ fn load_const_int_16() -> VMResult<()> {
 
     let driver = KsDriver::runner(vec![LDI16, le_int[0], le_int[1]])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 3);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
 
@@ -69,7 +69,7 @@ fn load_const_int_32() -> VMResult<()> {
 
     let driver = KsDriver::runner(vec![LDI32, le_int[0], le_int[1], le_int[2], le_int[3]])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 5);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
 
@@ -87,7 +87,7 @@ fn load_const_int() -> VMResult<()> {
         LDI, le_int[0], le_int[1], le_int[2], le_int[3], le_int[4], le_int[5], le_int[6], le_int[7],
     ])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 9);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
 

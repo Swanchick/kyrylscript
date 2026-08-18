@@ -5,8 +5,9 @@ use alloc::string::{String, ToString};
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
+use crate::data_size::DataSize64;
 use crate::ir::deserialize::{self, Deserialize};
-use crate::ir::instructions::{LBF, LBT, LDI, LDI8, LDN};
+use crate::ir::instructions::{LBF, LBT, LDI, LDI8, LDI16, LDI32, LDN};
 use crate::types::{Arguments, NativeId};
 use crate::{Assign, Function, NativeCall, VMError, VMHelper, VMResult};
 
@@ -72,12 +73,23 @@ impl Runner {
         Ok(())
     }
 
-    fn load_integer_8(&mut self, gvs: &mut GVS, deserialize: Deserialize) -> VMResult<()> {
-        println!("PC {:?}", self.pc);
+    fn load_integer(
+        &mut self,
+        gvs: &mut GVS,
+        deserialize: Deserialize,
+        data_size: DataSize64,
+    ) -> VMResult<()> {
+        let number = match data_size {
+            DataSize64::Byte => deserialize.parse_u8(),
+            DataSize64::Word => deserialize.parse_u16(),
+            DataSize64::DWord => deserialize.parse_u32(),
+            DataSize64::QWord => deserialize.parse_u64(),
+        }? as i64;
 
-        let variable = Variable::from(deserialize.parse_u8()? as i64);
+        let variable = Variable::from(number);
         self.acc.push(gvs, variable)?;
-        self.step(3)?;
+        self.step(data_size.instruction_size())?;
+
         Ok(())
     }
 
@@ -769,7 +781,10 @@ impl Runner {
             LDN => self.load_null(gvs),
             LBT => self.load_true(gvs),
             LBF => self.load_false(gvs),
-            LDI8 => self.load_integer_8(gvs, deserialize),
+            LDI8 => self.load_integer(gvs, deserialize, DataSize64::Byte),
+            LDI16 => self.load_integer(gvs, deserialize, DataSize64::Word),
+            LDI32 => self.load_integer(gvs, deserialize, DataSize64::DWord),
+            LDI => self.load_integer(gvs, deserialize, DataSize64::QWord),
 
             // Instruction::LoadConst(constant) => self.load_const(gvs, constant),
             // Instruction::LoadVar(slot) => self.load_var(gvs, slot),
