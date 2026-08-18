@@ -5,7 +5,7 @@ use ks_vm_new::ir::instructions::{
     LDV8, LDV16, LE, LEN, LT, MUL, NE, NOT, OR, RET, STR, SUB,
 };
 use ks_vm_new::types::Pointer;
-use ks_vm_new::{Assign, KsCall, NativeHelper, NativeRegistry, STRING_TYPE, VMHelper};
+use ks_vm_new::{Assign, VMHelper};
 use ks_vm_new::{
     CallStack, Collection, Function, GVS, Instruction, NativeCall, Runner, Stack, VMError,
     VMResult, Variable,
@@ -2304,38 +2304,6 @@ fn native_call_was_added() -> VMResult<()> {
 
     assert_eq!(native_stack.len(), 1);
     assert_eq!(native_stack[0], NativeCall::new(1, 5, 0));
-
-    Ok(())
-}
-
-struct TestPrint {
-    output: String,
-}
-
-impl KsCall for TestPrint {
-    fn call(&mut self, arguments: usize, helper: NativeHelper) -> VMResult<()> {
-        let gvs = helper.gvs;
-
-        for _ in 0..arguments {
-            let variable = helper.runner.acc.pop(gvs)?;
-            if variable.value_type != STRING_TYPE {
-                continue;
-            }
-
-            let string = gvs.collection_string(variable.value)?;
-            self.output.push_str(string);
-        }
-
-        Ok(())
-    }
-}
-
-#[test]
-fn call_native() -> VMResult<()> {
-    let mut native_registry = NativeRegistry::new();
-    native_registry.functions.push(Box::new(TestPrint {
-        output: String::new(),
-    }));
 
     Ok(())
 }

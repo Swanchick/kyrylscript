@@ -6,15 +6,15 @@ use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
 use crate::types::{Arguments, NativeId};
-use crate::{Assign, Function, NativeCall, VMError, VMHelper, VMResult, vm_helper};
+use crate::{Assign, Function, NativeCall, VMError, VMHelper, VMResult};
 
+use super::Constant;
 use super::call_stack::CallStack;
 use super::environment::variable::{
     BOOLEAN_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STACK_TYPE, STRING_TYPE,
 };
 use super::environment::{GVS, Stack, Variable};
 use super::types::{CaptureSize, CollectionId, Offset, Pointer, Slot, StorageId};
-use super::{Constant, Instruction};
 
 #[derive(Debug)]
 pub struct Runner {

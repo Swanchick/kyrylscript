@@ -55,7 +55,7 @@ fn compile(path: &str) -> KsResult<Vec<u8>> {
     let program = compiler.program();
     println!("{:?}", program);
 
-    let mut bytes = program.serialize();
+    let mut bytes = program.instructions.as_ref().to_vec();
     let bytes_len = bytes.len() as u32;
     let mut bytes_len = bytes_len.to_le_bytes().to_vec();
 
