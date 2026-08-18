@@ -1,9 +1,9 @@
 use std::{env::args, println};
 
 use ks_core::kyryl_script::KyrylScript;
-use ks_global::utils::{ks_error::KsError, ks_result::KsResult};
+use ks_global::utils::ks_result::KsResult;
 use ks_std::ks_register_std;
-use ks_vm_new::{Program, VM};
+// use ks_vm_new::{Program, VM};
 
 fn main() -> KsResult<()> {
     let args: Vec<String> = args().collect();
