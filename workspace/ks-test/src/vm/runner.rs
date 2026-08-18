@@ -113,7 +113,7 @@ fn load_const_float() -> VMResult<()> {
         le_float[7],
     ])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 9);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
 

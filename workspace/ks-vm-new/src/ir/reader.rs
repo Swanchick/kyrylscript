@@ -6,12 +6,12 @@ use alloc::vec::Vec;
 use crate::VMResult;
 use crate::types::Pointer;
 
-pub struct Deserialize<'a> {
+pub struct Reader<'a> {
     pc: Pointer,
     program: &'a [u8],
 }
 
-impl<'a> Deserialize<'a> {
+impl<'a> Reader<'a> {
     pub fn new(pc: Pointer, program: &'a [u8]) -> Self {
         Self { pc, program }
     }

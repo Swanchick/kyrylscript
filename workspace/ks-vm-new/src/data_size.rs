@@ -1,8 +1,8 @@
-const BYTE: isize = 1;
-const WORD: isize = 2;
-const DWORD: isize = 4;
-const QWORD: isize = 8;
-const INSTRUCTION: isize = 1;
+pub const BYTE: isize = 1;
+pub const WORD: isize = 2;
+pub const DWORD: isize = 4;
+pub const QWORD: isize = 8;
+pub const INSTRUCTION: isize = 1;
 
 pub enum DataSize64 {
     Byte,  // 1 byte

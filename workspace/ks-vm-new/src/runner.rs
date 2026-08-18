@@ -5,9 +5,9 @@ use alloc::string::{String, ToString};
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
-use crate::data_size::DataSize64;
-use crate::ir::deserialize::{self, Deserialize};
-use crate::ir::instructions::{LBF, LBT, LDI, LDI8, LDI16, LDI32, LDN};
+use crate::data_size::{DataSize64, INSTRUCTION, QWORD};
+use crate::ir::instructions::{LBF, LBT, LDF, LDI, LDI8, LDI16, LDI32, LDN};
+use crate::ir::reader::Reader;
 use crate::types::{Arguments, NativeId};
 use crate::{Assign, Function, NativeCall, VMError, VMHelper, VMResult};
 
@@ -58,59 +58,48 @@ impl Runner {
 
     fn load_null(&mut self, gvs: &mut GVS) -> VMResult<()> {
         self.acc.push(gvs, Variable::null())?;
-        self.step(1)?;
-        Ok(())
+        self.step(1)
     }
 
     fn load_true(&mut self, gvs: &mut GVS) -> VMResult<()> {
         self.acc.push(gvs, Variable::from(true))?;
-        Ok(())
+        self.step(1)
     }
 
     fn load_false(&mut self, gvs: &mut GVS) -> VMResult<()> {
         self.acc.push(gvs, Variable::from(false))?;
-        self.step(1)?;
-        Ok(())
+        self.step(1)
     }
 
     fn load_integer(
         &mut self,
         gvs: &mut GVS,
-        deserialize: Deserialize,
+        reader: Reader,
         data_size: DataSize64,
     ) -> VMResult<()> {
         let number = match data_size {
-            DataSize64::Byte => deserialize.parse_u8(),
-            DataSize64::Word => deserialize.parse_u16(),
-            DataSize64::DWord => deserialize.parse_u32(),
-            DataSize64::QWord => deserialize.parse_u64(),
+            DataSize64::Byte => reader.parse_u8(),
+            DataSize64::Word => reader.parse_u16(),
+            DataSize64::DWord => reader.parse_u32(),
+            DataSize64::QWord => reader.parse_u64(),
         }? as i64;
 
         let variable = Variable::from(number);
         self.acc.push(gvs, variable)?;
-        self.step(data_size.instruction_size())?;
+        self.step(data_size.instruction_size())
+    }
 
-        Ok(())
+    fn load_float(&mut self, gvs: &mut GVS, reader: Reader) -> VMResult<()> {
+        let number = f64::from_bits(reader.parse_u64()?);
+        let variable = Variable::from(number);
+        self.acc.push(gvs, variable)?;
+        self.step(INSTRUCTION + QWORD)
     }
 
     fn load_const_string(gvs: &mut GVS, string: String) -> Variable {
         let collection_id = gvs.collection_store_string(string);
 
         Variable::string(collection_id)
-    }
-
-    fn load_const(&mut self, gvs: &mut GVS, constant: Constant) -> VMResult<()> {
-        let variable = match constant {
-            Constant::Null => Variable::null(),
-            Constant::Integer(value) => Variable::from(value),
-            Constant::Float(value) => Variable::from(value),
-            Constant::Boolean(value) => Variable::from(value),
-            Constant::String(string) => Self::load_const_string(gvs, string),
-        };
-
-        self.acc.push(gvs, variable)?;
-
-        Ok(())
     }
 
     fn load_var(&mut self, gvs: &mut GVS, slot: Slot) -> VMResult<()> {
@@ -775,17 +764,17 @@ impl Runner {
 
     pub fn run<'a>(&mut self, helper: VMHelper<'a>) -> VMResult<()> {
         let gvs = helper.gvs;
-        let deserialize = Deserialize::new(self.pc, helper.instructions);
+        let reader = Reader::new(self.pc, helper.instructions);
 
         match helper.instruction {
             LDN => self.load_null(gvs),
             LBT => self.load_true(gvs),
             LBF => self.load_false(gvs),
-            LDI8 => self.load_integer(gvs, deserialize, DataSize64::Byte),
-            LDI16 => self.load_integer(gvs, deserialize, DataSize64::Word),
-            LDI32 => self.load_integer(gvs, deserialize, DataSize64::DWord),
-            LDI => self.load_integer(gvs, deserialize, DataSize64::QWord),
-
+            LDI8 => self.load_integer(gvs, reader, DataSize64::Byte),
+            LDI16 => self.load_integer(gvs, reader, DataSize64::Word),
+            LDI32 => self.load_integer(gvs, reader, DataSize64::DWord),
+            LDI => self.load_integer(gvs, reader, DataSize64::QWord),
+            LDF => self.load_float(gvs, reader),
             // Instruction::LoadConst(constant) => self.load_const(gvs, constant),
             // Instruction::LoadVar(slot) => self.load_var(gvs, slot),
             // Instruction::Jump(offset) => self.jump(offset),
