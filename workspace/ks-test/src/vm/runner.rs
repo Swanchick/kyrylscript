@@ -1,10 +1,12 @@
 use ks_vm_new::ir::instructions::{
-    ADD, DIV, EQ, JMP, JMP8, JMP16, LBF, LBT, LDF, LDI, LDI8, LDI16, LDI32, LDN, LDS, LDV, LDV8,
-    LDV16, NE,
+    ADD, AND, ASC, ASN, ASV, ASV8, ASV16, CALL, CALL8, CALL16, CLR, CPY, DEC, DIV, EQ, FREE, FREE8,
+    GE, GT, INC, JMP, JMP8, JMP16, JNZ, JNZ8, JNZ16, JZ, JZ8, JZ16, LBF, LBT, LDC, LDC8, LDC16,
+    LDCP, LDCP8, LDCP16, LDF, LDFC, LDFN, LDFN8, LDFN16, LDI, LDI8, LDI16, LDI32, LDN, LDS, LDV,
+    LDV8, LDV16, LE, LEN, LT, MUL, NE, NOT, OR, RET, STR, SUB,
 };
 use ks_vm_new::types::Pointer;
 use ks_vm_new::{Assign, KsCall, NativeHelper, NativeRegistry, STRING_TYPE};
-use ks_vm_new::{CallStack, Collection, Function, Instruction, Stack, VMError, VMResult, Variable};
+use ks_vm_new::{CallStack, Collection, Function, Stack, VMError, VMResult, Variable};
 
 use crate::drivers::KsDriver;
 use crate::drivers::utils::operation;
@@ -368,7 +370,7 @@ fn jump_negative() -> VMResult<()> {
     Ok(())
 }
 
-operation!(add, Instruction::Add, +);
+operation!(add, vec![ADD], +);
 
 #[test]
 fn add_string_string() -> VMResult<()> {
@@ -419,8 +421,8 @@ fn add_string_string() -> VMResult<()> {
     Ok(())
 }
 
-operation!(minus, Instruction::Minus, -);
-operation!(mul, Instruction::Mul, *);
+operation!(minus, vec![SUB], -);
+operation!(mul, vec![MUL], *);
 
 #[test]
 fn div_int_int() -> VMResult<()> {
@@ -434,12 +436,7 @@ fn div_int_int() -> VMResult<()> {
     let mut variable_result = Variable::from(int_left as f64 / int_right as f64);
     variable_result.owners = 1;
 
-    KsDriver::operation_test(
-        variable_left,
-        variable_right,
-        variable_result,
-        Instruction::Div,
-    )?;
+    KsDriver::operation_test(variable_left, variable_right, variable_result, vec![DIV])?;
 
     Ok(())
 }
@@ -456,12 +453,7 @@ fn div_int_float() -> VMResult<()> {
     let mut variable_result = Variable::from((int_left as f64) / float_right);
     variable_result.owners = 1;
 
-    KsDriver::operation_test(
-        variable_left,
-        variable_right,
-        variable_result,
-        Instruction::Div,
-    )?;
+    KsDriver::operation_test(variable_left, variable_right, variable_result, vec![DIV])?;
 
     Ok(())
 }
@@ -478,12 +470,7 @@ fn div_float_int() -> VMResult<()> {
     let mut variable_result = Variable::from(float_left / (int_right as f64));
     variable_result.owners = 1;
 
-    KsDriver::operation_test(
-        variable_left,
-        variable_right,
-        variable_result,
-        Instruction::Div,
-    )?;
+    KsDriver::operation_test(variable_left, variable_right, variable_result, vec![DIV])?;
 
     Ok(())
 }
@@ -500,12 +487,7 @@ fn div_float_float() -> VMResult<()> {
     let mut variable_result = Variable::from(float_left / float_right);
     variable_result.owners = 1;
 
-    KsDriver::operation_test(
-        variable_left,
-        variable_right,
-        variable_result,
-        Instruction::Div,
-    )?;
+    KsDriver::operation_test(variable_left, variable_right, variable_result, vec![DIV])?;
 
     Ok(())
 }
@@ -542,7 +524,7 @@ fn div_zero_division_error() -> VMResult<()> {
     Ok(())
 }
 
-operation!(eq, Instruction::Eq, ==);
+operation!(eq, vec![EQ], ==);
 
 #[test]
 fn eq_string_string() -> VMResult<()> {
@@ -591,12 +573,12 @@ fn eq_string_string() -> VMResult<()> {
     Ok(())
 }
 
-operation!(greater_eq, Instruction::GreaterEq, >=);
-operation!(greater, Instruction::Greater, >);
-operation!(less_eq, Instruction::LessEq, <=);
-operation!(less, Instruction::Less, <);
+operation!(greater_eq, vec![GE], >=);
+operation!(greater, vec![GT], >);
+operation!(less_eq, vec![LE], <=);
+operation!(less, vec![LT], <);
 
-operation!(not_eq, Instruction::NotEq, !=);
+operation!(not_eq, vec![NE], !=);
 
 #[test]
 fn not_eq_string_string() -> VMResult<()> {
@@ -657,12 +639,7 @@ fn and_true() -> VMResult<()> {
     let mut variable_result = Variable::from(left && right);
     variable_result.owners = 1;
 
-    KsDriver::operation_test(
-        variable_left,
-        variable_right,
-        variable_result,
-        Instruction::And,
-    )?;
+    KsDriver::operation_test(variable_left, variable_right, variable_result, vec![AND])?;
 
     Ok(())
 }
@@ -679,12 +656,7 @@ fn and_false() -> VMResult<()> {
     let mut variable_result = Variable::from(left && right);
     variable_result.owners = 1;
 
-    KsDriver::operation_test(
-        variable_left,
-        variable_right,
-        variable_result,
-        Instruction::And,
-    )?;
+    KsDriver::operation_test(variable_left, variable_right, variable_result, vec![AND])?;
 
     Ok(())
 }
@@ -701,12 +673,7 @@ fn or_true() -> VMResult<()> {
     let mut variable_result = Variable::from(left || right);
     variable_result.owners = 1;
 
-    KsDriver::operation_test(
-        variable_left,
-        variable_right,
-        variable_result,
-        Instruction::Or,
-    )?;
+    KsDriver::operation_test(variable_left, variable_right, variable_result, vec![AND])?;
 
     Ok(())
 }
@@ -723,12 +690,7 @@ fn or_false() -> VMResult<()> {
     let mut variable_result = Variable::from(left || right);
     variable_result.owners = 1;
 
-    KsDriver::operation_test(
-        variable_left,
-        variable_right,
-        variable_result,
-        Instruction::Or,
-    )?;
+    KsDriver::operation_test(variable_left, variable_right, variable_result, vec![OR])?;
 
     Ok(())
 }
@@ -752,7 +714,7 @@ fn not_true() -> VMResult<()> {
         None,
     );
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Not)?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![NOT])?;
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.acc.len(), 1);
@@ -786,7 +748,7 @@ fn not_false() -> VMResult<()> {
         None,
     );
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Not)?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![NOT])?;
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.acc.len(), 1);
@@ -820,7 +782,7 @@ fn increment() -> VMResult<()> {
         None,
     );
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Increment)?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![INC])?;
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.acc.len(), 1);
@@ -852,7 +814,7 @@ fn decrement() -> VMResult<()> {
         None,
     );
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Decrement)?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![DEC])?;
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.acc.len(), 1);
@@ -884,7 +846,7 @@ fn clone_primitive() -> VMResult<()> {
 
     variable.owners = 1;
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Clone)?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![CPY])?;
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.acc.len(), 1);
@@ -926,7 +888,7 @@ fn clone_collection_string() -> VMResult<()> {
 
     variable.owners = 1;
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Clone)?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![CPY])?;
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.acc.len(), 1);
@@ -997,7 +959,7 @@ fn clone_collection() -> VMResult<()> {
 
     variable.owners = 1;
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Clone)?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![CPY])?;
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.acc.len(), 1);
@@ -1048,8 +1010,89 @@ fn load_collection() -> VMResult<()> {
     let acc = Stack::from(vec![3, 2, 1, 0]);
 
     let runner = KsDriver::runner_default(Some(acc), None, false, None, None, None);
-    let driver =
-        KsDriver::runner_configured(runner, gvs, Instruction::LoadCollection(storage_len))?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![LDC, storage_len as u8, 0, 0, 0])?;
+
+    assert_eq!(driver.runner.acc.len(), 1);
+    assert_eq!(driver.gvs.storage.len(), 5);
+
+    let gvs_variable_collection = driver.gvs.storage[4].clone().unwrap();
+
+    assert_eq!(gvs_variable_collection, variable_collection);
+
+    let gvs_collection = &driver.gvs.collections[0];
+    assert_eq!(gvs_collection, &collection);
+
+    Ok(())
+}
+
+#[test]
+fn load_collection_8() -> VMResult<()> {
+    let collection = Collection::Stack(vec![0, 1, 2, 3]);
+    let mut storage = vec![
+        Some(Variable::from(1).with_owners(1)),
+        Some(Variable::from(2).with_owners(1)),
+        Some(Variable::from(3).with_owners(1)),
+        Some(Variable::from(4).with_owners(1)),
+    ];
+
+    let storage_len = storage.len();
+
+    for variable in &mut storage {
+        if let Some(variable) = variable {
+            variable.owners = 1;
+        }
+    }
+
+    let mut variable_collection = Variable::collection(0);
+    variable_collection.owners = 1;
+
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
+
+    let acc = Stack::from(vec![3, 2, 1, 0]);
+
+    let runner = KsDriver::runner_default(Some(acc), None, false, None, None, None);
+    let driver = KsDriver::runner_configured(runner, gvs, vec![LDC8, storage_len as u8])?;
+
+    assert_eq!(driver.runner.acc.len(), 1);
+    assert_eq!(driver.gvs.storage.len(), 5);
+
+    let gvs_variable_collection = driver.gvs.storage[4].clone().unwrap();
+
+    assert_eq!(gvs_variable_collection, variable_collection);
+
+    let gvs_collection = &driver.gvs.collections[0];
+    assert_eq!(gvs_collection, &collection);
+
+    Ok(())
+}
+
+#[test]
+fn load_collection_16() -> VMResult<()> {
+    let collection = Collection::Stack(vec![0, 1, 2, 3]);
+    let mut storage = vec![
+        Some(Variable::from(1).with_owners(1)),
+        Some(Variable::from(2).with_owners(1)),
+        Some(Variable::from(3).with_owners(1)),
+        Some(Variable::from(4).with_owners(1)),
+    ];
+
+    let storage_len = storage.len();
+
+    for variable in &mut storage {
+        if let Some(variable) = variable {
+            variable.owners = 1;
+        }
+    }
+
+    let mut variable_collection = Variable::collection(0);
+    variable_collection.owners = 1;
+
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
+
+    let acc = Stack::from(vec![3, 2, 1, 0]);
+
+    let runner = KsDriver::runner_default(Some(acc), None, false, None, None, None);
+    let driver = KsDriver::runner_configured(runner, gvs, vec![LDC16, storage_len as u8, 0])?;
 
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.gvs.storage.len(), 5);
@@ -1072,7 +1115,7 @@ fn store() -> VMResult<()> {
     let acc = Stack::from(vec![0]);
     let runner = KsDriver::runner_default(Some(acc), None, false, None, None, None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Store)?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![STR])?;
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.acc.len(), 0);
@@ -1096,7 +1139,63 @@ fn free_primitive() -> VMResult<()> {
     let stack = Stack::from(vec![0, 1, 2]);
     let runner = KsDriver::runner_default(None, Some(stack), false, None, None, None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Free(3))?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![FREE, 3, 0, 0, 0])?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+
+    assert_eq!(driver.runner.stack.len(), 0);
+
+    assert_eq!(driver.gvs.storage.len(), 3);
+    assert_eq!(driver.gvs.storage, vec![None, None, None]);
+
+    assert_eq!(driver.gvs.free_storage.len(), 3);
+    assert_eq!(driver.gvs.free_storage, vec![2, 1, 0]);
+
+    Ok(())
+}
+
+#[test]
+fn free_primitive_8() -> VMResult<()> {
+    let storage = vec![
+        Some(Variable::from(10).with_owners(1)),
+        Some(Variable::from(20).with_owners(1)),
+        Some(Variable::from(30).with_owners(1)),
+    ];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
+
+    let stack = Stack::from(vec![0, 1, 2]);
+    let runner = KsDriver::runner_default(None, Some(stack), false, None, None, None);
+
+    let driver = KsDriver::runner_configured(runner, gvs, vec![FREE8, 3])?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+
+    assert_eq!(driver.runner.stack.len(), 0);
+
+    assert_eq!(driver.gvs.storage.len(), 3);
+    assert_eq!(driver.gvs.storage, vec![None, None, None]);
+
+    assert_eq!(driver.gvs.free_storage.len(), 3);
+    assert_eq!(driver.gvs.free_storage, vec![2, 1, 0]);
+
+    Ok(())
+}
+
+#[test]
+fn free_primitive_16() -> VMResult<()> {
+    let storage = vec![
+        Some(Variable::from(10).with_owners(1)),
+        Some(Variable::from(20).with_owners(1)),
+        Some(Variable::from(30).with_owners(1)),
+    ];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
+
+    let stack = Stack::from(vec![0, 1, 2]);
+    let runner = KsDriver::runner_default(None, Some(stack), false, None, None, None);
+
+    let driver = KsDriver::runner_configured(runner, gvs, vec![FREE, 3, 0])?;
 
     assert_eq!(driver.runner.program_counter, 1);
 
@@ -1121,7 +1220,7 @@ fn free_string() -> VMResult<()> {
     let stack = Stack::from(vec![0]);
     let runner = KsDriver::runner_default(None, Some(stack), false, None, None, None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Free(1))?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![FREE, 1, 0, 0, 0])?;
 
     assert_eq!(driver.runner.program_counter, 1);
 
@@ -1156,7 +1255,7 @@ fn free_collection() -> VMResult<()> {
     let stack = Stack::from(vec![3]);
     let runner = KsDriver::runner_default(None, Some(stack), false, None, None, None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Free(1))?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![FREE, 1, 0, 0, 0])?;
 
     assert_eq!(driver.runner.program_counter, 1);
 
@@ -1205,7 +1304,7 @@ fn free_collection_matrix() -> VMResult<()> {
     let stack = Stack::from(vec![12]);
     let runner = KsDriver::runner_default(None, Some(stack), false, None, None, None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Free(1))?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![FREE, 1, 0, 0, 0])?;
 
     assert_eq!(driver.runner.program_counter, 1);
 
@@ -1256,7 +1355,7 @@ fn clear_acc() -> VMResult<()> {
     let acc = Stack::from(vec![3]);
     let runner = KsDriver::runner_default(Some(acc), None, false, None, None, None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::ClearAcc)?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![CLR])?;
 
     assert_eq!(driver.runner.program_counter, 1);
 
@@ -1285,7 +1384,47 @@ fn jump_if_false_if_actually_false() -> VMResult<()> {
     let runner = KsDriver::runner_default(Some(acc), None, false, None, None, None);
     let jump_offset = 32;
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::JumpIfFalse(jump_offset))?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![JZ, jump_offset as u8, 0, 0, 0])?;
+
+    assert_eq!(driver.runner.program_counter(), jump_offset as usize + 1);
+    assert_eq!(driver.runner.prevent_step, false);
+
+    assert_eq!(driver.runner.acc.len(), 0);
+
+    Ok(())
+}
+
+#[test]
+fn jump_if_false_if_actually_false_8() -> VMResult<()> {
+    let condition = Variable::from(false).with_owners(1);
+
+    let gvs = KsDriver::gvs_storage(Some(vec![Some(condition)]), None, None, None);
+    let acc = Stack::from(vec![0]);
+
+    let runner = KsDriver::runner_default(Some(acc), None, false, None, None, None);
+    let jump_offset = 32;
+
+    let driver = KsDriver::runner_configured(runner, gvs, vec![JZ8, jump_offset as u8])?;
+
+    assert_eq!(driver.runner.program_counter(), jump_offset as usize + 1);
+    assert_eq!(driver.runner.prevent_step, false);
+
+    assert_eq!(driver.runner.acc.len(), 0);
+
+    Ok(())
+}
+
+#[test]
+fn jump_if_false_if_actually_false_16() -> VMResult<()> {
+    let condition = Variable::from(false).with_owners(1);
+
+    let gvs = KsDriver::gvs_storage(Some(vec![Some(condition)]), None, None, None);
+    let acc = Stack::from(vec![0]);
+
+    let runner = KsDriver::runner_default(Some(acc), None, false, None, None, None);
+    let jump_offset = 32;
+
+    let driver = KsDriver::runner_configured(runner, gvs, vec![JZ16, jump_offset as u8, 0])?;
 
     assert_eq!(driver.runner.program_counter(), jump_offset as usize + 1);
     assert_eq!(driver.runner.prevent_step, false);
@@ -1305,7 +1444,7 @@ fn jump_if_false_if_actually_true() -> VMResult<()> {
     let runner = KsDriver::runner_default(Some(acc), None, false, None, None, None);
     let jump_offset = 32;
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::JumpIfFalse(jump_offset))?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![JZ, jump_offset as u8, 0, 0, 0])?;
 
     assert_eq!(driver.runner.program_counter(), 1);
     assert_eq!(driver.runner.prevent_step, false);
@@ -1325,7 +1464,7 @@ fn jump_if_true_if_actually_false() -> VMResult<()> {
     let runner = KsDriver::runner_default(Some(acc), None, false, None, None, None);
     let jump_offset = 32;
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::JumpIfTrue(jump_offset))?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![JNZ, jump_offset as u8, 0, 0, 0])?;
 
     assert_eq!(driver.runner.program_counter(), 1);
     assert_eq!(driver.runner.prevent_step, false);
@@ -1345,7 +1484,47 @@ fn jump_if_true_if_actually_true() -> VMResult<()> {
     let runner = KsDriver::runner_default(Some(acc), None, false, None, None, None);
     let jump_offset = 32;
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::JumpIfTrue(jump_offset))?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![JNZ, jump_offset as u8, 0, 0, 0])?;
+
+    assert_eq!(driver.runner.program_counter(), jump_offset as Pointer + 1);
+    assert_eq!(driver.runner.prevent_step, false);
+
+    assert_eq!(driver.runner.acc.len(), 0);
+
+    Ok(())
+}
+
+#[test]
+fn jump_if_true_if_actually_true_8() -> VMResult<()> {
+    let condition = Variable::from(true).with_owners(1);
+
+    let gvs = KsDriver::gvs_storage(Some(vec![Some(condition)]), None, None, None);
+    let acc = Stack::from(vec![0]);
+
+    let runner = KsDriver::runner_default(Some(acc), None, false, None, None, None);
+    let jump_offset = 32;
+
+    let driver = KsDriver::runner_configured(runner, gvs, vec![JNZ8, jump_offset as u8])?;
+
+    assert_eq!(driver.runner.program_counter(), jump_offset as Pointer + 1);
+    assert_eq!(driver.runner.prevent_step, false);
+
+    assert_eq!(driver.runner.acc.len(), 0);
+
+    Ok(())
+}
+
+#[test]
+fn jump_if_true_if_actually_true_16() -> VMResult<()> {
+    let condition = Variable::from(true).with_owners(1);
+
+    let gvs = KsDriver::gvs_storage(Some(vec![Some(condition)]), None, None, None);
+    let acc = Stack::from(vec![0]);
+
+    let runner = KsDriver::runner_default(Some(acc), None, false, None, None, None);
+    let jump_offset = 32;
+
+    let driver = KsDriver::runner_configured(runner, gvs, vec![JNZ16, jump_offset as u8, 0])?;
 
     assert_eq!(driver.runner.program_counter(), jump_offset as Pointer + 1);
     assert_eq!(driver.runner.prevent_step, false);
@@ -1364,7 +1543,7 @@ fn call() -> VMResult<()> {
     let acc = vec![0];
     let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, false, None, None, None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Call(0))?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![CALL, 0, 0, 0, 0])?;
 
     assert_eq!(driver.runner.program_counter, 20);
     assert_eq!(driver.runner.call_stack.len(), 1);
@@ -1389,7 +1568,57 @@ fn call_with_parameters() -> VMResult<()> {
     let acc = vec![0, 1, 2];
     let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, false, None, None, None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Call(2))?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![CALL, 2, 0, 0, 0])?;
+
+    assert_eq!(driver.runner.program_counter, 20);
+    assert_eq!(driver.runner.call_stack.len(), 1);
+    assert_eq!(driver.runner.call_stack[0].return_pointer, 0);
+    assert_eq!(driver.runner.call_stack[0].collection_id, 0);
+
+    assert_eq!(driver.runner.acc.len(), 2);
+
+    Ok(())
+}
+
+#[test]
+fn call_with_parameters_8() -> VMResult<()> {
+    let storage = vec![
+        Some(Variable::from(Function::from(20u32)).with_owners(1)),
+        Some(Variable::from(10)),
+        Some(Variable::from(20)),
+    ];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
+
+    let acc = vec![0, 1, 2];
+    let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, false, None, None, None);
+
+    let driver = KsDriver::runner_configured(runner, gvs, vec![CALL8, 2])?;
+
+    assert_eq!(driver.runner.program_counter, 20);
+    assert_eq!(driver.runner.call_stack.len(), 1);
+    assert_eq!(driver.runner.call_stack[0].return_pointer, 0);
+    assert_eq!(driver.runner.call_stack[0].collection_id, 0);
+
+    assert_eq!(driver.runner.acc.len(), 2);
+
+    Ok(())
+}
+
+#[test]
+fn call_with_parameters_16() -> VMResult<()> {
+    let storage = vec![
+        Some(Variable::from(Function::from(20u32)).with_owners(1)),
+        Some(Variable::from(10)),
+        Some(Variable::from(20)),
+    ];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
+
+    let acc = vec![0, 1, 2];
+    let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, false, None, None, None);
+
+    let driver = KsDriver::runner_configured(runner, gvs, vec![CALL16, 2, 0])?;
 
     assert_eq!(driver.runner.program_counter, 20);
     assert_eq!(driver.runner.call_stack.len(), 1);
@@ -1420,7 +1649,7 @@ fn return_instruction() -> VMResult<()> {
         None,
     );
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Return)?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![RET])?;
 
     assert_eq!(driver.runner.call_stack.len(), 0);
     assert_eq!(driver.runner.program_counter, 1);
@@ -1438,7 +1667,49 @@ fn load_function_empty() -> VMResult<()> {
     let acc = vec![0];
     let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, false, None, None, None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::LoadFunction(0))?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![LDFN, 0, 0, 0, 0])?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.gvs.storage[0], Some(function));
+
+    assert_eq!(driver.runner.acc.len(), 1);
+    assert_eq!(driver.runner.acc.get(0), Some(&0));
+
+    Ok(())
+}
+
+#[test]
+fn load_function_empty_8() -> VMResult<()> {
+    let function = Variable::from(Function::from(20u32)).with_owners(1);
+
+    let storage = vec![Some(function.clone())];
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
+
+    let acc = vec![0];
+    let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, false, None, None, None);
+
+    let driver = KsDriver::runner_configured(runner, gvs, vec![LDFN8, 0, 0, 0, 0])?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.gvs.storage[0], Some(function));
+
+    assert_eq!(driver.runner.acc.len(), 1);
+    assert_eq!(driver.runner.acc.get(0), Some(&0));
+
+    Ok(())
+}
+
+#[test]
+fn load_function_empty_16() -> VMResult<()> {
+    let function = Variable::from(Function::from(20u32)).with_owners(1);
+
+    let storage = vec![Some(function.clone())];
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
+
+    let acc = vec![0];
+    let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, false, None, None, None);
+
+    let driver = KsDriver::runner_configured(runner, gvs, vec![LDFN16, 0, 0])?;
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.gvs.storage[0], Some(function));
@@ -1463,7 +1734,7 @@ fn load_function_capture() -> VMResult<()> {
     let acc = vec![0, 2, 1];
     let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, false, None, None, None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::LoadFunction(2))?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![LDFN, 2, 0, 0, 0])?;
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.gvs.storage[0], Some(function));
@@ -1493,7 +1764,7 @@ fn free_function_with_capture() -> VMResult<()> {
     let stack = Stack::from(vec![3]);
     let runner = KsDriver::runner_default(None, Some(stack), false, None, None, None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Free(1))?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![FREE8, 1])?;
 
     assert_eq!(driver.runner.program_counter, 1);
 
@@ -1528,7 +1799,7 @@ fn call_stack_should_own_collection() -> VMResult<()> {
     let acc = vec![3];
     let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, false, None, None, None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Call(0))?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![CALL8, 0])?;
 
     assert_eq!(driver.runner.program_counter, 20);
     assert_eq!(driver.runner.call_stack.len(), 1);
@@ -1559,7 +1830,65 @@ fn load_capture() -> VMResult<()> {
     let call_stack = vec![CallStack::new(0, 0, 0)];
     let runner = KsDriver::runner_default(None, None, false, None, Some(call_stack), None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::LoadCapture(0))?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![LDCP, 0, 0, 0, 0])?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+
+    assert_eq!(driver.runner.acc.len(), 1);
+    assert_eq!(driver.runner.acc.get(0), Some(&1));
+
+    assert_eq!(driver.gvs.collections.len(), 1);
+    assert_eq!(driver.gvs.collections[0], Collection::Stack(vec![1, 2, 3]));
+
+    Ok(())
+}
+
+#[test]
+fn load_capture_8() -> VMResult<()> {
+    let storage = vec![
+        Some(Variable::from(Function::new(20u32, 0u32)).with_owners(1)),
+        Some(Variable::from(10).with_owners(1)),
+        Some(Variable::from(20).with_owners(1)),
+        Some(Variable::from(30).with_owners(1)),
+    ];
+
+    let collection = vec![Collection::Stack(vec![1, 2, 3])];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), Some(collection), None, None);
+
+    let call_stack = vec![CallStack::new(0, 0, 0)];
+    let runner = KsDriver::runner_default(None, None, false, None, Some(call_stack), None);
+
+    let driver = KsDriver::runner_configured(runner, gvs, vec![LDCP8, 0])?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+
+    assert_eq!(driver.runner.acc.len(), 1);
+    assert_eq!(driver.runner.acc.get(0), Some(&1));
+
+    assert_eq!(driver.gvs.collections.len(), 1);
+    assert_eq!(driver.gvs.collections[0], Collection::Stack(vec![1, 2, 3]));
+
+    Ok(())
+}
+
+#[test]
+fn load_capture_16() -> VMResult<()> {
+    let storage = vec![
+        Some(Variable::from(Function::new(20u32, 0u32)).with_owners(1)),
+        Some(Variable::from(10).with_owners(1)),
+        Some(Variable::from(20).with_owners(1)),
+        Some(Variable::from(30).with_owners(1)),
+    ];
+
+    let collection = vec![Collection::Stack(vec![1, 2, 3])];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), Some(collection), None, None);
+
+    let call_stack = vec![CallStack::new(0, 0, 0)];
+    let runner = KsDriver::runner_default(None, None, false, None, Some(call_stack), None);
+
+    let driver = KsDriver::runner_configured(runner, gvs, vec![LDCP16, 0, 0])?;
 
     assert_eq!(driver.runner.program_counter, 1);
 
@@ -1591,7 +1920,7 @@ fn collection_len() -> VMResult<()> {
     let acc = Stack::from(vec![3]);
     let runner = KsDriver::runner_default(Some(acc), Some(stack), false, None, None, None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::CollectionLen)?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![LEN])?;
 
     assert_eq!(driver.runner.program_counter, 1);
 
@@ -1620,7 +1949,7 @@ fn collection_len_string() -> VMResult<()> {
     let acc = Stack::from(vec![0]);
     let runner = KsDriver::runner_default(Some(acc), Some(stack), false, None, None, None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::CollectionLen)?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![LEN])?;
 
     assert_eq!(driver.runner.program_counter, 1);
 
@@ -1653,7 +1982,7 @@ fn load_from_collection_stack() -> VMResult<()> {
     let acc = Stack::from(vec![3, 4]);
     let runner = KsDriver::runner_default(Some(acc), Some(stack), false, None, None, None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::LoadFromCollection)?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![LDFC])?;
 
     assert_eq!(driver.runner.program_counter, 1);
 
@@ -1686,7 +2015,7 @@ fn load_from_collection_string() -> VMResult<()> {
     let acc = Stack::from(vec![0, 1]);
     let runner = KsDriver::runner_default(Some(acc), Some(stack), false, None, None, None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::LoadFromCollection)?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![LDFC])?;
 
     assert_eq!(driver.runner.program_counter, 1);
 
@@ -1724,7 +2053,7 @@ fn variable_assign() -> VMResult<()> {
         Some(Assign::Variable(0)),
     );
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Assign)?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![ASN])?;
 
     assert_eq!(driver.runner.program_counter, 1);
 
@@ -1766,7 +2095,7 @@ fn collection_assign() -> VMResult<()> {
         Some(Assign::Collection(0, 1)),
     );
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::Assign)?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![ASN])?;
 
     assert_eq!(driver.runner.program_counter, 1);
 
@@ -1801,7 +2130,63 @@ fn assign_variable() -> VMResult<()> {
         Some(Assign::None),
     );
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::AssignVariable(0))?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![ASV, 0, 0, 0, 0])?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.assign, Assign::Variable(0));
+
+    Ok(())
+}
+
+#[test]
+fn assign_variable_8() -> VMResult<()> {
+    let storage = vec![
+        Some(Variable::from(10).with_owners(1)),
+        Some(Variable::from(20).with_owners(2)),
+    ];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
+
+    let stack = Stack::from(vec![0, 1]);
+    let acc = Stack::from(vec![1]);
+    let runner = KsDriver::runner_default(
+        Some(acc),
+        Some(stack),
+        false,
+        None,
+        None,
+        Some(Assign::None),
+    );
+
+    let driver = KsDriver::runner_configured(runner, gvs, vec![ASV8, 0])?;
+
+    assert_eq!(driver.runner.program_counter, 1);
+    assert_eq!(driver.runner.assign, Assign::Variable(0));
+
+    Ok(())
+}
+
+#[test]
+fn assign_variable_16() -> VMResult<()> {
+    let storage = vec![
+        Some(Variable::from(10).with_owners(1)),
+        Some(Variable::from(20).with_owners(2)),
+    ];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
+
+    let stack = Stack::from(vec![0, 1]);
+    let acc = Stack::from(vec![1]);
+    let runner = KsDriver::runner_default(
+        Some(acc),
+        Some(stack),
+        false,
+        None,
+        None,
+        Some(Assign::None),
+    );
+
+    let driver = KsDriver::runner_configured(runner, gvs, vec![ASV16, 0, 0])?;
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.assign, Assign::Variable(0));
@@ -1834,7 +2219,7 @@ fn assign_collection_from_variable() -> VMResult<()> {
         Some(Assign::Variable(0)),
     );
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::AssignCollection)?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![ASC])?;
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.assign, Assign::Collection(0, 1));
@@ -1883,7 +2268,7 @@ fn assign_collection_from_collection() -> VMResult<()> {
         Some(Assign::Collection(3, 1)),
     );
 
-    let driver = KsDriver::runner_configured(runner, gvs, Instruction::AssignCollection)?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![ASC])?;
 
     assert_eq!(driver.runner.program_counter, 1);
     assert_eq!(driver.runner.assign, Assign::Collection(1, 2));

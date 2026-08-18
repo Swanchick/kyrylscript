@@ -105,7 +105,7 @@ impl KsDriver {
             NativeRegistry::new()
         };
 
-        let mut vm = VM::new(Program::from(instructions), vec![runner], gvs, native);
+        let mut vm = VM::new(Program::serialize(instructions), vec![runner], gvs, native);
 
         for _ in 0..instructions_len {
             vm.step()?;
@@ -228,7 +228,7 @@ impl KsDriver {
         left: Variable,
         right: Variable,
         result: Variable,
-        instruction: Instruction,
+        instruction: Vec<u8>,
     ) -> VMResult<()> {
         let runner = KsDriver::runner_default(
             Some(Stack::from(vec![0, 1])),
