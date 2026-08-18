@@ -1,3 +1,5 @@
+use core::str::from_utf8;
+
 #[cfg(not(feature = "std"))]
 use alloc::string::String;
 #[cfg(not(feature = "std"))]
@@ -17,34 +19,49 @@ impl<'a> Reader<'a> {
     }
 
     pub fn parse_u8(self) -> VMResult<u64> {
-        let number = *self.program.get(self.pc + 1).ok_or("Out of program")? as u64;
+        let number = *self
+            .program
+            .get(self.pc + 1)
+            .ok_or("Out of program for u8")? as u64;
         Ok(number)
     }
 
-    pub fn parse_u16(self) -> VMResult<u64> {
+    pub fn parse_u16(&self) -> VMResult<u64> {
         let bytes = self
             .program
             .get(self.pc + 1..self.pc + 3)
-            .ok_or("Out of program")?;
+            .ok_or("Out of program for u16")?;
 
         Ok(u16::from_le_bytes(bytes.try_into().unwrap()) as u64)
     }
 
-    pub fn parse_u32(self) -> VMResult<u64> {
+    pub fn parse_u32(&self) -> VMResult<u64> {
         let bytes = self
             .program
             .get(self.pc + 1..self.pc + 5)
-            .ok_or("Out of program")?;
+            .ok_or("Out of program for u32")?;
 
         Ok(u32::from_le_bytes(bytes.try_into().unwrap()) as u64)
     }
 
-    pub fn parse_u64(self) -> VMResult<u64> {
+    pub fn parse_u64(&self) -> VMResult<u64> {
         let bytes = self
             .program
             .get(self.pc + 1..self.pc + 9)
-            .ok_or("Out of program")?;
+            .ok_or("Out of program for u64")?;
 
         Ok(u64::from_le_bytes(bytes.try_into().unwrap()))
+    }
+
+    pub fn parse_string(self) -> VMResult<&'a str> {
+        let size = self.parse_u32()? as usize;
+
+        let bytes = self
+            .program
+            .get(self.pc + 5..self.pc + size)
+            .ok_or("Out of program for string")?;
+
+        let string = from_utf8(bytes).map_err(|_| "Invalid UTF-8")?;
+        Ok(string)
     }
 }

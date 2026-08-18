@@ -11,7 +11,6 @@ use crate::ir::reader::Reader;
 use crate::types::{Arguments, NativeId};
 use crate::{Assign, Function, NativeCall, VMError, VMHelper, VMResult};
 
-use super::Constant;
 use super::call_stack::CallStack;
 use super::environment::variable::{
     BOOLEAN_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STACK_TYPE, STRING_TYPE,
@@ -96,10 +95,11 @@ impl Runner {
         self.step(INSTRUCTION + QWORD)
     }
 
-    fn load_const_string(gvs: &mut GVS, string: String) -> Variable {
-        let collection_id = gvs.collection_store_string(string);
+    fn load_const_string(gvs: &mut GVS, reader: Reader) -> Variable {
+        // let collection_id = gvs.collection_store_string(string);
 
-        Variable::string(collection_id)
+        // Variable::string(collection_id)
+        todo!()
     }
 
     fn load_var(&mut self, gvs: &mut GVS, slot: Slot) -> VMResult<()> {
