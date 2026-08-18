@@ -13,6 +13,7 @@ mod stats;
 pub mod types;
 mod utils;
 mod vm;
+mod vm_helper;
 
 pub use assign::Assign;
 pub use call_stack::CallStack;
@@ -26,6 +27,7 @@ pub use ir::program::Program;
 pub use native::{KsCall, NativeCall, NativeHelper, NativeRegistry};
 pub use runner::Runner;
 pub use vm::VM;
+pub use vm_helper::VMHelper;
 
 pub use types::VMResult;
 pub use utils::VMError;
