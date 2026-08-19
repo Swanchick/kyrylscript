@@ -1150,7 +1150,7 @@ fn free_primitive() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![FREE, 3, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 5);
 
     assert_eq!(driver.runner.stack.len(), 0);
 
@@ -1178,7 +1178,7 @@ fn free_primitive_8() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![FREE8, 3])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 2);
 
     assert_eq!(driver.runner.stack.len(), 0);
 
@@ -1206,7 +1206,7 @@ fn free_primitive_16() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![FREE, 3, 0])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 3);
 
     assert_eq!(driver.runner.stack.len(), 0);
 
@@ -1669,7 +1669,7 @@ fn load_function_empty() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDFN, 0, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 5);
     assert_eq!(driver.gvs.storage[0], Some(function));
 
     assert_eq!(driver.runner.acc.len(), 1);
@@ -1690,7 +1690,7 @@ fn load_function_empty_8() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDFN8, 0, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 2);
     assert_eq!(driver.gvs.storage[0], Some(function));
 
     assert_eq!(driver.runner.acc.len(), 1);
@@ -1711,7 +1711,7 @@ fn load_function_empty_16() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDFN16, 0, 0])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 3);
     assert_eq!(driver.gvs.storage[0], Some(function));
 
     assert_eq!(driver.runner.acc.len(), 1);
@@ -1736,7 +1736,7 @@ fn load_function_capture() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDFN, 2, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 5);
     assert_eq!(driver.gvs.storage[0], Some(function));
 
     assert_eq!(driver.runner.acc.len(), 1);

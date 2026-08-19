@@ -6,6 +6,7 @@ use alloc::string::String;
 use alloc::vec::Vec;
 
 use crate::VMResult;
+use crate::data_size::DataSize32;
 use crate::types::Pointer;
 
 pub struct ByteReader<'a> {
@@ -68,6 +69,14 @@ impl<'a> ByteReader<'a> {
             .ok_or("Out of program for u64")?;
 
         Ok(u64::from_le_bytes(bytes.try_into().unwrap()))
+    }
+
+    pub fn from_data_size_32(&self, data_size: &DataSize32) -> VMResult<usize> {
+        Ok(match data_size {
+            DataSize32::Byte => self.parse_u8()? as usize,
+            DataSize32::Word => self.parse_u16()? as usize,
+            DataSize32::DWord => self.parse_u32()? as usize,
+        })
     }
 
     pub fn parse_string(&self, size: usize) -> VMResult<&'a str> {
