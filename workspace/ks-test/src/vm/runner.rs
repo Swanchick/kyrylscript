@@ -213,7 +213,7 @@ fn load_var_8() -> VMResult<()> {
     let variable = driver.gvs.storage[0].clone().unwrap();
 
     assert_eq!(variable.owners, 2);
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 2);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
 
     Ok(())
@@ -240,7 +240,7 @@ fn load_var_16() -> VMResult<()> {
     let variable = driver.gvs.storage[0].clone().unwrap();
 
     assert_eq!(variable.owners, 2);
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 3);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
 
     Ok(())
@@ -267,7 +267,7 @@ fn load_var() -> VMResult<()> {
     let variable = driver.gvs.storage[0].clone().unwrap();
 
     assert_eq!(variable.owners, 2);
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 5);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
 
     Ok(())
@@ -285,7 +285,7 @@ fn load_var_invalid_storage_id() -> VMResult<()> {
         None,
     );
 
-    let err = KsDriver::runner_configured(runner, None, vec![LDV, 0x0]).unwrap_err();
+    let err = KsDriver::runner_configured(runner, None, vec![LDV8, 0]).unwrap_err();
     assert_eq!(
         err,
         VMError::from(format!("Cannot access variable {}", storage_id))
@@ -298,7 +298,7 @@ fn load_var_invalid_storage_id() -> VMResult<()> {
 fn load_var_invalid_slot() -> VMResult<()> {
     let slot = 10;
 
-    let err = KsDriver::runner(vec![LDV8, 0]).unwrap_err();
+    let err = KsDriver::runner(vec![LDV8, slot as u8]).unwrap_err();
     assert_eq!(
         err,
         VMError::from(format!("Cannot get storage_id by slot {}", slot))
