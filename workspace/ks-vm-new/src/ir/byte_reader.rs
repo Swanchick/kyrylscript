@@ -90,8 +90,6 @@ impl<'a> ByteReader<'a> {
     }
 
     pub fn parse_ncall(&self) -> VMResult<(usize, usize)> {
-        println!("Program: {:X?}", self.program);
-
         let bytes = self
             .program
             .get(self.pc + 1..self.pc + 5)

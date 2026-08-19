@@ -132,8 +132,6 @@ impl Runner {
             DataSize32::DWord => reader.parse_i32()? as isize,
         };
 
-        println!("OFFSET: {}", offset);
-
         self.pc = self
             .pc
             .checked_add_signed(offset)
