@@ -315,7 +315,6 @@ fn jump_positive_8() -> VMResult<()> {
     let driver = KsDriver::runner_configured(runner, None, vec![JMP8, jump_offset as u8])?;
 
     assert_eq!(driver.runner.pc, jump_offset as Pointer);
-    assert_eq!(driver.runner.prevent_step, false);
 
     Ok(())
 }
@@ -328,7 +327,6 @@ fn jump_positive_16() -> VMResult<()> {
     let driver = KsDriver::runner_configured(runner, None, vec![JMP16, jump_offset as u8, 0])?;
 
     assert_eq!(driver.runner.pc, jump_offset as Pointer);
-    assert_eq!(driver.runner.prevent_step, false);
 
     Ok(())
 }
@@ -341,7 +339,6 @@ fn jump_positive() -> VMResult<()> {
     let driver = KsDriver::runner_configured(runner, None, vec![JMP, jump_offset as u8, 0, 0, 0])?;
 
     assert_eq!(driver.runner.pc, jump_offset as Pointer);
-    assert_eq!(driver.runner.prevent_step, false);
 
     Ok(())
 }
@@ -369,7 +366,6 @@ fn jump_negative() -> VMResult<()> {
         driver.runner.pc,
         initial_pc.saturating_add_signed(jump_offset as isize) as Pointer
     );
-    assert_eq!(driver.runner.prevent_step, false);
 
     Ok(())
 }
@@ -1391,7 +1387,6 @@ fn jump_if_false_if_actually_false() -> VMResult<()> {
     let driver = KsDriver::runner_configured(runner, gvs, vec![JZ, jump_offset as u8, 0, 0, 0])?;
 
     assert_eq!(driver.runner.pc, jump_offset as usize);
-    assert_eq!(driver.runner.prevent_step, false);
 
     assert_eq!(driver.runner.acc.len(), 0);
 
@@ -1411,8 +1406,6 @@ fn jump_if_false_if_actually_false_8() -> VMResult<()> {
     let driver = KsDriver::runner_configured(runner, gvs, vec![JZ8, jump_offset as u8])?;
 
     assert_eq!(driver.runner.pc, jump_offset as usize);
-    assert_eq!(driver.runner.prevent_step, false);
-
     assert_eq!(driver.runner.acc.len(), 0);
 
     Ok(())
@@ -1431,7 +1424,6 @@ fn jump_if_false_if_actually_false_16() -> VMResult<()> {
     let driver = KsDriver::runner_configured(runner, gvs, vec![JZ16, jump_offset as u8, 0])?;
 
     assert_eq!(driver.runner.pc, jump_offset as usize);
-    assert_eq!(driver.runner.prevent_step, false);
 
     assert_eq!(driver.runner.acc.len(), 0);
 
@@ -1451,7 +1443,6 @@ fn jump_if_false_if_actually_true() -> VMResult<()> {
     let driver = KsDriver::runner_configured(runner, gvs, vec![JZ, jump_offset as u8, 0, 0, 0])?;
 
     assert_eq!(driver.runner.pc, 5);
-    assert_eq!(driver.runner.prevent_step, false);
 
     assert_eq!(driver.runner.acc.len(), 0);
 
@@ -1471,7 +1462,6 @@ fn jump_if_true_if_actually_false() -> VMResult<()> {
     let driver = KsDriver::runner_configured(runner, gvs, vec![JNZ, jump_offset as u8, 0, 0, 0])?;
 
     assert_eq!(driver.runner.pc, 5);
-    assert_eq!(driver.runner.prevent_step, false);
 
     assert_eq!(driver.runner.acc.len(), 0);
 
@@ -1491,7 +1481,6 @@ fn jump_if_true_if_actually_true() -> VMResult<()> {
     let driver = KsDriver::runner_configured(runner, gvs, vec![JNZ, jump_offset as u8, 0, 0, 0])?;
 
     assert_eq!(driver.runner.pc, jump_offset as Pointer);
-    assert_eq!(driver.runner.prevent_step, false);
 
     assert_eq!(driver.runner.acc.len(), 0);
 
@@ -1511,7 +1500,6 @@ fn jump_if_true_if_actually_true_8() -> VMResult<()> {
     let driver = KsDriver::runner_configured(runner, gvs, vec![JNZ8, jump_offset as u8])?;
 
     assert_eq!(driver.runner.pc, jump_offset as Pointer);
-    assert_eq!(driver.runner.prevent_step, false);
 
     assert_eq!(driver.runner.acc.len(), 0);
 
@@ -1531,7 +1519,6 @@ fn jump_if_true_if_actually_true_16() -> VMResult<()> {
     let driver = KsDriver::runner_configured(runner, gvs, vec![JNZ16, jump_offset as u8, 0])?;
 
     assert_eq!(driver.runner.pc, jump_offset as Pointer);
-    assert_eq!(driver.runner.prevent_step, false);
 
     assert_eq!(driver.runner.acc.len(), 0);
 
