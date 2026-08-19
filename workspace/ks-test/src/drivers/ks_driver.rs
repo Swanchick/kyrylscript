@@ -192,7 +192,6 @@ impl KsDriver {
             stack,
             call_stack,
             assign,
-            prevent_step,
         })
     }
 
@@ -209,7 +208,7 @@ impl KsDriver {
         };
 
         let vm_helper = VMHelper {
-            instruction: instruction[0],
+            instruction: instruction[runner.pc],
             instructions: &instruction,
             gvs: &mut gvs,
             native_stack: &mut Vec::new(),

@@ -129,13 +129,13 @@ impl Runner {
     }
 
     fn jump(&mut self, reader: ByteReader, data_size: DataSize32) -> VMResult<()> {
-        println!("hello world");
-
         let offset = match data_size {
-            DataSize32::Byte => reader.parse_u8()? as isize,
-            DataSize32::Word => reader.parse_u16()? as isize,
-            DataSize32::DWord => reader.parse_u32()? as isize,
+            DataSize32::Byte => reader.parse_i8()? as isize,
+            DataSize32::Word => reader.parse_i16()? as isize,
+            DataSize32::DWord => reader.parse_i32()? as isize,
         };
+
+        println!("OFFSET: {}", offset);
 
         self.pc = self
             .pc

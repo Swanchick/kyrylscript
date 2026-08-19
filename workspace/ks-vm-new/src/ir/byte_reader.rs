@@ -18,11 +18,12 @@ impl<'a> ByteReader<'a> {
         Self { pc, program }
     }
 
-    pub fn parse_u8(self) -> VMResult<u8> {
+    pub fn parse_u8(&self) -> VMResult<u8> {
         let number = *self
             .program
             .get(self.pc + 1)
             .ok_or("Out of program for u8")?;
+
         Ok(number)
     }
 
@@ -42,6 +43,22 @@ impl<'a> ByteReader<'a> {
             .ok_or("Out of program for u32")?;
 
         Ok(u32::from_le_bytes(bytes.try_into().unwrap()))
+    }
+
+    pub fn parse_i8(&self) -> VMResult<i8> {
+        Ok(self.parse_u8()? as i8)
+    }
+
+    pub fn parse_i16(&self) -> VMResult<i16> {
+        Ok(self.parse_u16()? as i16)
+    }
+
+    pub fn parse_i32(&self) -> VMResult<i32> {
+        Ok(self.parse_u32()? as i32)
+    }
+
+    pub fn parse_i64(&self) -> VMResult<i64> {
+        Ok(self.parse_u64()? as i64)
     }
 
     pub fn parse_u64(&self) -> VMResult<u64> {

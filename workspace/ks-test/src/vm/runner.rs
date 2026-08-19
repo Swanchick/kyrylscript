@@ -345,7 +345,7 @@ fn jump_positive() -> VMResult<()> {
 
 #[test]
 fn jump_negative() -> VMResult<()> {
-    let initial_pc = 64;
+    let initial_pc = 6;
     let jump_offset = -5;
     let le_jump_offset = (-5i32).to_le_bytes();
 
@@ -354,6 +354,12 @@ fn jump_negative() -> VMResult<()> {
         runner,
         None,
         vec![
+            0x0,
+            0x0,
+            0x0,
+            0x0,
+            0x0,
+            0x0,
             JMP,
             le_jump_offset[0],
             le_jump_offset[1],
