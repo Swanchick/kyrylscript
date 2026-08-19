@@ -9,8 +9,8 @@ use crate::data_size::{DWORD, DataSize32, DataSize64, INSTRUCTION, QWORD};
 use crate::ir::byte_reader::ByteReader;
 use crate::ir::instructions::{
     ADD, AND, CLR, CPY, DEC, DIV, EQ, GE, GT, INC, JMP, JMP8, JMP16, JNZ, JNZ8, JNZ16, JZ, JZ8,
-    JZ16, LBF, LBT, LDF, LDI, LDI8, LDI16, LDI32, LDN, LDS, LDV, LDV8, LDV16, LE, LT, MUL, NE, NOT,
-    OR, RET, STR, SUB,
+    JZ16, LBF, LBT, LDC, LDC8, LDC16, LDF, LDI, LDI8, LDI16, LDI32, LDN, LDS, LDV, LDV8, LDV16, LE,
+    LT, MUL, NE, NOT, OR, RET, STR, SUB,
 };
 use crate::types::{Arguments, NativeId};
 use crate::{Assign, Function, NativeCall, VMError, VMHelper, VMResult};
@@ -431,7 +431,18 @@ impl Runner {
         self.step(INSTRUCTION)
     }
 
-    fn load_collection(&mut self, gvs: &mut GVS, size: usize) -> VMResult<()> {
+    fn load_collection(
+        &mut self,
+        gvs: &mut GVS,
+        reader: ByteReader,
+        data_size: DataSize32,
+    ) -> VMResult<()> {
+        let size = match data_size {
+            DataSize32::Byte => reader.parse_u8()? as usize,
+            DataSize32::Word => reader.parse_u16()? as usize,
+            DataSize32::DWord => reader.parse_u32()? as usize,
+        };
+
         let stack = self.acc.size_pop(size);
         let collection_id = gvs.collection_store_stack(stack);
 
@@ -835,7 +846,9 @@ impl Runner {
             INC => self.increment(gvs),
             DEC => self.decrement(gvs),
             CPY => self.clone(gvs),
-            // Instruction::LoadCollection(size) => self.load_collection(gvs, size),
+            LDC8 => self.load_collection(gvs, reader, DataSize32::Byte),
+            LDC16 => self.load_collection(gvs, reader, DataSize32::Word),
+            LDC => self.load_collection(gvs, reader, DataSize32::DWord),
             STR => self.store(),
             // Instruction::Free(size) => self.free(gvs, size),
             CLR => self.clear_acc(gvs),

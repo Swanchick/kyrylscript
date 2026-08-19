@@ -1018,6 +1018,7 @@ fn load_collection() -> VMResult<()> {
     let runner = KsDriver::runner_default(Some(acc), None, false, None, None, None);
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDC, storage_len as u8, 0, 0, 0])?;
 
+    assert_eq!(driver.runner.pc, 5);
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.gvs.storage.len(), 5);
 
@@ -1059,6 +1060,7 @@ fn load_collection_8() -> VMResult<()> {
     let runner = KsDriver::runner_default(Some(acc), None, false, None, None, None);
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDC8, storage_len as u8])?;
 
+    assert_eq!(driver.runner.pc, 2);
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.gvs.storage.len(), 5);
 
@@ -1100,6 +1102,7 @@ fn load_collection_16() -> VMResult<()> {
     let runner = KsDriver::runner_default(Some(acc), None, false, None, None, None);
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDC16, storage_len as u8, 0])?;
 
+    assert_eq!(driver.runner.pc, 3);
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.gvs.storage.len(), 5);
 
