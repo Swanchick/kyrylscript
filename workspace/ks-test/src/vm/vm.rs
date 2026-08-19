@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use ks_vm_new::types::CollectionId;
 use ks_vm_new::{Constant, Instruction, VMResult};
 use ks_vm_new::{KsCall, NativeHelper, NativeRegistry, STRING_TYPE};
 
@@ -23,7 +24,7 @@ impl KsCall for TestPrint {
                 continue;
             }
 
-            let string = gvs.collection_string(variable.value)?;
+            let string = gvs.collection_string(variable.value as CollectionId)?;
 
             let mut output = self.output.borrow_mut();
             output.push_str(string);

@@ -95,7 +95,7 @@ impl GVS {
     fn free_string(&mut self, storage_id: StorageId) -> VMResult<()> {
         let collection_id = {
             let variable = self.variable(storage_id)?;
-            variable.value
+            variable.value as CollectionId
         };
 
         self.free_collection(collection_id);
@@ -118,9 +118,9 @@ impl GVS {
 
                     if variable.is_function() {
                         let function = variable.as_function()?;
-                        (function.collection_id.unwrap() as u64, variable.owners)
+                        (function.collection_id.unwrap(), variable.owners)
                     } else {
-                        (variable.value, variable.owners)
+                        (variable.value as CollectionId, variable.owners)
                     }
                 };
 
@@ -246,9 +246,9 @@ impl GVS {
             if variable.is_function() {
                 let function = variable.as_function()?;
 
-                function.collection_id.unwrap() as u64
+                function.collection_id.unwrap()
             } else {
-                variable.value
+                variable.value as CollectionId
             }
         };
 
@@ -269,13 +269,13 @@ impl GVS {
                         let function = variable.as_function()?;
 
                         if let Some(collection_id) = function.collection_id {
-                            collections.push(Frame::new(*storage_id, collection_id as u64));
+                            collections.push(Frame::new(*storage_id, collection_id));
 
                             continue;
                         }
                     }
                     STACK_TYPE => {
-                        collections.push(Frame::new(*storage_id, variable.value));
+                        collections.push(Frame::new(*storage_id, variable.value as CollectionId));
 
                         continue;
                     }

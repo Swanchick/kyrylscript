@@ -62,11 +62,11 @@ impl Variable {
     }
 
     pub fn string(collection_id: CollectionId) -> Self {
-        Self::new(STRING_TYPE, collection_id)
+        Self::new(STRING_TYPE, collection_id as u64)
     }
 
     pub fn collection(collection_id: CollectionId) -> Self {
-        Self::new(STACK_TYPE, collection_id)
+        Self::new(STACK_TYPE, collection_id as u64)
     }
 
     pub fn function(function: Function) -> Self {

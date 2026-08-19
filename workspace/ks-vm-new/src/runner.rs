@@ -5,9 +5,9 @@ use alloc::string::{String, ToString};
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
-use crate::data_size::{DWORD, DataSize64, INSTRUCTION, QWORD};
+use crate::data_size::{DWORD, DataSize32, DataSize64, INSTRUCTION, QWORD};
 use crate::ir::byte_reader::ByteReader;
-use crate::ir::instructions::{LBF, LBT, LDF, LDI, LDI8, LDI16, LDI32, LDN, LDS};
+use crate::ir::instructions::{LBF, LBT, LDF, LDI, LDI8, LDI16, LDI32, LDN, LDS, LDV, LDV8, LDV16};
 use crate::types::{Arguments, NativeId};
 use crate::{Assign, Function, NativeCall, VMError, VMHelper, VMResult};
 
@@ -108,11 +108,22 @@ impl Runner {
         self.step(size as isize)
     }
 
-    fn load_var(&mut self, gvs: &mut GVS, slot: Slot) -> VMResult<()> {
+    fn load_var(
+        &mut self,
+        gvs: &mut GVS,
+        reader: ByteReader,
+        data_size: DataSize32,
+    ) -> VMResult<()> {
+        let slot = match data_size {
+            DataSize32::Byte => reader.parse_u8()? as u32,
+            DataSize32::Word => reader.parse_u16()? as u32,
+            DataSize32::DWord => reader.parse_u32()? as u32,
+        };
+
         let storage_id = self.stack.storage_id(slot)?;
         self.acc.push_storage_id(gvs, storage_id)?;
 
-        Ok(())
+        self.step(data_size.instruction_size())
     }
 
     fn jump(&mut self, offset: Offset) -> VMResult<()> {
@@ -127,7 +138,11 @@ impl Runner {
         Ok(())
     }
 
-    fn add_strings(gvs: &mut GVS, left: CollectionId, right: CollectionId) -> VMResult<u64> {
+    fn add_strings(
+        gvs: &mut GVS,
+        left: CollectionId,
+        right: CollectionId,
+    ) -> VMResult<CollectionId> {
         let mut left = gvs.collection_string(left)?.to_string();
         let right = gvs.collection_string(right)?;
 
@@ -147,7 +162,11 @@ impl Runner {
                 Ok(Variable::from(left.as_f64()? + right.as_f64()?))
             }
             (STRING_TYPE, STRING_TYPE) => {
-                let collection_id = Self::add_strings(gvs, left.value, right.value)?;
+                let collection_id = Self::add_strings(
+                    gvs,
+                    left.value as CollectionId,
+                    right.value as CollectionId,
+                )?;
                 Ok(Variable::string(collection_id))
             }
             _ => Err("Invalid type"),
@@ -257,8 +276,8 @@ impl Runner {
                 Ok(Variable::from(left.as_f64()? == right.as_f64()?))
             }
             (STRING_TYPE, STRING_TYPE) => {
-                let left_string = gvs.collection_string(left.value)?;
-                let right_string = gvs.collection_string(right.value)?;
+                let left_string = gvs.collection_string(left.value as CollectionId)?;
+                let right_string = gvs.collection_string(right.value as CollectionId)?;
                 Ok(Variable::from(left_string == right_string))
             }
             _ => Err("Invalid type"),
@@ -360,16 +379,16 @@ impl Runner {
     }
 
     fn clone_string(&mut self, gvs: &mut GVS, variable: &mut Variable) -> VMResult<()> {
-        let collection_id = variable.value;
+        let collection_id = variable.value as CollectionId;
         let string = gvs.collection_string(collection_id)?;
         let collection_id = gvs.collection_store_string(string.to_string());
 
-        variable.value = collection_id;
+        variable.value = collection_id as u64;
         Ok(())
     }
 
     fn clone_stack(&mut self, gvs: &mut GVS, variable: &mut Variable) -> VMResult<()> {
-        let collection_id = variable.value;
+        let collection_id = variable.value as CollectionId;
         let stack = gvs.collection_stack(collection_id)?.to_vec();
 
         // Todo: Implement deep cloning for matrices
@@ -383,7 +402,7 @@ impl Runner {
             .collect::<VMResult<Vec<StorageId>>>()?;
 
         let collection_id = gvs.collection_store_stack(stack);
-        variable.value = collection_id;
+        variable.value = collection_id as u64;
 
         Ok(())
     }
@@ -631,7 +650,7 @@ impl Runner {
 
         let collection_variable = self.acc.pop(gvs)?;
 
-        let collection_id = collection_variable.value;
+        let collection_id = collection_variable.value as CollectionId;
         let index = index_variable.value as usize;
 
         match collection_variable.value_type {
@@ -713,7 +732,9 @@ impl Runner {
             return Err(VMError::from("Cannot extract slot_id from not stack"));
         }
 
-        self.assign = Assign::Collection(variable.value, index);
+        let collection_id = variable.value as CollectionId;
+
+        self.assign = Assign::Collection(collection_id, index);
 
         Ok(())
     }
@@ -736,7 +757,8 @@ impl Runner {
             return Err(VMError::from("Cannot extract slot_id from not stack"));
         }
 
-        self.assign = Assign::Collection(variable.value, index);
+        let collection_id = variable.value as CollectionId;
+        self.assign = Assign::Collection(collection_id, index);
 
         Ok(())
     }
@@ -782,7 +804,9 @@ impl Runner {
             LDI => self.load_integer(gvs, reader, DataSize64::QWord),
             LDF => self.load_float(gvs, reader),
             LDS => self.load_string(gvs, reader),
-            // Instruction::LoadConst(constant) => self.load_const(gvs, constant),
+            LDV8 => self.load_var(gvs, reader, DataSize32::Byte),
+            LDV16 => self.load_var(gvs, reader, DataSize32::Word),
+            LDV => self.load_var(gvs, reader, DataSize32::DWord),
             // Instruction::LoadVar(slot) => self.load_var(gvs, slot),
             // Instruction::Jump(offset) => self.jump(offset),
             // Instruction::Add => self.add(gvs),

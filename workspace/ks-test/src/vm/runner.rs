@@ -180,7 +180,7 @@ fn load_const_with_free_storage() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(None, gvs, vec![LDI8, le_integer[0]])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 2);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
 

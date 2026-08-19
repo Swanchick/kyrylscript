@@ -27,3 +27,13 @@ pub enum DataSize32 {
     Word,  // 2 bytes
     DWord, // 4 bytes
 }
+
+impl DataSize32 {
+    pub fn instruction_size(self) -> isize {
+        match self {
+            Self::Byte => INSTRUCTION + BYTE,
+            Self::Word => INSTRUCTION + WORD,
+            Self::DWord => INSTRUCTION + DWORD,
+        }
+    }
+}
