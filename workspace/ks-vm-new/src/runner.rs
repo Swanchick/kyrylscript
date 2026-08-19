@@ -11,7 +11,7 @@ use crate::ir::instructions::{
     ADD, AND, ASC, ASN, ASV, ASV8, ASV16, CALL, CALL8, CALL16, CLR, CPY, DEC, DIV, EQ, FREE, FREE8,
     FREE16, GE, GT, INC, JMP, JMP8, JMP16, JNZ, JNZ8, JNZ16, JZ, JZ8, JZ16, LBF, LBT, LDC, LDC8,
     LDC16, LDCP, LDCP8, LDCP16, LDF, LDFC, LDFN, LDFN8, LDFN16, LDI, LDI8, LDI16, LDI32, LDN, LDS,
-    LDV, LDV8, LDV16, LE, LEN, LT, MUL, NE, NOT, OR, RET, STR, SUB,
+    LDV, LDV8, LDV16, LE, LEN, LT, MUL, NCALL, NE, NOT, OR, RET, STR, SUB,
 };
 use crate::types::{Arguments, NativeId};
 use crate::{Assign, Function, NativeCall, VMError, VMHelper, VMResult};
@@ -808,14 +808,15 @@ impl Runner {
     }
 
     fn call_native(
-        &self,
+        &mut self,
         native_stack: &mut Vec<NativeCall>,
-        native_id: NativeId,
-        arguments: Arguments,
         runner_id: usize,
+        reader: ByteReader,
     ) -> VMResult<()> {
+        let (native_id, arguments) = reader.parse_ncall()?;
         let native_call = NativeCall::new(native_id, arguments, runner_id);
         native_stack.push(native_call);
+        self.step(INSTRUCTION + DWORD * 2)?;
         Ok(())
     }
 
@@ -886,9 +887,7 @@ impl Runner {
             ASV16 => self.assign_variable(reader, DataSize32::Word),
             ASV => self.assign_variable(reader, DataSize32::DWord),
             ASC => self.assign_collection(gvs),
-            // Instruction::CallNative(native_id, arguments) => {
-            //     self.call_native(native_stack, runner_id)
-            // }
+            NCALL => self.call_native(helper.native_stack, helper.runner_id, reader),
             _ => Err(VMError::from("Unknown instruction opcode")),
         }?;
 

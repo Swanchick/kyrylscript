@@ -2299,6 +2299,8 @@ fn native_call_was_added() -> VMResult<()> {
 
     runner.run(vm_helper)?;
 
+    assert_eq!(runner.pc, 9);
+
     assert_eq!(native_stack.len(), 1);
     assert_eq!(native_stack[0], NativeCall::new(1, 5, 0));
 
