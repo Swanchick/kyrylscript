@@ -448,7 +448,7 @@ impl Runner {
 
         self.acc.push(gvs, Variable::collection(collection_id))?;
 
-        Ok(())
+        self.step(data_size.instruction_size())
     }
 
     fn store(&mut self) -> VMResult<()> {
