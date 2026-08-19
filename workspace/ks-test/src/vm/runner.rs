@@ -677,7 +677,7 @@ fn or_true() -> VMResult<()> {
     let mut variable_result = Variable::from(left || right);
     variable_result.owners = 1;
 
-    KsDriver::operation_test(variable_left, variable_right, variable_result, vec![AND])?;
+    KsDriver::operation_test(variable_left, variable_right, variable_result, vec![OR])?;
 
     Ok(())
 }

@@ -7,7 +7,10 @@ use alloc::vec::Vec;
 
 use crate::data_size::{DWORD, DataSize32, DataSize64, INSTRUCTION, QWORD};
 use crate::ir::byte_reader::ByteReader;
-use crate::ir::instructions::{LBF, LBT, LDF, LDI, LDI8, LDI16, LDI32, LDN, LDS, LDV, LDV8, LDV16};
+use crate::ir::instructions::{
+    ADD, AND, CLR, CPY, DEC, DIV, EQ, GE, GT, INC, LBF, LBT, LDF, LDI, LDI8, LDI16, LDI32, LDN,
+    LDS, LDV, LDV8, LDV16, LE, LT, MUL, NE, NOT, OR, RET, STR, SUB,
+};
 use crate::types::{Arguments, NativeId};
 use crate::{Assign, Function, NativeCall, VMError, VMHelper, VMResult};
 
@@ -174,7 +177,7 @@ impl Runner {
 
         self.acc.push(gvs, variable)?;
 
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
     fn binary_op<RI, RF>(
@@ -202,7 +205,7 @@ impl Runner {
 
         self.acc.push(gvs, variable)?;
 
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
     fn minus(&mut self, gvs: &mut GVS) -> VMResult<()> {
@@ -243,7 +246,7 @@ impl Runner {
 
         self.acc.push(gvs, variable)?;
 
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
     fn greater_eq(&mut self, gvs: &mut GVS) -> VMResult<()> {
@@ -283,6 +286,7 @@ impl Runner {
             _ => Err("Invalid type"),
         }?;
 
+        self.step(INSTRUCTION)?;
         Ok(variable)
     }
 
@@ -313,8 +317,7 @@ impl Runner {
         }?;
 
         self.acc.push(gvs, variable)?;
-
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
     fn and(&mut self, gvs: &mut GVS) -> VMResult<()> {
@@ -333,7 +336,9 @@ impl Runner {
         match variable.value_type {
             BOOLEAN_TYPE => self.acc.push(gvs, Variable::from(!variable.as_boolean())),
             _ => Err(VMError::from("Invalid value_type for not operator")),
-        }
+        }?;
+
+        self.step(INSTRUCTION)
     }
 
     fn increment(&mut self, gvs: &mut GVS) -> VMResult<()> {
@@ -354,7 +359,7 @@ impl Runner {
             _ => Err("Invalid value_type for increment operator"),
         }?;
 
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
     fn decrement(&mut self, gvs: &mut GVS) -> VMResult<()> {
@@ -375,7 +380,7 @@ impl Runner {
             _ => Err("Invalid value_type for decrement operator"),
         }?;
 
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
     fn clone_string(&mut self, gvs: &mut GVS, variable: &mut Variable) -> VMResult<()> {
@@ -419,8 +424,7 @@ impl Runner {
         }?;
 
         self.acc.push(gvs, variable)?;
-
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
     fn load_collection(&mut self, gvs: &mut GVS, size: usize) -> VMResult<()> {
@@ -433,12 +437,9 @@ impl Runner {
     }
 
     fn store(&mut self) -> VMResult<()> {
-        if let Some(storage_id) = self.acc.data.pop() {
-            self.stack.data.push(storage_id);
-            Ok(())
-        } else {
-            Err(VMError::from("No storage_id in acc stack"))
-        }
+        let storage_id = self.acc.data.pop().ok_or("No storage_id in acc stack")?;
+        self.stack.data.push(storage_id);
+        self.step(INSTRUCTION)
     }
 
     fn free(&mut self, gvs: &mut GVS, size: usize) -> VMResult<()> {
@@ -454,7 +455,7 @@ impl Runner {
             gvs.storage_remove_owner(storage_id)?;
         }
 
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
     fn jump_if(&mut self, gvs: &mut GVS, offset: i32, boolean: bool) -> VMResult<()> {
@@ -493,14 +494,14 @@ impl Runner {
     }
 
     fn on_return(&mut self, gvs: &mut GVS) -> VMResult<()> {
-        if let Some(call_stack) = self.call_stack.pop() {
-            gvs.storage_remove_owner(call_stack.storage_id)?;
-            self.pc = call_stack.return_pointer;
+        let call_stack = self
+            .call_stack
+            .pop()
+            .ok_or("CallStack is empty, cannot execute return")?;
 
-            Ok(())
-        } else {
-            Err(VMError::from("CallStack is empty, cannot execute return"))
-        }
+        gvs.storage_remove_owner(call_stack.storage_id)?;
+        self.pc = call_stack.return_pointer;
+        self.step(INSTRUCTION)
     }
 
     fn load_function(&mut self, gvs: &mut GVS, captures: CaptureSize) -> VMResult<()> {
@@ -807,32 +808,31 @@ impl Runner {
             LDV8 => self.load_var(gvs, reader, DataSize32::Byte),
             LDV16 => self.load_var(gvs, reader, DataSize32::Word),
             LDV => self.load_var(gvs, reader, DataSize32::DWord),
-            // Instruction::LoadVar(slot) => self.load_var(gvs, slot),
             // Instruction::Jump(offset) => self.jump(offset),
-            // Instruction::Add => self.add(gvs),
-            // Instruction::Minus => self.minus(gvs),
-            // Instruction::Mul => self.mul(gvs),
-            // Instruction::Div => self.div(gvs),
-            // Instruction::Eq => self.eq(gvs),
-            // Instruction::GreaterEq => self.greater_eq(gvs),
-            // Instruction::Greater => self.greater(gvs),
-            // Instruction::LessEq => self.less_eq(gvs),
-            // Instruction::Less => self.less(gvs),
-            // Instruction::NotEq => self.not_eq(gvs),
-            // Instruction::And => self.and(gvs),
-            // Instruction::Or => self.or(gvs),
-            // Instruction::Not => self.not(gvs),
-            // Instruction::Increment => self.increment(gvs),
-            // Instruction::Decrement => self.decrement(gvs),
-            // Instruction::Clone => self.clone(gvs),
+            ADD => self.add(gvs),
+            SUB => self.minus(gvs),
+            MUL => self.mul(gvs),
+            DIV => self.div(gvs),
+            EQ => self.eq(gvs),
+            GE => self.greater_eq(gvs),
+            GT => self.greater(gvs),
+            LE => self.less_eq(gvs),
+            LT => self.less(gvs),
+            NE => self.not_eq(gvs),
+            AND => self.and(gvs),
+            OR => self.or(gvs),
+            NOT => self.not(gvs),
+            INC => self.increment(gvs),
+            DEC => self.decrement(gvs),
+            CPY => self.clone(gvs),
             // Instruction::LoadCollection(size) => self.load_collection(gvs, size),
-            // Instruction::Store => self.store(),
+            STR => self.store(),
             // Instruction::Free(size) => self.free(gvs, size),
-            // Instruction::ClearAcc => self.clear_acc(gvs),
+            CLR => self.clear_acc(gvs),
             // Instruction::JumpIfFalse(offset) => self.jump_if(gvs, offset, false),
             // Instruction::JumpIfTrue(offset) => self.jump_if(gvs, offset, true),
             // Instruction::Call => self.call(gvs),
-            // Instruction::Return => self.on_return(gvs),
+            RET => self.on_return(gvs),
             // Instruction::LoadFunction(captures) => self.load_function(gvs, captures),
             // Instruction::LoadCapture(slot_id) => self.load_capture(gvs, slot_id),
             // Instruction::CollectionLen => self.collection_len(gvs),
