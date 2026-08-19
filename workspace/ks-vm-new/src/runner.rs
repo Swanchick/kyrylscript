@@ -5,9 +5,9 @@ use alloc::string::{String, ToString};
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
-use crate::data_size::{DataSize64, INSTRUCTION, QWORD};
-use crate::ir::instructions::{LBF, LBT, LDF, LDI, LDI8, LDI16, LDI32, LDN};
-use crate::ir::reader::Reader;
+use crate::data_size::{DWORD, DataSize64, INSTRUCTION, QWORD};
+use crate::ir::byte_reader::ByteReader;
+use crate::ir::instructions::{LBF, LBT, LDF, LDI, LDI8, LDI16, LDI32, LDN, LDS};
 use crate::types::{Arguments, NativeId};
 use crate::{Assign, Function, NativeCall, VMError, VMHelper, VMResult};
 
@@ -73,33 +73,39 @@ impl Runner {
     fn load_integer(
         &mut self,
         gvs: &mut GVS,
-        reader: Reader,
+        reader: ByteReader,
         data_size: DataSize64,
     ) -> VMResult<()> {
         let number = match data_size {
-            DataSize64::Byte => reader.parse_u8(),
-            DataSize64::Word => reader.parse_u16(),
-            DataSize64::DWord => reader.parse_u32(),
-            DataSize64::QWord => reader.parse_u64(),
-        }? as i64;
+            DataSize64::Byte => reader.parse_u8()? as u64,
+            DataSize64::Word => reader.parse_u16()? as u64,
+            DataSize64::DWord => reader.parse_u32()? as u64,
+            DataSize64::QWord => reader.parse_u64()? as u64,
+        } as i64;
 
         let variable = Variable::from(number);
         self.acc.push(gvs, variable)?;
         self.step(data_size.instruction_size())
     }
 
-    fn load_float(&mut self, gvs: &mut GVS, reader: Reader) -> VMResult<()> {
+    fn load_float(&mut self, gvs: &mut GVS, reader: ByteReader) -> VMResult<()> {
         let number = f64::from_bits(reader.parse_u64()?);
         let variable = Variable::from(number);
         self.acc.push(gvs, variable)?;
         self.step(INSTRUCTION + QWORD)
     }
 
-    fn load_const_string(gvs: &mut GVS, reader: Reader) -> Variable {
-        // let collection_id = gvs.collection_store_string(string);
+    fn load_string(&mut self, gvs: &mut GVS, mut reader: ByteReader) -> VMResult<()> {
+        let size = reader.parse_u32()? as usize;
+        self.step(INSTRUCTION + DWORD)?;
+        reader.pc = self.pc;
+        let string = reader.parse_string(size)?;
 
-        // Variable::string(collection_id)
-        todo!()
+        let collection_id = gvs.collection_store_string(string.to_string());
+        let variable = Variable::string(collection_id);
+        self.acc.push(gvs, variable)?;
+
+        self.step(size as isize)
     }
 
     fn load_var(&mut self, gvs: &mut GVS, slot: Slot) -> VMResult<()> {
@@ -764,7 +770,7 @@ impl Runner {
 
     pub fn run<'a>(&mut self, helper: VMHelper<'a>) -> VMResult<()> {
         let gvs = helper.gvs;
-        let reader = Reader::new(self.pc, helper.instructions);
+        let reader = ByteReader::new(self.pc, helper.instructions);
 
         match helper.instruction {
             LDN => self.load_null(gvs),
@@ -775,6 +781,7 @@ impl Runner {
             LDI32 => self.load_integer(gvs, reader, DataSize64::DWord),
             LDI => self.load_integer(gvs, reader, DataSize64::QWord),
             LDF => self.load_float(gvs, reader),
+            LDS => self.load_string(gvs, reader),
             // Instruction::LoadConst(constant) => self.load_const(gvs, constant),
             // Instruction::LoadVar(slot) => self.load_var(gvs, slot),
             // Instruction::Jump(offset) => self.jump(offset),

@@ -123,15 +123,16 @@ fn load_const_float() -> VMResult<()> {
 #[test]
 fn load_const_string() -> VMResult<()> {
     let string = String::from("Hello World");
+    let mut bytes = string.as_bytes().to_vec();
     let mut variable = Variable::string(0);
     variable.owners = 1;
 
-    let mut instruction = vec![LDS, string.len() as u8];
-    instruction.append(&mut string.as_bytes().to_vec());
+    let mut instruction = vec![LDS, string.len() as u8, 0, 0, 0];
+    instruction.append(&mut bytes);
 
     let driver = KsDriver::runner(instruction)?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 16);
     assert_eq!(driver.runner.acc.get(0), Some(&0));
     assert_eq!(driver.gvs.storage[0], Some(variable));
     assert_eq!(driver.gvs.collections[0], Collection::String(string));
