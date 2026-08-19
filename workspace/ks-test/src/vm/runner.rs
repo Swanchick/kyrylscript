@@ -1231,7 +1231,7 @@ fn free_string() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![FREE, 1, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 5);
 
     assert_eq!(driver.runner.stack.len(), 0);
 
@@ -1266,7 +1266,7 @@ fn free_collection() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![FREE, 1, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 5);
 
     assert_eq!(driver.runner.stack.len(), 0);
 
@@ -1315,7 +1315,7 @@ fn free_collection_matrix() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![FREE, 1, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 5);
 
     assert_eq!(driver.runner.stack.len(), 0);
 
@@ -1766,7 +1766,7 @@ fn free_function_with_capture() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![FREE8, 1])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 2);
 
     assert_eq!(driver.runner.stack.len(), 0);
 
