@@ -92,7 +92,7 @@ pub const JZ16: u8 = 0xA1; // <u16>
 pub const JNZ8: u8 = 0xA2; // <u8>
 pub const JNZ16: u8 = 0xA3; // <u16>
 pub const JMP8: u8 = 0xA4; // <u8>
-pub const JMP16: u8 = 0xA4; // <u16>
+pub const JMP16: u8 = 0xA5; // <u16>
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Instruction {

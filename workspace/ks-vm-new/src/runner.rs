@@ -8,8 +8,9 @@ use alloc::vec::Vec;
 use crate::data_size::{DWORD, DataSize32, DataSize64, INSTRUCTION, QWORD};
 use crate::ir::byte_reader::ByteReader;
 use crate::ir::instructions::{
-    ADD, AND, CLR, CPY, DEC, DIV, EQ, GE, GT, INC, LBF, LBT, LDF, LDI, LDI8, LDI16, LDI32, LDN,
-    LDS, LDV, LDV8, LDV16, LE, LT, MUL, NE, NOT, OR, RET, STR, SUB,
+    ADD, AND, CLR, CPY, DEC, DIV, EQ, GE, GT, INC, JMP, JMP8, JMP16, JNZ, JNZ8, JNZ16, JZ, JZ8,
+    JZ16, LBF, LBT, LDF, LDI, LDI8, LDI16, LDI32, LDN, LDS, LDV, LDV8, LDV16, LE, LT, MUL, NE, NOT,
+    OR, RET, STR, SUB,
 };
 use crate::types::{Arguments, NativeId};
 use crate::{Assign, Function, NativeCall, VMError, VMHelper, VMResult};
@@ -19,7 +20,7 @@ use super::environment::variable::{
     BOOLEAN_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STACK_TYPE, STRING_TYPE,
 };
 use super::environment::{GVS, Stack, Variable};
-use super::types::{CaptureSize, CollectionId, Offset, Pointer, Slot, StorageId};
+use super::types::{CaptureSize, CollectionId, Pointer, Slot, StorageId};
 
 #[derive(Debug)]
 pub struct Runner {
@@ -28,7 +29,6 @@ pub struct Runner {
     pub stack: Stack,
     pub call_stack: Vec<CallStack>,
     pub assign: Assign,
-    pub prevent_step: bool,
 }
 
 impl Default for Runner {
@@ -45,7 +45,6 @@ impl Runner {
             stack: Stack::new(),
             call_stack: Vec::new(),
             assign: Assign::None,
-            prevent_step: false,
         }
     }
 
@@ -129,14 +128,19 @@ impl Runner {
         self.step(data_size.instruction_size())
     }
 
-    fn jump(&mut self, offset: Offset) -> VMResult<()> {
-        self.pc = if offset < 0 {
-            self.pc.saturating_sub(offset.unsigned_abs() as Pointer)
-        } else {
-            self.pc.saturating_add(offset as Pointer)
+    fn jump(&mut self, reader: ByteReader, data_size: DataSize32) -> VMResult<()> {
+        println!("hello world");
+
+        let offset = match data_size {
+            DataSize32::Byte => reader.parse_u8()? as isize,
+            DataSize32::Word => reader.parse_u16()? as isize,
+            DataSize32::DWord => reader.parse_u32()? as isize,
         };
 
-        // self.prevent_step = true;
+        self.pc = self
+            .pc
+            .checked_add_signed(offset)
+            .ok_or("Out of program bounding")?;
 
         Ok(())
     }
@@ -458,7 +462,13 @@ impl Runner {
         self.step(INSTRUCTION)
     }
 
-    fn jump_if(&mut self, gvs: &mut GVS, offset: i32, boolean: bool) -> VMResult<()> {
+    fn jump_if(
+        &mut self,
+        gvs: &mut GVS,
+        reader: ByteReader,
+        data_size: DataSize32,
+        boolean: bool,
+    ) -> VMResult<()> {
         let variable = self.acc.pop(gvs)?;
 
         if variable.value_type != BOOLEAN_TYPE {
@@ -466,10 +476,10 @@ impl Runner {
         }
 
         if variable.as_boolean() == boolean {
-            self.jump(offset)?;
+            self.jump(reader, data_size)
+        } else {
+            self.step(data_size.instruction_size())
         }
-
-        Ok(())
     }
 
     fn call(&mut self, gvs: &mut GVS, arguments: Arguments) -> VMResult<()> {
@@ -479,8 +489,6 @@ impl Runner {
 
         let variable = gvs.variable(storage_id)?;
         let function = variable.as_function()?;
-
-        self.prevent_step = true;
 
         let return_pointer = self.pc;
         let stack_pointer = self.stack.len() as Pointer;
@@ -808,7 +816,9 @@ impl Runner {
             LDV8 => self.load_var(gvs, reader, DataSize32::Byte),
             LDV16 => self.load_var(gvs, reader, DataSize32::Word),
             LDV => self.load_var(gvs, reader, DataSize32::DWord),
-            // Instruction::Jump(offset) => self.jump(offset),
+            JMP8 => self.jump(reader, DataSize32::Byte),
+            JMP16 => self.jump(reader, DataSize32::Word),
+            JMP => self.jump(reader, DataSize32::DWord),
             ADD => self.add(gvs),
             SUB => self.minus(gvs),
             MUL => self.mul(gvs),
@@ -829,8 +839,12 @@ impl Runner {
             STR => self.store(),
             // Instruction::Free(size) => self.free(gvs, size),
             CLR => self.clear_acc(gvs),
-            // Instruction::JumpIfFalse(offset) => self.jump_if(gvs, offset, false),
-            // Instruction::JumpIfTrue(offset) => self.jump_if(gvs, offset, true),
+            JZ8 => self.jump_if(gvs, reader, DataSize32::Byte, false),
+            JZ16 => self.jump_if(gvs, reader, DataSize32::Word, false),
+            JZ => self.jump_if(gvs, reader, DataSize32::DWord, false),
+            JNZ8 => self.jump_if(gvs, reader, DataSize32::Byte, true),
+            JNZ16 => self.jump_if(gvs, reader, DataSize32::Word, true),
+            JNZ => self.jump_if(gvs, reader, DataSize32::DWord, true),
             // Instruction::Call => self.call(gvs),
             RET => self.on_return(gvs),
             // Instruction::LoadFunction(captures) => self.load_function(gvs, captures),
