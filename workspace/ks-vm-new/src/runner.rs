@@ -8,10 +8,10 @@ use alloc::vec::Vec;
 use crate::data_size::{DWORD, DataSize32, DataSize64, INSTRUCTION, QWORD};
 use crate::ir::byte_reader::ByteReader;
 use crate::ir::instructions::{
-    ADD, AND, CALL, CALL8, CALL16, CLR, CPY, DEC, DIV, EQ, FREE, FREE8, FREE16, GE, GT, INC, JMP,
-    JMP8, JMP16, JNZ, JNZ8, JNZ16, JZ, JZ8, JZ16, LBF, LBT, LDC, LDC8, LDC16, LDF, LDFN, LDFN8,
-    LDFN16, LDI, LDI8, LDI16, LDI32, LDN, LDS, LDV, LDV8, LDV16, LE, LT, MUL, NE, NOT, OR, RET,
-    STR, SUB,
+    ADD, AND, ASC, ASN, ASV, ASV8, ASV16, CALL, CALL8, CALL16, CLR, CPY, DEC, DIV, EQ, FREE, FREE8,
+    FREE16, GE, GT, INC, JMP, JMP8, JMP16, JNZ, JNZ8, JNZ16, JZ, JZ8, JZ16, LBF, LBT, LDC, LDC8,
+    LDC16, LDCP, LDCP8, LDCP16, LDF, LDFC, LDFN, LDFN8, LDFN16, LDI, LDI8, LDI16, LDI32, LDN, LDS,
+    LDV, LDV8, LDV16, LE, LEN, LT, MUL, NE, NOT, OR, RET, STR, SUB,
 };
 use crate::types::{Arguments, NativeId};
 use crate::{Assign, Function, NativeCall, VMError, VMHelper, VMResult};
@@ -21,7 +21,7 @@ use super::environment::variable::{
     BOOLEAN_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STACK_TYPE, STRING_TYPE,
 };
 use super::environment::{GVS, Stack, Variable};
-use super::types::{CaptureSize, CollectionId, Pointer, Slot, StorageId};
+use super::types::{CollectionId, Pointer, Slot, StorageId};
 
 #[derive(Debug)]
 pub struct Runner {
@@ -560,22 +560,27 @@ impl Runner {
         Ok(function)
     }
 
-    fn load_capture(&mut self, gvs: &mut GVS, slot_id: StorageId) -> VMResult<()> {
+    fn load_capture(
+        &mut self,
+        gvs: &mut GVS,
+        reader: ByteReader,
+        data_size: DataSize32,
+    ) -> VMResult<()> {
+        let slot_id = reader.from_data_size_32(&data_size)?;
+
         let function = self.last_function(gvs)?;
 
         let collection_id = function.collection_id()?;
         let collection = gvs.collection_stack(collection_id as CollectionId)?;
 
-        if let Some(storage_id) = collection.get(slot_id as usize) {
-            self.acc.push_storage_id(gvs, *storage_id)?;
+        let storage_id = collection.get(slot_id).ok_or(format!(
+            "The function does not have captured variable with slot_id {}",
+            slot_id
+        ))?;
 
-            Ok(())
-        } else {
-            Err(VMError::from(format!(
-                "The function does not have captured variable with slot_id {}",
-                slot_id
-            )))
-        }
+        self.acc.push_storage_id(gvs, *storage_id)?;
+
+        self.step(data_size.instruction_size())
     }
 
     fn collection_len_stack(
@@ -622,7 +627,7 @@ impl Runner {
         let variable = Variable::from(collection_len);
         self.acc.push(gvs, variable)?;
 
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
     fn load_from_collection_stack(
@@ -633,12 +638,12 @@ impl Runner {
     ) -> VMResult<()> {
         let collection = gvs.collection_stack(collection_id)?;
 
-        if let Some(storage_id) = collection.get(index) {
-            self.acc.push_storage_id(gvs, *storage_id)?;
-            Ok(())
-        } else {
-            Err(VMError::from(format!("No value by that index {}", index)))
-        }
+        let storage_id = collection
+            .get(index)
+            .ok_or(format!("No value by that index {}", index))?;
+
+        self.acc.push_storage_id(gvs, *storage_id)?;
+        Ok(())
     }
 
     fn load_from_collection_string(
@@ -651,17 +656,19 @@ impl Runner {
 
         let string = collection.to_string();
 
-        if let Some(char) = string.chars().collect::<Vec<char>>().get(index) {
-            let char_string = format!("{}", char);
-            let collection_id = gvs.collection_store_string(char_string);
-            let string_variable = Variable::string(collection_id);
+        let char = *string
+            .chars()
+            .collect::<Vec<char>>()
+            .get(index)
+            .ok_or(format!("No value by that index {}", index))?;
 
-            self.acc.push(gvs, string_variable)?;
+        let char_string = format!("{}", char);
+        let collection_id = gvs.collection_store_string(char_string);
+        let string_variable = Variable::string(collection_id);
 
-            Ok(())
-        } else {
-            Err(VMError::from(format!("No value by that index {}", index)))
-        }
+        self.acc.push(gvs, string_variable)?;
+
+        Ok(())
     }
 
     fn load_from_collection(&mut self, gvs: &mut GVS) -> VMResult<()> {
@@ -681,7 +688,7 @@ impl Runner {
             _ => Err(VMError::from("This is not a collection")),
         }?;
 
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
     fn assign_for_variable(&mut self, gvs: &mut GVS, slot_id: StorageId) -> VMResult<()> {
@@ -732,13 +739,13 @@ impl Runner {
         }?;
 
         self.assign = Assign::None;
-
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
-    fn assign_variable(&mut self, slot_id: Slot) -> VMResult<()> {
+    fn assign_variable(&mut self, reader: ByteReader, data_size: DataSize32) -> VMResult<()> {
+        let slot_id = reader.from_data_size_32(&data_size)? as u32;
         self.assign = Assign::Variable(slot_id);
-        Ok(())
+        self.step(data_size.instruction_size())
     }
 
     fn assign_collection_from_variable(
@@ -797,7 +804,7 @@ impl Runner {
             Assign::None => Err(VMError::from("No assign available for collection")),
         }?;
 
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
     fn call_native(
@@ -869,16 +876,19 @@ impl Runner {
             LDFN8 => self.load_function(gvs, reader, DataSize32::Byte),
             LDFN16 => self.load_function(gvs, reader, DataSize32::Word),
             LDFN => self.load_function(gvs, reader, DataSize32::DWord),
-            // Instruction::LoadCapture(slot_id) => self.load_capture(gvs, slot_id),
-            // Instruction::CollectionLen => self.collection_len(gvs),
-            // Instruction::LoadFromCollection => self.load_from_collection(gvs),
-            // Instruction::Assign => self.assign(gvs),
-            // Instruction::AssignVariable(slot_id) => self.assign_variable(slot_id),
-            // Instruction::AssignCollection => self.assign_collection(gvs),
+            LDCP8 => self.load_capture(gvs, reader, DataSize32::Byte),
+            LDCP16 => self.load_capture(gvs, reader, DataSize32::Word),
+            LDCP => self.load_capture(gvs, reader, DataSize32::DWord),
+            LEN => self.collection_len(gvs),
+            LDFC => self.load_from_collection(gvs),
+            ASN => self.assign(gvs),
+            ASV8 => self.assign_variable(reader, DataSize32::Byte),
+            ASV16 => self.assign_variable(reader, DataSize32::Word),
+            ASV => self.assign_variable(reader, DataSize32::DWord),
+            ASC => self.assign_collection(gvs),
             // Instruction::CallNative(native_id, arguments) => {
-            //     self.call_native(native_stack, native_id, arguments, runner_id)
+            //     self.call_native(native_stack, runner_id)
             // }
-            //
             _ => Err(VMError::from("Unknown instruction opcode")),
         }?;
 

@@ -1,8 +1,8 @@
 use ks_vm_new::ir::instructions::{
     ADD, AND, ASC, ASN, ASV, ASV8, ASV16, CALL, CALL8, CALL16, CLR, CPY, DEC, DIV, EQ, FREE, FREE8,
-    GE, GT, INC, JMP, JMP8, JMP16, JNZ, JNZ8, JNZ16, JZ, JZ8, JZ16, LBF, LBT, LDC, LDC8, LDC16,
-    LDCP, LDCP8, LDCP16, LDF, LDFC, LDFN, LDFN8, LDFN16, LDI, LDI8, LDI16, LDI32, LDN, LDS, LDV,
-    LDV8, LDV16, LE, LEN, LT, MUL, NE, NOT, OR, RET, STR, SUB,
+    FREE16, GE, GT, INC, JMP, JMP8, JMP16, JNZ, JNZ8, JNZ16, JZ, JZ8, JZ16, LBF, LBT, LDC, LDC8,
+    LDC16, LDCP, LDCP8, LDCP16, LDF, LDFC, LDFN, LDFN8, LDFN16, LDI, LDI8, LDI16, LDI32, LDN, LDS,
+    LDV, LDV8, LDV16, LE, LEN, LT, MUL, NE, NOT, OR, RET, STR, SUB,
 };
 use ks_vm_new::types::Pointer;
 use ks_vm_new::{Assign, VMHelper};
@@ -1204,7 +1204,7 @@ fn free_primitive_16() -> VMResult<()> {
     let stack = Stack::from(vec![0, 1, 2]);
     let runner = KsDriver::runner_default(None, Some(stack), false, None, None, None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, vec![FREE, 3, 0])?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![FREE16, 3, 0])?;
 
     assert_eq!(driver.runner.pc, 3);
 
@@ -1632,7 +1632,7 @@ fn call_with_parameters_16() -> VMResult<()> {
 
 #[test]
 fn return_instruction() -> VMResult<()> {
-    let initial_pc = 20usize;
+    let initial_pc = 5usize;
 
     let call_stack = CallStack::new(0, 0, 0);
 
@@ -1649,7 +1649,7 @@ fn return_instruction() -> VMResult<()> {
         None,
     );
 
-    let driver = KsDriver::runner_configured(runner, gvs, vec![RET])?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![0, 0, 0, 0, 0, RET])?;
 
     assert_eq!(driver.runner.call_stack.len(), 0);
     assert_eq!(driver.runner.pc, 1);
@@ -1832,7 +1832,7 @@ fn load_capture() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDCP, 0, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 5);
 
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.runner.acc.get(0), Some(&1));
@@ -1861,7 +1861,7 @@ fn load_capture_8() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDCP8, 0])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 2);
 
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.runner.acc.get(0), Some(&1));
@@ -1890,7 +1890,7 @@ fn load_capture_16() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDCP16, 0, 0])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 3);
 
     assert_eq!(driver.runner.acc.len(), 1);
     assert_eq!(driver.runner.acc.get(0), Some(&1));
@@ -2132,7 +2132,7 @@ fn assign_variable() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![ASV, 0, 0, 0, 0])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 5);
     assert_eq!(driver.runner.assign, Assign::Variable(0));
 
     Ok(())
@@ -2160,7 +2160,7 @@ fn assign_variable_8() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![ASV8, 0])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 2);
     assert_eq!(driver.runner.assign, Assign::Variable(0));
 
     Ok(())
@@ -2188,7 +2188,7 @@ fn assign_variable_16() -> VMResult<()> {
 
     let driver = KsDriver::runner_configured(runner, gvs, vec![ASV16, 0, 0])?;
 
-    assert_eq!(driver.runner.pc, 1);
+    assert_eq!(driver.runner.pc, 3);
     assert_eq!(driver.runner.assign, Assign::Variable(0));
 
     Ok(())
