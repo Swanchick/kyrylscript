@@ -5,7 +5,4 @@ mod runner;
 mod vm;
 
 #[cfg(test)]
-mod serialize;
-
-#[cfg(test)]
 mod deserialize;

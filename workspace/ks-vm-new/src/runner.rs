@@ -5,25 +5,31 @@ use alloc::string::{String, ToString};
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
+use crate::data_size::{DWORD, DataSize32, DataSize64, INSTRUCTION, QWORD};
+use crate::ir::byte_reader::ByteReader;
+use crate::ir::instructions::{
+    ADD, AND, ASC, ASN, ASV, ASV8, ASV16, CALL, CALL8, CALL16, CLR, CPY, DEC, DIV, EQ, FREE, FREE8,
+    FREE16, GE, GT, INC, JMP, JMP8, JMP16, JNZ, JNZ8, JNZ16, JZ, JZ8, JZ16, LBF, LBT, LDC, LDC8,
+    LDC16, LDCP, LDCP8, LDCP16, LDF, LDFC, LDFN, LDFN8, LDFN16, LDI, LDI8, LDI16, LDI32, LDN, LDS,
+    LDV, LDV8, LDV16, LE, LEN, LT, MUL, NCALL, NE, NOT, OR, RET, STR, SUB,
+};
 use crate::types::{Arguments, NativeId};
-use crate::{Assign, Function, NativeCall, VMError, VMResult};
+use crate::{Assign, Function, NativeCall, VMError, VMHelper, VMResult};
 
 use super::call_stack::CallStack;
 use super::environment::variable::{
     BOOLEAN_TYPE, FLOAT_TYPE, INT_TYPE, NULL_TYPE, STACK_TYPE, STRING_TYPE,
 };
 use super::environment::{GVS, Stack, Variable};
-use super::types::{CaptureSize, CollectionId, Offset, Pointer, Slot, StorageId};
-use super::{Constant, Instruction};
+use super::types::{CollectionId, Pointer, Slot, StorageId};
 
 #[derive(Debug)]
 pub struct Runner {
-    pub program_counter: Pointer,
+    pub pc: Pointer,
     pub acc: Stack,
     pub stack: Stack,
     pub call_stack: Vec<CallStack>,
     pub assign: Assign,
-    pub prevent_step: bool,
 }
 
 impl Default for Runner {
@@ -35,64 +41,110 @@ impl Default for Runner {
 impl Runner {
     pub fn new() -> Self {
         Self {
-            program_counter: 0,
+            pc: 0,
             acc: Stack::new(),
             stack: Stack::new(),
             call_stack: Vec::new(),
             assign: Assign::None,
-            prevent_step: false,
         }
     }
 
-    fn step(&mut self) {
-        if !self.prevent_step {
-            self.program_counter += 1;
-        }
-
-        self.prevent_step = false;
-    }
-
-    fn load_const_string(gvs: &mut GVS, string: String) -> Variable {
-        let collection_id = gvs.collection_store_string(string);
-
-        Variable::string(collection_id)
-    }
-
-    fn load_const(&mut self, gvs: &mut GVS, constant: Constant) -> VMResult<()> {
-        let variable = match constant {
-            Constant::Null => Variable::null(),
-            Constant::Integer(value) => Variable::from(value),
-            Constant::Float(value) => Variable::from(value),
-            Constant::Boolean(value) => Variable::from(value),
-            Constant::String(string) => Self::load_const_string(gvs, string),
-        };
-
-        self.acc.push(gvs, variable)?;
+    fn step(&mut self, steps: isize) -> VMResult<()> {
+        self.pc = self
+            .pc
+            .checked_add_signed(steps)
+            .ok_or("Stepped out of program memory")?;
 
         Ok(())
     }
 
-    fn load_var(&mut self, gvs: &mut GVS, slot: Slot) -> VMResult<()> {
+    fn load_null(&mut self, gvs: &mut GVS) -> VMResult<()> {
+        self.acc.push(gvs, Variable::null())?;
+        self.step(1)
+    }
+
+    fn load_true(&mut self, gvs: &mut GVS) -> VMResult<()> {
+        self.acc.push(gvs, Variable::from(true))?;
+        self.step(1)
+    }
+
+    fn load_false(&mut self, gvs: &mut GVS) -> VMResult<()> {
+        self.acc.push(gvs, Variable::from(false))?;
+        self.step(1)
+    }
+
+    fn load_integer(
+        &mut self,
+        gvs: &mut GVS,
+        reader: ByteReader,
+        data_size: DataSize64,
+    ) -> VMResult<()> {
+        let number = match data_size {
+            DataSize64::Byte => reader.parse_i8()? as i64,
+            DataSize64::Word => reader.parse_i16()? as i64,
+            DataSize64::DWord => reader.parse_i32()? as i64,
+            DataSize64::QWord => reader.parse_i64()? as i64,
+        };
+
+        let variable = Variable::from(number);
+        self.acc.push(gvs, variable)?;
+        self.step(data_size.instruction_size())
+    }
+
+    fn load_float(&mut self, gvs: &mut GVS, reader: ByteReader) -> VMResult<()> {
+        let number = f64::from_bits(reader.parse_u64()?);
+        let variable = Variable::from(number);
+        self.acc.push(gvs, variable)?;
+        self.step(INSTRUCTION + QWORD)
+    }
+
+    fn load_string(&mut self, gvs: &mut GVS, mut reader: ByteReader) -> VMResult<()> {
+        let size = reader.parse_u32()? as usize;
+        self.step(INSTRUCTION + DWORD)?;
+        reader.pc = self.pc;
+        let string = reader.parse_string(size)?;
+
+        let collection_id = gvs.collection_store_string(string.to_string());
+        let variable = Variable::string(collection_id);
+        self.acc.push(gvs, variable)?;
+
+        self.step(size as isize)
+    }
+
+    fn load_var(
+        &mut self,
+        gvs: &mut GVS,
+        reader: ByteReader,
+        data_size: DataSize32,
+    ) -> VMResult<()> {
+        let slot = reader.from_data_size_32(&data_size)? as u32;
+
         let storage_id = self.stack.storage_id(slot)?;
         self.acc.push_storage_id(gvs, storage_id)?;
 
-        Ok(())
+        self.step(data_size.instruction_size())
     }
 
-    fn jump(&mut self, offset: Offset) -> VMResult<()> {
-        self.program_counter = if offset < 0 {
-            self.program_counter
-                .saturating_sub(offset.unsigned_abs() as Pointer)
-        } else {
-            self.program_counter.saturating_add(offset as Pointer)
+    fn jump(&mut self, reader: ByteReader, data_size: DataSize32) -> VMResult<()> {
+        let offset = match data_size {
+            DataSize32::Byte => reader.parse_i8()? as isize,
+            DataSize32::Word => reader.parse_i16()? as isize,
+            DataSize32::DWord => reader.parse_i32()? as isize,
         };
 
-        // self.prevent_step = true;
+        self.pc = self
+            .pc
+            .checked_add_signed(offset)
+            .ok_or("Out of program bounding")?;
 
         Ok(())
     }
 
-    fn add_strings(gvs: &mut GVS, left: CollectionId, right: CollectionId) -> VMResult<u64> {
+    fn add_strings(
+        gvs: &mut GVS,
+        left: CollectionId,
+        right: CollectionId,
+    ) -> VMResult<CollectionId> {
         let mut left = gvs.collection_string(left)?.to_string();
         let right = gvs.collection_string(right)?;
 
@@ -112,7 +164,11 @@ impl Runner {
                 Ok(Variable::from(left.as_f64()? + right.as_f64()?))
             }
             (STRING_TYPE, STRING_TYPE) => {
-                let collection_id = Self::add_strings(gvs, left.value, right.value)?;
+                let collection_id = Self::add_strings(
+                    gvs,
+                    left.value as CollectionId,
+                    right.value as CollectionId,
+                )?;
                 Ok(Variable::string(collection_id))
             }
             _ => Err("Invalid type"),
@@ -120,7 +176,7 @@ impl Runner {
 
         self.acc.push(gvs, variable)?;
 
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
     fn binary_op<RI, RF>(
@@ -148,7 +204,7 @@ impl Runner {
 
         self.acc.push(gvs, variable)?;
 
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
     fn minus(&mut self, gvs: &mut GVS) -> VMResult<()> {
@@ -189,7 +245,7 @@ impl Runner {
 
         self.acc.push(gvs, variable)?;
 
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
     fn greater_eq(&mut self, gvs: &mut GVS) -> VMResult<()> {
@@ -222,13 +278,14 @@ impl Runner {
                 Ok(Variable::from(left.as_f64()? == right.as_f64()?))
             }
             (STRING_TYPE, STRING_TYPE) => {
-                let left_string = gvs.collection_string(left.value)?;
-                let right_string = gvs.collection_string(right.value)?;
+                let left_string = gvs.collection_string(left.value as CollectionId)?;
+                let right_string = gvs.collection_string(right.value as CollectionId)?;
                 Ok(Variable::from(left_string == right_string))
             }
             _ => Err("Invalid type"),
         }?;
 
+        self.step(INSTRUCTION)?;
         Ok(variable)
     }
 
@@ -259,8 +316,7 @@ impl Runner {
         }?;
 
         self.acc.push(gvs, variable)?;
-
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
     fn and(&mut self, gvs: &mut GVS) -> VMResult<()> {
@@ -279,7 +335,9 @@ impl Runner {
         match variable.value_type {
             BOOLEAN_TYPE => self.acc.push(gvs, Variable::from(!variable.as_boolean())),
             _ => Err(VMError::from("Invalid value_type for not operator")),
-        }
+        }?;
+
+        self.step(INSTRUCTION)
     }
 
     fn increment(&mut self, gvs: &mut GVS) -> VMResult<()> {
@@ -300,7 +358,7 @@ impl Runner {
             _ => Err("Invalid value_type for increment operator"),
         }?;
 
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
     fn decrement(&mut self, gvs: &mut GVS) -> VMResult<()> {
@@ -321,20 +379,20 @@ impl Runner {
             _ => Err("Invalid value_type for decrement operator"),
         }?;
 
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
     fn clone_string(&mut self, gvs: &mut GVS, variable: &mut Variable) -> VMResult<()> {
-        let collection_id = variable.value;
+        let collection_id = variable.value as CollectionId;
         let string = gvs.collection_string(collection_id)?;
         let collection_id = gvs.collection_store_string(string.to_string());
 
-        variable.value = collection_id;
+        variable.value = collection_id as u64;
         Ok(())
     }
 
     fn clone_stack(&mut self, gvs: &mut GVS, variable: &mut Variable) -> VMResult<()> {
-        let collection_id = variable.value;
+        let collection_id = variable.value as CollectionId;
         let stack = gvs.collection_stack(collection_id)?.to_vec();
 
         // Todo: Implement deep cloning for matrices
@@ -348,7 +406,7 @@ impl Runner {
             .collect::<VMResult<Vec<StorageId>>>()?;
 
         let collection_id = gvs.collection_store_stack(stack);
-        variable.value = collection_id;
+        variable.value = collection_id as u64;
 
         Ok(())
     }
@@ -365,34 +423,39 @@ impl Runner {
         }?;
 
         self.acc.push(gvs, variable)?;
-
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
-    fn load_collection(&mut self, gvs: &mut GVS, size: usize) -> VMResult<()> {
+    fn load_collection(
+        &mut self,
+        gvs: &mut GVS,
+        reader: ByteReader,
+        data_size: DataSize32,
+    ) -> VMResult<()> {
+        let size = reader.from_data_size_32(&data_size)?;
+
         let stack = self.acc.size_pop(size);
         let collection_id = gvs.collection_store_stack(stack);
 
         self.acc.push(gvs, Variable::collection(collection_id))?;
 
-        Ok(())
+        self.step(data_size.instruction_size())
     }
 
     fn store(&mut self) -> VMResult<()> {
-        if let Some(storage_id) = self.acc.data.pop() {
-            self.stack.data.push(storage_id);
-            Ok(())
-        } else {
-            Err(VMError::from("No storage_id in acc stack"))
-        }
+        let storage_id = self.acc.data.pop().ok_or("No storage_id in acc stack")?;
+        self.stack.data.push(storage_id);
+        self.step(INSTRUCTION)
     }
 
-    fn free(&mut self, gvs: &mut GVS, size: usize) -> VMResult<()> {
+    fn free(&mut self, gvs: &mut GVS, reader: ByteReader, data_size: DataSize32) -> VMResult<()> {
+        let size = reader.from_data_size_32(&data_size)?;
+
         for _ in 0..size {
             self.stack.free_last(gvs)?;
         }
 
-        Ok(())
+        self.step(data_size.instruction_size())
     }
 
     fn clear_acc(&mut self, gvs: &mut GVS) -> VMResult<()> {
@@ -400,10 +463,16 @@ impl Runner {
             gvs.storage_remove_owner(storage_id)?;
         }
 
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
-    fn jump_if(&mut self, gvs: &mut GVS, offset: i32, boolean: bool) -> VMResult<()> {
+    fn jump_if(
+        &mut self,
+        gvs: &mut GVS,
+        reader: ByteReader,
+        data_size: DataSize32,
+        boolean: bool,
+    ) -> VMResult<()> {
         let variable = self.acc.pop(gvs)?;
 
         if variable.value_type != BOOLEAN_TYPE {
@@ -411,45 +480,51 @@ impl Runner {
         }
 
         if variable.as_boolean() == boolean {
-            self.jump(offset)?;
+            self.jump(reader, data_size)
+        } else {
+            self.step(data_size.instruction_size())
         }
-
-        Ok(())
     }
 
-    fn call(&mut self, gvs: &mut GVS, arguments: Arguments) -> VMResult<()> {
-        let slot = self.acc.len() - arguments - 1;
+    fn call(&mut self, gvs: &mut GVS, reader: ByteReader, data_size: DataSize32) -> VMResult<()> {
+        let arguments = reader.from_data_size_32(&data_size)?;
 
+        let slot = self.acc.len() - arguments - 1;
         let storage_id = self.acc.remove(slot);
 
         let variable = gvs.variable(storage_id)?;
         let function = variable.as_function()?;
 
-        self.prevent_step = true;
-
-        let return_pointer = self.program_counter;
+        let return_pointer = self.pc;
         let stack_pointer = self.stack.len() as Pointer;
 
         let call_stack = CallStack::new(return_pointer, stack_pointer, storage_id);
         self.call_stack.push(call_stack);
 
-        self.program_counter = function.pointer as usize;
+        self.pc = function.pointer as usize;
 
         Ok(())
     }
 
     fn on_return(&mut self, gvs: &mut GVS) -> VMResult<()> {
-        if let Some(call_stack) = self.call_stack.pop() {
-            gvs.storage_remove_owner(call_stack.storage_id)?;
-            self.program_counter = call_stack.return_pointer;
+        let call_stack = self
+            .call_stack
+            .pop()
+            .ok_or("CallStack is empty, cannot execute return")?;
 
-            Ok(())
-        } else {
-            Err(VMError::from("CallStack is empty, cannot execute return"))
-        }
+        gvs.storage_remove_owner(call_stack.storage_id)?;
+        self.pc = call_stack.return_pointer;
+        self.step(INSTRUCTION)
     }
 
-    fn load_function(&mut self, gvs: &mut GVS, captures: CaptureSize) -> VMResult<()> {
+    fn load_function(
+        &mut self,
+        gvs: &mut GVS,
+        reader: ByteReader,
+        data_size: DataSize32,
+    ) -> VMResult<()> {
+        let captures = reader.from_data_size_32(&data_size)?;
+
         let collection_id = if captures == 0 {
             None
         } else {
@@ -471,35 +546,39 @@ impl Runner {
 
         self.acc.push(gvs, variable_function)?;
 
+        self.step(data_size.instruction_size())?;
+
         Ok(())
     }
 
     fn last_function(&self, gvs: &mut GVS) -> VMResult<Function> {
-        if let Some(call_stack) = self.call_stack.last() {
-            let variable = gvs.variable(call_stack.storage_id)?;
-            let function = variable.as_function()?;
-            Ok(function)
-        } else {
-            Err(VMError::from("Call stack is empty"))
-        }
+        let call_stack = self.call_stack.last().ok_or("Call stack is empty")?;
+        let variable = gvs.variable(call_stack.storage_id)?;
+        let function = variable.as_function()?;
+        Ok(function)
     }
 
-    fn load_capture(&mut self, gvs: &mut GVS, slot_id: StorageId) -> VMResult<()> {
+    fn load_capture(
+        &mut self,
+        gvs: &mut GVS,
+        reader: ByteReader,
+        data_size: DataSize32,
+    ) -> VMResult<()> {
+        let slot_id = reader.from_data_size_32(&data_size)?;
+
         let function = self.last_function(gvs)?;
 
         let collection_id = function.collection_id()?;
         let collection = gvs.collection_stack(collection_id as CollectionId)?;
 
-        if let Some(storage_id) = collection.get(slot_id as usize) {
-            self.acc.push_storage_id(gvs, *storage_id)?;
+        let storage_id = collection.get(slot_id).ok_or(format!(
+            "The function does not have captured variable with slot_id {}",
+            slot_id
+        ))?;
 
-            Ok(())
-        } else {
-            Err(VMError::from(format!(
-                "The function does not have captured variable with slot_id {}",
-                slot_id
-            )))
-        }
+        self.acc.push_storage_id(gvs, *storage_id)?;
+
+        self.step(data_size.instruction_size())
     }
 
     fn collection_len_stack(
@@ -546,7 +625,7 @@ impl Runner {
         let variable = Variable::from(collection_len);
         self.acc.push(gvs, variable)?;
 
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
     fn load_from_collection_stack(
@@ -557,12 +636,12 @@ impl Runner {
     ) -> VMResult<()> {
         let collection = gvs.collection_stack(collection_id)?;
 
-        if let Some(storage_id) = collection.get(index) {
-            self.acc.push_storage_id(gvs, *storage_id)?;
-            Ok(())
-        } else {
-            Err(VMError::from(format!("No value by that index {}", index)))
-        }
+        let storage_id = collection
+            .get(index)
+            .ok_or(format!("No value by that index {}", index))?;
+
+        self.acc.push_storage_id(gvs, *storage_id)?;
+        Ok(())
     }
 
     fn load_from_collection_string(
@@ -575,17 +654,19 @@ impl Runner {
 
         let string = collection.to_string();
 
-        if let Some(char) = string.chars().collect::<Vec<char>>().get(index) {
-            let char_string = format!("{}", char);
-            let collection_id = gvs.collection_store_string(char_string);
-            let string_variable = Variable::string(collection_id);
+        let char = *string
+            .chars()
+            .collect::<Vec<char>>()
+            .get(index)
+            .ok_or(format!("No value by that index {}", index))?;
 
-            self.acc.push(gvs, string_variable)?;
+        let char_string = format!("{}", char);
+        let collection_id = gvs.collection_store_string(char_string);
+        let string_variable = Variable::string(collection_id);
 
-            Ok(())
-        } else {
-            Err(VMError::from(format!("No value by that index {}", index)))
-        }
+        self.acc.push(gvs, string_variable)?;
+
+        Ok(())
     }
 
     fn load_from_collection(&mut self, gvs: &mut GVS) -> VMResult<()> {
@@ -596,7 +677,7 @@ impl Runner {
 
         let collection_variable = self.acc.pop(gvs)?;
 
-        let collection_id = collection_variable.value;
+        let collection_id = collection_variable.value as CollectionId;
         let index = index_variable.value as usize;
 
         match collection_variable.value_type {
@@ -605,7 +686,7 @@ impl Runner {
             _ => Err(VMError::from("This is not a collection")),
         }?;
 
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
     fn assign_for_variable(&mut self, gvs: &mut GVS, slot_id: StorageId) -> VMResult<()> {
@@ -656,13 +737,13 @@ impl Runner {
         }?;
 
         self.assign = Assign::None;
-
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
-    fn assign_variable(&mut self, slot_id: Slot) -> VMResult<()> {
+    fn assign_variable(&mut self, reader: ByteReader, data_size: DataSize32) -> VMResult<()> {
+        let slot_id = reader.from_data_size_32(&data_size)? as u32;
         self.assign = Assign::Variable(slot_id);
-        Ok(())
+        self.step(data_size.instruction_size())
     }
 
     fn assign_collection_from_variable(
@@ -678,7 +759,9 @@ impl Runner {
             return Err(VMError::from("Cannot extract slot_id from not stack"));
         }
 
-        self.assign = Assign::Collection(variable.value, index);
+        let collection_id = variable.value as CollectionId;
+
+        self.assign = Assign::Collection(collection_id, index);
 
         Ok(())
     }
@@ -701,7 +784,8 @@ impl Runner {
             return Err(VMError::from("Cannot extract slot_id from not stack"));
         }
 
-        self.assign = Assign::Collection(variable.value, index);
+        let collection_id = variable.value as CollectionId;
+        self.assign = Assign::Collection(collection_id, index);
 
         Ok(())
     }
@@ -718,76 +802,93 @@ impl Runner {
             Assign::None => Err(VMError::from("No assign available for collection")),
         }?;
 
-        Ok(())
+        self.step(INSTRUCTION)
     }
 
     fn call_native(
-        &self,
+        &mut self,
         native_stack: &mut Vec<NativeCall>,
-        native_id: NativeId,
-        arguments: Arguments,
         runner_id: usize,
+        reader: ByteReader,
     ) -> VMResult<()> {
+        let (native_id, arguments) = reader.parse_ncall()?;
         let native_call = NativeCall::new(native_id, arguments, runner_id);
         native_stack.push(native_call);
+        self.step(INSTRUCTION + DWORD * 2)?;
         Ok(())
     }
 
-    pub fn run(
-        &mut self,
-        runner_id: usize,
-        instruction: Instruction,
-        gvs: &mut GVS,
-        native_stack: &mut Vec<NativeCall>,
-    ) -> VMResult<()> {
-        println!("Instruction: {:?}", instruction);
+    pub fn run<'a>(&mut self, helper: VMHelper<'a>) -> VMResult<()> {
+        let gvs = helper.gvs;
+        let reader = ByteReader::new(self.pc, helper.instructions);
 
-        match instruction {
-            Instruction::LoadConst(constant) => self.load_const(gvs, constant),
-            Instruction::LoadVar(slot) => self.load_var(gvs, slot),
-            Instruction::Jump(offset) => self.jump(offset),
-            Instruction::Add => self.add(gvs),
-            Instruction::Minus => self.minus(gvs),
-            Instruction::Mul => self.mul(gvs),
-            Instruction::Div => self.div(gvs),
-            Instruction::Eq => self.eq(gvs),
-            Instruction::GreaterEq => self.greater_eq(gvs),
-            Instruction::Greater => self.greater(gvs),
-            Instruction::LessEq => self.less_eq(gvs),
-            Instruction::Less => self.less(gvs),
-            Instruction::NotEq => self.not_eq(gvs),
-            Instruction::And => self.and(gvs),
-            Instruction::Or => self.or(gvs),
-            Instruction::Not => self.not(gvs),
-            Instruction::Increment => self.increment(gvs),
-            Instruction::Decrement => self.decrement(gvs),
-            Instruction::Clone => self.clone(gvs),
-            Instruction::LoadCollection(size) => self.load_collection(gvs, size),
-            Instruction::Store => self.store(),
-            Instruction::Free(size) => self.free(gvs, size),
-            Instruction::ClearAcc => self.clear_acc(gvs),
-            Instruction::JumpIfFalse(offset) => self.jump_if(gvs, offset, false),
-            Instruction::JumpIfTrue(offset) => self.jump_if(gvs, offset, true),
-            Instruction::Call(arguments) => self.call(gvs, arguments),
-            Instruction::Return => self.on_return(gvs),
-            Instruction::LoadFunction(captures) => self.load_function(gvs, captures),
-            Instruction::LoadCapture(slot_id) => self.load_capture(gvs, slot_id),
-            Instruction::CollectionLen => self.collection_len(gvs),
-            Instruction::LoadFromCollection => self.load_from_collection(gvs),
-            Instruction::Assign => self.assign(gvs),
-            Instruction::AssignVariable(slot_id) => self.assign_variable(slot_id),
-            Instruction::AssignCollection => self.assign_collection(gvs),
-            Instruction::CallNative(native_id, arguments) => {
-                self.call_native(native_stack, native_id, arguments, runner_id)
-            }
+        match helper.instruction {
+            LDN => self.load_null(gvs),
+            LBT => self.load_true(gvs),
+            LBF => self.load_false(gvs),
+            LDI8 => self.load_integer(gvs, reader, DataSize64::Byte),
+            LDI16 => self.load_integer(gvs, reader, DataSize64::Word),
+            LDI32 => self.load_integer(gvs, reader, DataSize64::DWord),
+            LDI => self.load_integer(gvs, reader, DataSize64::QWord),
+            LDF => self.load_float(gvs, reader),
+            LDS => self.load_string(gvs, reader),
+            LDV8 => self.load_var(gvs, reader, DataSize32::Byte),
+            LDV16 => self.load_var(gvs, reader, DataSize32::Word),
+            LDV => self.load_var(gvs, reader, DataSize32::DWord),
+            JMP8 => self.jump(reader, DataSize32::Byte),
+            JMP16 => self.jump(reader, DataSize32::Word),
+            JMP => self.jump(reader, DataSize32::DWord),
+            ADD => self.add(gvs),
+            SUB => self.minus(gvs),
+            MUL => self.mul(gvs),
+            DIV => self.div(gvs),
+            EQ => self.eq(gvs),
+            GE => self.greater_eq(gvs),
+            GT => self.greater(gvs),
+            LE => self.less_eq(gvs),
+            LT => self.less(gvs),
+            NE => self.not_eq(gvs),
+            AND => self.and(gvs),
+            OR => self.or(gvs),
+            NOT => self.not(gvs),
+            INC => self.increment(gvs),
+            DEC => self.decrement(gvs),
+            CPY => self.clone(gvs),
+            LDC8 => self.load_collection(gvs, reader, DataSize32::Byte),
+            LDC16 => self.load_collection(gvs, reader, DataSize32::Word),
+            LDC => self.load_collection(gvs, reader, DataSize32::DWord),
+            STR => self.store(),
+            FREE8 => self.free(gvs, reader, DataSize32::Byte),
+            FREE16 => self.free(gvs, reader, DataSize32::Word),
+            FREE => self.free(gvs, reader, DataSize32::DWord),
+            CLR => self.clear_acc(gvs),
+            JZ8 => self.jump_if(gvs, reader, DataSize32::Byte, false),
+            JZ16 => self.jump_if(gvs, reader, DataSize32::Word, false),
+            JZ => self.jump_if(gvs, reader, DataSize32::DWord, false),
+            JNZ8 => self.jump_if(gvs, reader, DataSize32::Byte, true),
+            JNZ16 => self.jump_if(gvs, reader, DataSize32::Word, true),
+            JNZ => self.jump_if(gvs, reader, DataSize32::DWord, true),
+            CALL8 => self.call(gvs, reader, DataSize32::Byte),
+            CALL16 => self.call(gvs, reader, DataSize32::Word),
+            CALL => self.call(gvs, reader, DataSize32::DWord),
+            RET => self.on_return(gvs),
+            LDFN8 => self.load_function(gvs, reader, DataSize32::Byte),
+            LDFN16 => self.load_function(gvs, reader, DataSize32::Word),
+            LDFN => self.load_function(gvs, reader, DataSize32::DWord),
+            LDCP8 => self.load_capture(gvs, reader, DataSize32::Byte),
+            LDCP16 => self.load_capture(gvs, reader, DataSize32::Word),
+            LDCP => self.load_capture(gvs, reader, DataSize32::DWord),
+            LEN => self.collection_len(gvs),
+            LDFC => self.load_from_collection(gvs),
+            ASN => self.assign(gvs),
+            ASV8 => self.assign_variable(reader, DataSize32::Byte),
+            ASV16 => self.assign_variable(reader, DataSize32::Word),
+            ASV => self.assign_variable(reader, DataSize32::DWord),
+            ASC => self.assign_collection(gvs),
+            NCALL => self.call_native(helper.native_stack, helper.runner_id, reader),
+            _ => Err(VMError::from("Unknown instruction opcode")),
         }?;
 
-        self.step();
-
         Ok(())
-    }
-
-    pub fn program_counter(&self) -> Pointer {
-        self.program_counter
     }
 }

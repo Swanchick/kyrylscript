@@ -38,7 +38,7 @@ impl CompilerNew {
     }
 
     pub fn program(self) -> Program {
-        Program::from(self.instructions)
+        Program::serialize(self.instructions)
     }
 
     pub fn compile(&mut self, statements: Vec<Statement>) -> KsResult<()> {
@@ -198,7 +198,7 @@ impl CompilerNew {
                 continue;
             }
 
-            self.insert(Instruction::LoadCapture(index as u64))?;
+            self.insert(Instruction::LoadCapture(index as u32))?;
 
             self.environment.define_variable(captured_name.clone())?;
             self.insert(Instruction::Store)?;
@@ -687,7 +687,7 @@ impl CompilerNew {
         for (name, expression) in module {
             self.compile_expression(expression)?;
 
-            indeces.insert(name, children.len() as u64);
+            indeces.insert(name, children.len() as u32);
             let temp_collection = self.environment.temp_collection();
             children.push(temp_collection);
         }

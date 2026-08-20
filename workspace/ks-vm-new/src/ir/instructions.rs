@@ -30,38 +30,69 @@ pub const AND: u8 = 0x20;
 pub const OR: u8 = 0x21;
 pub const NOT: u8 = 0x22;
 
-// Control (0x30-0x3F)
+// Branching (0x30-0x3F)
 pub const RET: u8 = 0x30;
-pub const JZ: u8 = 0x31;
-pub const JNZ: u8 = 0x32;
-pub const JMP: u8 = 0x33;
+pub const JZ: u8 = 0x31; // <u32>
+pub const JNZ: u8 = 0x32; // <u32>
+pub const JMP: u8 = 0x33; // <u32>
 
 // Stack (0x40-0x4F)
 pub const CPY: u8 = 0x40;
 pub const CLR: u8 = 0x41;
-pub const FREE: u8 = 0x42;
-pub const CALL: u8 = 0x43;
-pub const NCALL: u8 = 0x44;
+pub const FREE: u8 = 0x42; // <u32>
+pub const CALL: u8 = 0x43; // <u32>
+pub const NCALL: u8 = 0x44; // <u32>, <u32>
 
-// Constants (0x50-0x5F)
-pub const LDI: u8 = 0x50;
-pub const LDF: u8 = 0x51;
-pub const LDS: u8 = 0x52;
-pub const LBT: u8 = 0x53;
-pub const LBF: u8 = 0x54;
-pub const LDN: u8 = 0x55;
-pub const LDFN: u8 = 0x56;
-pub const LDC: u8 = 0x57;
+// MEMORY (0x50-0x5F)
+pub const STR: u8 = 0x50;
+pub const ASN: u8 = 0x51;
+pub const ASV: u8 = 0x52; // <u32>
+pub const ASC: u8 = 0x53;
+pub const LDV: u8 = 0x54; // <u32>
+pub const LDCP: u8 = 0x57; // <u32>
+pub const LDFC: u8 = 0x58;
+pub const LEN: u8 = 0x59;
 
-// MEMORY (0x60-0x6F)
-pub const STR: u8 = 0x60;
-pub const ASN: u8 = 0x61;
-pub const ASV: u8 = 0x62;
-pub const ASC: u8 = 0x63;
-pub const LDV: u8 = 0x64;
-pub const LDCP: u8 = 0x65;
-pub const LDFC: u8 = 0x66;
-pub const LEN: u8 = 0x67; // bruh
+// Standard constants (0x60-0x6F)
+pub const LDI: u8 = 0x60; // <i64>
+pub const LDF: u8 = 0x61; // <f64>
+pub const LDS: u8 = 0x62; // <u8>, <&str>
+pub const LBT: u8 = 0x63;
+pub const LBF: u8 = 0x64;
+pub const LDN: u8 = 0x65;
+pub const LDFN: u8 = 0x66; // <u32>
+pub const LDC: u8 = 0x67;
+
+// Small sized constants (0x70-0x7F)
+pub const LDI8: u8 = 0x70; // <u8>
+pub const LDI16: u8 = 0x71; // <u16>
+pub const LDI32: u8 = 0x72; // <u32>
+pub const LDFN8: u8 = 0x73; // <u8>
+pub const LDFN16: u8 = 0x74; // <u16>
+pub const LDC8: u8 = 0x75; // <u8>
+pub const LDC16: u8 = 0x76; // <u16>
+
+// Small sized memory (0x80-0x08F)
+pub const LDV8: u8 = 0x80; // <u8>
+pub const LDV16: u8 = 0x81; // <u16>
+pub const ASV8: u8 = 0x82; // <u8>
+pub const ASV16: u8 = 0x83; // <u16>
+pub const LDCP8: u8 = 0x84; // <u8>
+pub const LDCP16: u8 = 0x85; // <u16>
+
+// Small sized stack (0x90-0x9F)
+pub const FREE8: u8 = 0x90; // <u8>
+pub const FREE16: u8 = 0x91; // <u16>
+pub const CALL8: u8 = 0x92; // <u8>
+pub const CALL16: u8 = 0x93; // <u16>
+
+// Small sized branching (0xA0-0xAF)
+pub const JZ8: u8 = 0xA0; // <u8>
+pub const JZ16: u8 = 0xA1; // <u16>
+pub const JNZ8: u8 = 0xA2; // <u8>
+pub const JNZ16: u8 = 0xA3; // <u16>
+pub const JMP8: u8 = 0xA4; // <u8>
+pub const JMP16: u8 = 0xA5; // <u16>
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Instruction {
@@ -200,15 +231,15 @@ impl Instruction {
             Self::Jump(offset) => self.opcode_value_u32(JMP, *offset as u32),
             Self::Store => vec![STR],
             Self::Assign => vec![ASN],
-            Self::AssignVariable(variable_id) => self.opcode_value_u64_dynamic(ASV, *variable_id),
+            Self::AssignVariable(variable_id) => self.opcode_value_u32(ASV, *variable_id),
             Self::AssignCollection => vec![ASC],
             Self::LoadConst(constant) => self.load_const(constant),
-            Self::LoadVar(variable_id) => self.opcode_value_u64_dynamic(LDV, *variable_id),
+            Self::LoadVar(variable_id) => self.opcode_value_u32(LDV, *variable_id),
             Self::Call(arguments) => self.opcode_value_u32(CALL, *arguments as u32),
             Self::CallNative(native_id, arguments) => {
                 self.native(*native_id as u32, *arguments as u32)
             }
-            Self::LoadCapture(captured) => self.opcode_value_u64_dynamic(LDCP, *captured),
+            Self::LoadCapture(captured) => self.opcode_value_u32(LDCP, *captured),
             Self::LoadFunction(size) => self.opcode_value_u32(LDFN, *size as u32),
             Self::LoadCollection(size) => self.opcode_value_u32(LDC, *size as u32),
             Self::LoadFromCollection => vec![LDFC],

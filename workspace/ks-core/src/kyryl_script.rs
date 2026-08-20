@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 use ks_vm::function::Function;
+use ks_vm_new::Program;
 
 use crate::compiler::compiler::Compiler;
 use crate::compiler_new::compiler::CompilerNew;
@@ -73,7 +74,7 @@ impl KyrylScript {
         Ok(compiler.to_functions())
     }
 
-    pub fn compile_from_file_new(mut self, path: &str) -> KsResult<Vec<u8>> {
+    pub fn compile_from_file_new(mut self, path: &str) -> KsResult<Program> {
         let mut lexer = Lexer::load(path)?;
         lexer.lexer()?;
 
@@ -102,7 +103,6 @@ impl KyrylScript {
         }
 
         let program = self.compiler.program();
-
-        Ok(program.serialize())
+        Ok(program)
     }
 }

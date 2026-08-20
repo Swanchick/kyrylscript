@@ -7,7 +7,7 @@ use ks_global::utils::ks_result::KsResult;
 use ks_std::ks_register_std;
 use ks_vm_new::{
     Assign, CallStack, Collection, GVS, Instruction, NativeRegistry, Program, Runner, Stack, VM,
-    VMError, VMResult, Variable,
+    VMError, VMHelper, VMResult, Variable,
 };
 
 use super::runner_driver::RunnerDriver;
@@ -68,11 +68,19 @@ impl KsDriver {
         Ok(compiler)
     }
 
-    pub fn runner(instruction: Instruction) -> VMResult<RunnerDriver> {
+    pub fn runner(instructions: Vec<u8>) -> VMResult<RunnerDriver> {
         let mut gvs = GVS::new();
         let mut runner = Runner::new();
 
-        runner.run(0, instruction, &mut gvs, &mut Vec::new())?;
+        let vm_helper = VMHelper {
+            instruction: instructions[0],
+            instructions: &instructions,
+            gvs: &mut gvs,
+            native_stack: &mut Vec::new(),
+            runner_id: 0,
+        };
+
+        runner.run(vm_helper)?;
 
         Ok(RunnerDriver::new(runner, gvs))
     }
@@ -97,7 +105,7 @@ impl KsDriver {
             NativeRegistry::new()
         };
 
-        let mut vm = VM::new(Program::from(instructions), vec![runner], gvs, native);
+        let mut vm = VM::new(Program::serialize(instructions), vec![runner], gvs, native);
 
         for _ in 0..instructions_len {
             vm.step()?;
@@ -148,7 +156,7 @@ impl KsDriver {
         acc: Option<Stack>,
         stack: Option<Stack>,
         prevent_step: bool,
-        program_counter: Option<usize>,
+        pc: Option<usize>,
         call_stack: Option<Vec<CallStack>>,
         assign: Option<Assign>,
     ) -> Option<Runner> {
@@ -164,11 +172,7 @@ impl KsDriver {
             Stack::new()
         };
 
-        let program_counter = if let Some(program_counter) = program_counter {
-            program_counter
-        } else {
-            0
-        };
+        let pc = if let Some(pc) = pc { pc } else { 0 };
 
         let call_stack = if let Some(call_stack) = call_stack {
             call_stack
@@ -183,19 +187,18 @@ impl KsDriver {
         };
 
         Some(Runner {
-            program_counter,
+            pc,
             acc,
             stack,
             call_stack,
             assign,
-            prevent_step,
         })
     }
 
     pub fn runner_configured(
         runner: Option<Runner>,
         gvs: Option<GVS>,
-        instruction: Instruction,
+        instruction: Vec<u8>,
     ) -> VMResult<RunnerDriver> {
         let mut gvs = if let Some(gvs) = gvs { gvs } else { GVS::new() };
         let mut runner = if let Some(runner) = runner {
@@ -204,7 +207,15 @@ impl KsDriver {
             Runner::new()
         };
 
-        runner.run(0, instruction, &mut gvs, &mut Vec::new())?;
+        let vm_helper = VMHelper {
+            instruction: instruction[runner.pc],
+            instructions: &instruction,
+            gvs: &mut gvs,
+            native_stack: &mut Vec::new(),
+            runner_id: 0,
+        };
+
+        runner.run(vm_helper)?;
         Ok(RunnerDriver::new(runner, gvs))
     }
 
@@ -212,7 +223,7 @@ impl KsDriver {
         left: Variable,
         right: Variable,
         result: Variable,
-        instruction: Instruction,
+        instruction: Vec<u8>,
     ) -> VMResult<()> {
         let runner = KsDriver::runner_default(
             Some(Stack::from(vec![0, 1])),
@@ -226,8 +237,8 @@ impl KsDriver {
 
         let driver = KsDriver::runner_configured(runner, gvs, instruction)?;
 
-        if driver.runner.program_counter != 1 {
-            return Err(VMError::from("Wrong program_counter"));
+        if driver.runner.pc != 1 {
+            return Err(VMError::from("Wrong pc"));
         }
 
         if driver.runner.acc.len() != 1 {
