@@ -1,9 +1,11 @@
+use ks_core::compiler_new::constant::Constant;
+use ks_core::compiler_new::instructions::Instruction;
+
 use ks_vm_new::ir::instructions::{
     ADD, AND, ASC, ASN, ASV, CALL, CLR, CPY, DEC, DIV, EQ, FREE, GE, GT, INC, JMP, JNZ, JZ, LBF,
     LBT, LDC, LDCP, LDF, LDFC, LDFN, LDI, LDN, LDS, LDV, LE, LEN, LT, MUL, NCALL, NE, NOT, OR, RET,
     STR, SUB,
 };
-use ks_vm_new::{Constant, Instruction};
 
 #[test]
 fn add() {

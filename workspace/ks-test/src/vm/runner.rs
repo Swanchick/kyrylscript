@@ -7,9 +7,10 @@ use ks_vm_new::ir::instructions::{
 use ks_vm_new::types::Pointer;
 use ks_vm_new::{Assign, VMHelper};
 use ks_vm_new::{
-    CallStack, Collection, Function, GVS, Instruction, NativeCall, Runner, Stack, VMError,
-    VMResult, Variable,
+    CallStack, Collection, Function, GVS, NativeCall, Runner, Stack, VMError, VMResult, Variable,
 };
+
+use ks_core::compiler_new::instructions::Instruction;
 
 use crate::drivers::KsDriver;
 use crate::drivers::utils::operation;

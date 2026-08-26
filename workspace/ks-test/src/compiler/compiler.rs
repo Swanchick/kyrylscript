@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
+use ks_core::compiler_new::constant::Constant;
+use ks_core::compiler_new::instructions::Instruction;
+use ks_core::compiler_new::program::Program;
 use ks_core::kyryl_script::KyrylScript;
 use ks_core::parser::data_type::DataType;
 use ks_global::utils::ks_result::KsResult;
-use ks_vm_new::Constant;
-use ks_vm_new::Instruction;
-use ks_vm_new::Program;
 
 use crate::drivers::KsDriver;
 

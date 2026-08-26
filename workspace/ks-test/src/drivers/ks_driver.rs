@@ -1,13 +1,16 @@
 use ks_core::lexer::lexer::Lexer;
 use ks_core::parser::parser::Parser;
 use ks_core::parser::statement::Statement;
-use ks_core::{compiler_new::compiler::CompilerNew, kyryl_script::KyrylScript};
+use ks_core::{
+    compiler_new::{compiler::CompilerNew, instructions::Instruction, program::Program},
+    kyryl_script::KyrylScript,
+};
 
 use ks_global::utils::ks_result::KsResult;
 use ks_std::ks_register_std;
 use ks_vm_new::{
-    Assign, CallStack, Collection, GVS, Instruction, NativeRegistry, Program, Runner, Stack, VM,
-    VMError, VMHelper, VMResult, Variable,
+    Assign, CallStack, Collection, GVS, NativeRegistry, Runner, Stack, VM, VMError, VMHelper,
+    VMResult, Variable,
 };
 
 use super::runner_driver::RunnerDriver;
@@ -105,7 +108,12 @@ impl KsDriver {
             NativeRegistry::new()
         };
 
-        let mut vm = VM::new(Program::serialize(instructions), vec![runner], gvs, native);
+        let mut vm = VM::new(
+            Program::serialize(instructions).as_bytes(),
+            vec![runner],
+            gvs,
+            native,
+        );
 
         for _ in 0..instructions_len {
             vm.step()?;

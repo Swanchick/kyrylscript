@@ -1,9 +1,11 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use ks_core::compiler_new::constant::Constant;
+use ks_core::compiler_new::instructions::Instruction;
+
 use ks_vm_new::types::CollectionId;
-use ks_vm_new::{Constant, Instruction, VMResult};
-use ks_vm_new::{KsCall, NativeHelper, NativeRegistry, STRING_TYPE};
+use ks_vm_new::{KsCall, NativeHelper, NativeRegistry, STRING_TYPE, VMResult};
 
 use crate::drivers::KsDriver;
 

@@ -5,9 +5,9 @@ use alloc::string::String;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
+use crate::VMResult;
 use crate::data_size::DataSize32;
 use crate::types::Pointer;
-use crate::{VMResult, native};
 
 pub struct ByteReader<'a> {
     pub pc: Pointer,

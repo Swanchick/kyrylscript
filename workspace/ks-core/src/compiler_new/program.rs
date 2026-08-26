@@ -1,6 +1,3 @@
-#[cfg(not(feature = "std"))]
-use alloc::vec::Box;
-
 use super::instructions::Instruction;
 
 #[derive(Debug, PartialEq)]
@@ -25,5 +22,9 @@ impl Program {
         }
 
         Program::from(out)
+    }
+
+    pub fn as_bytes(self) -> Box<[u8]> {
+        self.instructions
     }
 }
