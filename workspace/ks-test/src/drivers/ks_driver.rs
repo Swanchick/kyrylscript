@@ -155,7 +155,6 @@ impl KsDriver {
     pub fn runner_default(
         acc: Option<Stack>,
         stack: Option<Stack>,
-        prevent_step: bool,
         pc: Option<usize>,
         call_stack: Option<Vec<CallStack>>,
         assign: Option<Assign>,
@@ -228,7 +227,6 @@ impl KsDriver {
         let runner = KsDriver::runner_default(
             Some(Stack::from(vec![0, 1])),
             Some(Stack::from(vec![0, 1])),
-            false,
             None,
             None,
             None,
