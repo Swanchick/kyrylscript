@@ -80,7 +80,7 @@ impl Instruction {
         }
     }
 
-    pub fn to_bytes(self) -> usize {
+    pub fn size(&self) -> usize {
         match self {
             Self::Add => SINGLE_INSTRUCTION,
             Self::Minus => SINGLE_INSTRUCTION,
@@ -100,25 +100,25 @@ impl Instruction {
             Self::Clone => SINGLE_INSTRUCTION,
             Self::ClearAcc => SINGLE_INSTRUCTION,
             Self::Return => SINGLE_INSTRUCTION,
-            Self::Free(size) => self.compressed_u32(size as u32),
-            Self::JumpIfFalse(offset) => self.compressed_i32(offset),
-            Self::JumpIfTrue(offset) => self.compressed_i32(offset),
-            Self::Jump(offset) => self.compressed_i32(offset),
+            Self::Free(size) => self.compressed_u32(*size as u32),
+            Self::JumpIfFalse(offset) => self.compressed_i32(*offset),
+            Self::JumpIfTrue(offset) => self.compressed_i32(*offset),
+            Self::Jump(offset) => self.compressed_i32(*offset),
             Self::Store => SINGLE_INSTRUCTION,
             Self::Assign => SINGLE_INSTRUCTION,
-            Self::AssignVariable(variable_id) => self.compressed_u32(variable_id),
+            Self::AssignVariable(variable_id) => self.compressed_u32(*variable_id),
             Self::AssignCollection => SINGLE_INSTRUCTION,
-            Self::LoadVar(variable_id) => self.compressed_u32(variable_id),
-            Self::Call(arguments) => self.compressed_u32(arguments),
-            Self::LoadConst(Constant::Integer(integer)) => self.compressed_i64(integer),
+            Self::LoadVar(variable_id) => self.compressed_u32(*variable_id),
+            Self::Call(arguments) => self.compressed_u32(*arguments),
+            Self::LoadConst(Constant::Integer(integer)) => self.compressed_i64(*integer),
             Self::LoadConst(Constant::Float(_)) => QWORD_INSTRUCTION,
             Self::LoadConst(Constant::Boolean(_)) => SINGLE_INSTRUCTION,
             Self::LoadConst(Constant::Null) => SINGLE_INSTRUCTION,
             Self::LoadConst(Constant::String(string)) => DWORD_INSTRUCTION + string.len(),
             Self::CallNative(_, _) => QWORD_INSTRUCTION,
-            Self::LoadCapture(captured) => self.compressed_u32(captured),
-            Self::LoadFunction(size) => self.compressed_u32(size as u32),
-            Self::LoadCollection(size) => self.compressed_u32(size as u32),
+            Self::LoadCapture(captured) => self.compressed_u32(*captured),
+            Self::LoadFunction(size) => self.compressed_u32(*size as u32),
+            Self::LoadCollection(size) => self.compressed_u32(*size as u32),
             Self::LoadFromCollection => SINGLE_INSTRUCTION,
             Self::CollectionLen => SINGLE_INSTRUCTION,
         }
