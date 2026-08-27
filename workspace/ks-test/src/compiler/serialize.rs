@@ -160,67 +160,7 @@ serialize_instructions!(
 serialize_instruction!(assign_collection, Instruction::AssignCollection, ASC);
 
 serialize_instructions!(
-    load_const_integer_1,
-    Instruction::LoadConst(Constant::Integer(200)),
-    {
-        let mut expected = vec![LDI];
-        expected.extend_from_slice(&[0x1, 0xC8]);
-        expected
-    }
-);
-
-serialize_instructions!(
-    load_const_integer_2,
-    Instruction::LoadConst(Constant::Integer(51400)),
-    {
-        let mut expected = vec![LDI];
-        expected.extend_from_slice(&[0x2, 0xC8, 0xC8]);
-        expected
-    }
-);
-
-serialize_instructions!(
-    load_const_integer_3,
-    Instruction::LoadConst(Constant::Integer(13158600)),
-    {
-        let mut expected = vec![LDI];
-        expected.extend_from_slice(&[0x3, 0xC8, 0xC8, 0xC8]);
-        expected
-    }
-);
-
-serialize_instructions!(
-    load_const_integer_4,
-    Instruction::LoadConst(Constant::Integer(3368601800)),
-    {
-        let mut expected = vec![LDI];
-        expected.extend_from_slice(&[0x4, 0xC8, 0xC8, 0xC8, 0xC8]);
-        expected
-    }
-);
-
-serialize_instructions!(
-    load_const_integer_5,
-    Instruction::LoadConst(Constant::Integer(862362061000)),
-    {
-        let mut expected = vec![LDI];
-        expected.extend_from_slice(&[0x5, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8]);
-        expected
-    }
-);
-
-serialize_instructions!(
-    load_const_integer_6,
-    Instruction::LoadConst(Constant::Integer(220764687616200)),
-    {
-        let mut expected = vec![LDI];
-        expected.extend_from_slice(&[0x6, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8]);
-        expected
-    }
-);
-
-serialize_instructions!(
-    load_const_integer_7,
+    load_const_integer,
     Instruction::LoadConst(Constant::Integer(56515760029747400)),
     {
         let mut expected = vec![LDI];
@@ -294,9 +234,9 @@ serialize_instructions!(
     }
 );
 
-serialize_instructions!(load_var, Instruction::LoadVar(7), {
+serialize_instructions!(load_var, Instruction::LoadVar(u32::MAX), {
     let mut expected = vec![LDV];
-    expected.extend_from_slice(&[0x1, 0x7]);
+    expected.extend_from_slice(&u32::MAX.to_le_bytes().to_vec());
     expected
 });
 

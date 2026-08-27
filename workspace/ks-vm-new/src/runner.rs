@@ -535,9 +535,7 @@ impl Runner {
         };
 
         let variable_function = Variable::from(function);
-
         self.acc.push(gvs, variable_function)?;
-
         self.step(INSTRUCTION + DWORD * 2)?;
 
         Ok(())
