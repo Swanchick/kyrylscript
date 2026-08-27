@@ -1,3 +1,5 @@
+use crate::compiler_new::serializer::Serializer;
+
 use super::instructions::Instruction;
 
 #[derive(Debug, PartialEq)]
@@ -15,11 +17,10 @@ impl From<Vec<u8>> for Program {
 
 impl Program {
     pub fn serialize(instructions: Vec<Instruction>) -> Program {
-        let mut out = Vec::new();
-        for instruction in instructions {
-            let mut bytes = instruction.to_bytes();
-            out.append(&mut bytes);
-        }
+        let mut serializer = Serializer::new(instructions);
+        serializer.prepare_map();
+
+        let out = serializer.serialize();
 
         Program::from(out)
     }

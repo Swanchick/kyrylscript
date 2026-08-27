@@ -1,333 +1,419 @@
-use ks_core::compiler_new::constant::Constant;
 use ks_core::compiler_new::instructions::Instruction;
+use ks_core::compiler_new::{constant::Constant, serializer::Serializer};
 
 use ks_vm_new::ir::instructions::{
-    ADD, AND, ASC, ASN, ASV, CALL, CLR, CPY, DEC, DIV, EQ, FREE, GE, GT, INC, JMP, JNZ, JZ, LBF,
-    LBT, LDC, LDCP, LDF, LDFC, LDFN, LDI, LDN, LDS, LDV, LE, LEN, LT, MUL, NCALL, NE, NOT, OR, RET,
-    STR, SUB,
+    ADD, AND, ASC, ASN, ASV, ASV8, ASV16, CALL, CALL8, CALL16, CLR, CPY, DEC, DIV, EQ, FREE, FREE8,
+    FREE16, GE, GT, INC, JMP, JMP8, JMP16, JNZ, JNZ8, JNZ16, JZ, JZ8, JZ16, LBF, LBT, LDC, LDC8,
+    LDC16, LDCP, LDCP8, LDCP16, LDF, LDFC, LDFN, LDFN8, LDFN16, LDI, LDI8, LDI16, LDI32, LDN, LDS,
+    LDV, LDV8, LDV16, LE, LEN, LT, MUL, NCALL, NE, NOT, OR, RET, STR, SUB,
 };
 
-#[test]
-fn add() {
-    assert_eq!(Instruction::Add.to_bytes(), vec![ADD]);
+macro_rules! serialize_instruction {
+    ($test: ident, $instruction: expr, $opcode: expr) => {
+        #[test]
+        fn $test() {
+            let serializer = Serializer::new(vec![$instruction]);
+            assert_eq!(serializer.serialize(), vec![$opcode]);
+        }
+    };
 }
 
-#[test]
-fn minus() {
-    assert_eq!(Instruction::Minus.to_bytes(), vec![SUB]);
+macro_rules! serialize_instructions {
+    ($test: ident, $instruction: expr, $opcodes: expr) => {
+        #[test]
+        fn $test() {
+            let serializer = Serializer::new(vec![$instruction]);
+            let buffer = $opcodes;
+            assert_eq!(serializer.serialize(), buffer);
+        }
+    };
 }
 
-#[test]
-fn mul() {
-    assert_eq!(Instruction::Mul.to_bytes(), vec![MUL]);
-}
+serialize_instruction!(add, Instruction::Add, ADD);
+serialize_instruction!(sub, Instruction::Minus, SUB);
+serialize_instruction!(mul, Instruction::Mul, MUL);
+serialize_instruction!(div, Instruction::Div, DIV);
+serialize_instruction!(eq, Instruction::Eq, EQ);
+serialize_instruction!(ne, Instruction::NotEq, NE);
+serialize_instruction!(gt, Instruction::Greater, GT);
+serialize_instruction!(ge, Instruction::GreaterEq, GE);
+serialize_instruction!(lt, Instruction::Less, LT);
+serialize_instruction!(not_eq, Instruction::NotEq, NE);
+serialize_instruction!(greater, Instruction::Greater, GT);
+serialize_instruction!(greater_eq, Instruction::GreaterEq, GE);
+serialize_instruction!(less, Instruction::Less, LT);
+serialize_instruction!(less_eq, Instruction::LessEq, LE);
+serialize_instruction!(and, Instruction::And, AND);
+serialize_instruction!(or, Instruction::Or, OR);
+serialize_instruction!(not, Instruction::Not, NOT);
+serialize_instruction!(increment, Instruction::Increment, INC);
+serialize_instruction!(decrement, Instruction::Decrement, DEC);
+serialize_instruction!(clone, Instruction::Clone, CPY);
+serialize_instruction!(clear_acc, Instruction::ClearAcc, CLR);
+serialize_instruction!(serialize_return, Instruction::Return, RET);
 
-#[test]
-fn div() {
-    assert_eq!(Instruction::Div.to_bytes(), vec![DIV]);
-}
-
-#[test]
-fn eq() {
-    assert_eq!(Instruction::Eq.to_bytes(), vec![EQ]);
-}
-
-#[test]
-fn not_eq() {
-    assert_eq!(Instruction::NotEq.to_bytes(), vec![NE]);
-}
-
-#[test]
-fn greater() {
-    assert_eq!(Instruction::Greater.to_bytes(), vec![GT]);
-}
-
-#[test]
-fn greater_eq() {
-    assert_eq!(Instruction::GreaterEq.to_bytes(), vec![GE]);
-}
-
-#[test]
-fn less() {
-    assert_eq!(Instruction::Less.to_bytes(), vec![LT]);
-}
-
-#[test]
-fn less_eq() {
-    assert_eq!(Instruction::LessEq.to_bytes(), vec![LE]);
-}
-
-#[test]
-fn and() {
-    assert_eq!(Instruction::And.to_bytes(), vec![AND]);
-}
-
-#[test]
-fn or() {
-    assert_eq!(Instruction::Or.to_bytes(), vec![OR]);
-}
-
-#[test]
-fn not() {
-    assert_eq!(Instruction::Not.to_bytes(), vec![NOT]);
-}
-
-#[test]
-fn increment() {
-    assert_eq!(Instruction::Increment.to_bytes(), vec![INC]);
-}
-
-#[test]
-fn decrement() {
-    assert_eq!(Instruction::Decrement.to_bytes(), vec![DEC]);
-}
-
-#[test]
-fn clone() {
-    assert_eq!(Instruction::Clone.to_bytes(), vec![CPY]);
-}
-
-#[test]
-fn clear_acc() {
-    assert_eq!(Instruction::ClearAcc.to_bytes(), vec![CLR]);
-}
-
-#[test]
-fn serialize_return() {
-    assert_eq!(Instruction::Return.to_bytes(), vec![RET]);
-}
-
-#[test]
-fn free() {
+serialize_instructions!(free, Instruction::Free(u32::MAX as usize), {
     let mut expected = vec![FREE];
-    expected.extend_from_slice(&42u32.to_le_bytes());
+    expected.extend_from_slice(&u32::MAX.to_le_bytes());
+    expected
+});
 
-    assert_eq!(Instruction::Free(42).to_bytes(), expected);
-}
+serialize_instructions!(free8, Instruction::Free(u8::MAX as usize), {
+    let mut expected = vec![FREE8];
+    expected.extend_from_slice(&u8::MAX.to_le_bytes());
+    expected
+});
 
-#[test]
-fn jump_if_false() {
+serialize_instructions!(free16, Instruction::Free(u16::MAX as usize), {
+    let mut expected = vec![FREE16];
+    expected.extend_from_slice(&u16::MAX.to_le_bytes());
+    expected
+});
+
+serialize_instructions!(jump_if_false, Instruction::JumpIfFalse(i32::MAX), {
     let mut expected = vec![JZ];
-    expected.extend_from_slice(&123u32.to_le_bytes());
+    expected.extend_from_slice(&u32::MAX.to_le_bytes());
+    expected
+});
 
-    assert_eq!(Instruction::JumpIfFalse(123).to_bytes(), expected);
-}
+serialize_instructions!(jump_if_false8, Instruction::JumpIfFalse(i8::MAX as i32), {
+    let mut expected = vec![JZ8];
+    expected.extend_from_slice(&u8::MAX.to_le_bytes());
+    expected
+});
 
-#[test]
-fn jump_if_true() {
+serialize_instructions!(
+    jump_if_false16,
+    Instruction::JumpIfFalse(i16::MAX as i32),
+    {
+        let mut expected = vec![JZ16];
+        expected.extend_from_slice(&u16::MAX.to_le_bytes());
+        expected
+    }
+);
+
+serialize_instructions!(jump_if_true, Instruction::JumpIfTrue(i32::MAX), {
     let mut expected = vec![JNZ];
-    expected.extend_from_slice(&123u32.to_le_bytes());
+    expected.extend_from_slice(&u32::MAX.to_le_bytes());
+    expected
+});
 
-    assert_eq!(Instruction::JumpIfTrue(123).to_bytes(), expected);
-}
+serialize_instructions!(jump_if_true8, Instruction::JumpIfTrue(i8::MAX as i32), {
+    let mut expected = vec![JNZ8];
+    expected.extend_from_slice(&u8::MAX.to_le_bytes());
+    expected
+});
 
-#[test]
-fn jump() {
+serialize_instructions!(jump_if_true16, Instruction::JumpIfTrue(i16::MAX as i32), {
+    let mut expected = vec![JNZ16];
+    expected.extend_from_slice(&u16::MAX.to_le_bytes());
+    expected
+});
+
+serialize_instructions!(jump, Instruction::Jump(i32::MAX), {
     let mut expected = vec![JMP];
-    expected.extend_from_slice(&123u32.to_le_bytes());
+    expected.extend_from_slice(&u32::MAX.to_le_bytes());
+    expected
+});
 
-    assert_eq!(Instruction::Jump(123).to_bytes(), expected);
-}
+serialize_instructions!(jump8, Instruction::Jump(i8::MAX as i32), {
+    let mut expected = vec![JMP8];
+    expected.extend_from_slice(&u8::MAX.to_le_bytes());
+    expected
+});
 
-#[test]
-fn store() {
-    assert_eq!(Instruction::Store.to_bytes(), vec![STR]);
-}
+serialize_instructions!(jump16, Instruction::Jump(i16::MAX as i32), {
+    let mut expected = vec![JMP16];
+    expected.extend_from_slice(&u16::MAX.to_le_bytes());
+    expected
+});
 
-#[test]
-fn assign() {
-    assert_eq!(Instruction::Assign.to_bytes(), vec![ASN]);
-}
+serialize_instruction!(store, Instruction::Store, STR);
+serialize_instruction!(assign, Instruction::Assign, ASN);
 
-#[test]
-fn assign_variable() {
+serialize_instructions!(assign_variable, Instruction::AssignVariable(5), {
     let mut expected = vec![ASV];
     expected.extend_from_slice(&[0x1, 0x5]);
+    expected
+});
 
-    assert_eq!(Instruction::AssignVariable(5).to_bytes(), expected);
-}
-
-#[test]
-fn assign_collection() {
-    assert_eq!(Instruction::AssignCollection.to_bytes(), vec![ASC]);
-}
-
-#[test]
-fn load_const_integer_1() {
-    let mut expected = vec![LDI];
-    expected.extend_from_slice(&[0x1, 0xC8]);
-
-    assert_eq!(
-        Instruction::LoadConst(Constant::Integer(200)).to_bytes(),
+serialize_instructions!(
+    assign_variable8,
+    Instruction::AssignVariable(u8::MAX as u32),
+    {
+        let mut expected = vec![ASV8];
+        expected.extend_from_slice(&u8::MAX.to_le_bytes());
         expected
-    );
-}
+    }
+);
 
-#[test]
-fn load_const_integer_2() {
-    let mut expected = vec![LDI];
-    expected.extend_from_slice(&[0x2, 0xC8, 0xC8]);
-
-    assert_eq!(
-        Instruction::LoadConst(Constant::Integer(51400)).to_bytes(),
+serialize_instructions!(
+    assign_variable16,
+    Instruction::AssignVariable(u16::MAX as u32),
+    {
+        let mut expected = vec![ASV16];
+        expected.extend_from_slice(&u16::MAX.to_le_bytes());
         expected
-    );
-}
+    }
+);
 
-#[test]
-fn load_const_integer_3() {
-    let mut expected = vec![LDI];
-    expected.extend_from_slice(&[0x3, 0xC8, 0xC8, 0xC8]);
+serialize_instruction!(assign_collection, Instruction::AssignCollection, ASC);
 
-    assert_eq!(
-        Instruction::LoadConst(Constant::Integer(13158600)).to_bytes(),
+serialize_instructions!(
+    load_const_integer_1,
+    Instruction::LoadConst(Constant::Integer(200)),
+    {
+        let mut expected = vec![LDI];
+        expected.extend_from_slice(&[0x1, 0xC8]);
         expected
-    );
-}
+    }
+);
 
-#[test]
-fn load_const_integer_4() {
-    let mut expected = vec![LDI];
-    expected.extend_from_slice(&[0x4, 0xC8, 0xC8, 0xC8, 0xC8]);
-
-    assert_eq!(
-        Instruction::LoadConst(Constant::Integer(3368601800)).to_bytes(),
+serialize_instructions!(
+    load_const_integer_2,
+    Instruction::LoadConst(Constant::Integer(51400)),
+    {
+        let mut expected = vec![LDI];
+        expected.extend_from_slice(&[0x2, 0xC8, 0xC8]);
         expected
-    );
-}
+    }
+);
 
-#[test]
-fn load_const_integer_5() {
-    let mut expected = vec![LDI];
-    expected.extend_from_slice(&[0x5, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8]);
-
-    assert_eq!(
-        Instruction::LoadConst(Constant::Integer(862362061000)).to_bytes(),
+serialize_instructions!(
+    load_const_integer_3,
+    Instruction::LoadConst(Constant::Integer(13158600)),
+    {
+        let mut expected = vec![LDI];
+        expected.extend_from_slice(&[0x3, 0xC8, 0xC8, 0xC8]);
         expected
-    );
-}
+    }
+);
 
-#[test]
-fn load_const_integer_6() {
-    let mut expected = vec![LDI];
-    expected.extend_from_slice(&[0x6, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8]);
-
-    assert_eq!(
-        Instruction::LoadConst(Constant::Integer(220764687616200)).to_bytes(),
+serialize_instructions!(
+    load_const_integer_4,
+    Instruction::LoadConst(Constant::Integer(3368601800)),
+    {
+        let mut expected = vec![LDI];
+        expected.extend_from_slice(&[0x4, 0xC8, 0xC8, 0xC8, 0xC8]);
         expected
-    );
-}
+    }
+);
 
-#[test]
-fn load_const_integer_7() {
-    let mut expected = vec![LDI];
-    expected.extend_from_slice(&[0x7, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8]);
-
-    assert_eq!(
-        Instruction::LoadConst(Constant::Integer(56515760029747400)).to_bytes(),
+serialize_instructions!(
+    load_const_integer_5,
+    Instruction::LoadConst(Constant::Integer(862362061000)),
+    {
+        let mut expected = vec![LDI];
+        expected.extend_from_slice(&[0x5, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8]);
         expected
-    );
-}
+    }
+);
 
-#[test]
-fn load_const_float() {
-    let mut expected = vec![LDF];
-    expected.extend_from_slice(&42.5f64.to_bits().to_le_bytes());
-
-    assert_eq!(
-        Instruction::LoadConst(Constant::Float(42.5)).to_bytes(),
+serialize_instructions!(
+    load_const_integer_6,
+    Instruction::LoadConst(Constant::Integer(220764687616200)),
+    {
+        let mut expected = vec![LDI];
+        expected.extend_from_slice(&[0x6, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8]);
         expected
-    );
-}
+    }
+);
 
-#[test]
-fn load_const_true() {
-    assert_eq!(
-        Instruction::LoadConst(Constant::Boolean(true)).to_bytes(),
-        vec![LBT]
-    );
-}
-
-#[test]
-fn load_const_false() {
-    assert_eq!(
-        Instruction::LoadConst(Constant::Boolean(false)).to_bytes(),
-        vec![LBF]
-    );
-}
-
-#[test]
-fn load_const_null() {
-    assert_eq!(Instruction::LoadConst(Constant::Null).to_bytes(), vec![LDN]);
-}
-
-#[test]
-fn load_const_string() {
-    let mut expected = vec![LDS];
-    expected.extend_from_slice(&5u32.to_le_bytes());
-    expected.extend_from_slice(b"hello");
-
-    assert_eq!(
-        Instruction::LoadConst(Constant::String("hello".into())).to_bytes(),
+serialize_instructions!(
+    load_const_integer_7,
+    Instruction::LoadConst(Constant::Integer(56515760029747400)),
+    {
+        let mut expected = vec![LDI];
+        expected.extend_from_slice(&[0x7, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8]);
         expected
-    );
-}
+    }
+);
 
-#[test]
-fn load_var() {
+serialize_instructions!(
+    load_const_integer8,
+    Instruction::LoadConst(Constant::Integer(u8::MAX as i64)),
+    {
+        let mut expected = vec![LDI8];
+        expected.extend_from_slice(&u8::MAX.to_le_bytes());
+        expected
+    }
+);
+
+serialize_instructions!(
+    load_const_integer16,
+    Instruction::LoadConst(Constant::Integer(u16::MAX as i64)),
+    {
+        let mut expected = vec![LDI16];
+        expected.extend_from_slice(&u16::MAX.to_le_bytes());
+        expected
+    }
+);
+
+serialize_instructions!(
+    load_const_integer32,
+    Instruction::LoadConst(Constant::Integer(u32::MAX as i64)),
+    {
+        let mut expected = vec![LDI32];
+        expected.extend_from_slice(&u32::MAX.to_le_bytes());
+        expected
+    }
+);
+
+serialize_instructions!(
+    load_const_float,
+    Instruction::LoadConst(Constant::Float(42.5)),
+    {
+        let mut expected = vec![LDF];
+        expected.extend_from_slice(&42.5f64.to_bits().to_le_bytes());
+        expected
+    }
+);
+
+serialize_instruction!(
+    load_const_true,
+    Instruction::LoadConst(Constant::Boolean(true)),
+    LBT
+);
+
+serialize_instruction!(
+    load_const_false,
+    Instruction::LoadConst(Constant::Boolean(false)),
+    LBF
+);
+
+serialize_instruction!(load_const_null, Instruction::LoadConst(Constant::Null), LDN);
+
+serialize_instructions!(
+    load_const_string,
+    Instruction::LoadConst(Constant::String("hello".into())),
+    {
+        let mut expected = vec![LDS];
+        expected.extend_from_slice(&5u32.to_le_bytes());
+        expected.extend_from_slice(b"hello");
+        expected
+    }
+);
+
+serialize_instructions!(load_var, Instruction::LoadVar(7), {
     let mut expected = vec![LDV];
     expected.extend_from_slice(&[0x1, 0x7]);
+    expected
+});
 
-    assert_eq!(Instruction::LoadVar(7).to_bytes(), expected);
-}
+serialize_instructions!(load_var8, Instruction::LoadVar(u8::MAX as u32), {
+    let mut expected = vec![LDV8];
+    expected.extend_from_slice(&u8::MAX.to_le_bytes());
+    expected
+});
 
-#[test]
-fn call() {
-    assert_eq!(
-        Instruction::Call(2).to_bytes(),
-        vec![CALL, 0x2, 0x0, 0x0, 0x0]
-    );
-}
+serialize_instructions!(load_var16, Instruction::LoadVar(u16::MAX as u32), {
+    let mut expected = vec![LDV16];
+    expected.extend_from_slice(&u16::MAX.to_le_bytes());
+    expected
+});
 
-#[test]
-fn call_native() {
+serialize_instructions!(call, Instruction::Call(u32::MAX as u32), {
+    let mut expected = vec![CALL];
+    expected.extend_from_slice(&u32::MAX.to_le_bytes());
+    expected
+});
+
+serialize_instructions!(call8, Instruction::Call(u8::MAX as u32), {
+    let mut expected = vec![CALL8];
+    expected.extend_from_slice(&u8::MAX.to_le_bytes());
+    expected
+});
+
+serialize_instructions!(call16, Instruction::Call(u16::MAX as u32), {
+    let mut expected = vec![CALL16];
+    expected.extend_from_slice(&u16::MAX.to_le_bytes());
+    expected
+});
+
+serialize_instructions!(call_native, Instruction::CallNative(1, 2), {
     let mut expected = vec![NCALL];
     expected.extend_from_slice(&1u32.to_le_bytes());
     expected.extend_from_slice(&2u32.to_le_bytes());
+    expected
+});
 
-    assert_eq!(Instruction::CallNative(1, 2).to_bytes(), expected);
-}
-
-#[test]
-fn load_capture() {
+serialize_instructions!(load_capture, Instruction::LoadCapture(9), {
     let mut expected = vec![LDCP];
     expected.extend_from_slice(&[0x1, 0x9]);
+    expected
+});
 
-    assert_eq!(Instruction::LoadCapture(9).to_bytes(), expected);
-}
+serialize_instructions!(load_capture8, Instruction::LoadCapture(u8::MAX as u32), {
+    let mut expected = vec![LDCP8];
+    expected.extend_from_slice(&u8::MAX.to_le_bytes());
+    expected
+});
 
-#[test]
-fn load_function() {
-    let mut expected = vec![LDFN];
-    expected.extend_from_slice(&3u32.to_le_bytes());
+serialize_instructions!(load_capture16, Instruction::LoadCapture(u16::MAX as u32), {
+    let mut expected = vec![LDCP16];
+    expected.extend_from_slice(&u16::MAX.to_le_bytes());
+    expected
+});
 
-    assert_eq!(Instruction::LoadFunction(3).to_bytes(), expected);
-}
+serialize_instructions!(
+    load_function,
+    Instruction::LoadFunction(u32::MAX as usize),
+    {
+        let mut expected = vec![LDFN];
+        expected.extend_from_slice(&u32::MAX.to_le_bytes());
+        expected
+    }
+);
 
-#[test]
-fn load_collection() {
-    let mut expected = vec![LDC];
-    expected.extend_from_slice(&8u32.to_le_bytes());
+serialize_instructions!(
+    load_function8,
+    Instruction::LoadFunction(u8::MAX as usize),
+    {
+        let mut expected = vec![LDFN8];
+        expected.extend_from_slice(&u8::MAX.to_le_bytes());
+        expected
+    }
+);
 
-    assert_eq!(Instruction::LoadCollection(8).to_bytes(), expected);
-}
+serialize_instructions!(
+    load_function16,
+    Instruction::LoadFunction(u16::MAX as usize),
+    {
+        let mut expected = vec![LDFN16];
+        expected.extend_from_slice(&u16::MAX.to_le_bytes());
+        expected
+    }
+);
 
-#[test]
-fn load_from_collection() {
-    assert_eq!(Instruction::LoadFromCollection.to_bytes(), vec![LDFC]);
-}
+serialize_instructions!(
+    load_collection,
+    Instruction::LoadCollection(u32::MAX as usize),
+    {
+        let mut expected = vec![LDC];
+        expected.extend_from_slice(&u32::MAX.to_le_bytes());
+        expected
+    }
+);
 
-#[test]
-fn collection_len() {
-    assert_eq!(Instruction::CollectionLen.to_bytes(), vec![LEN]);
-}
+serialize_instructions!(
+    load_collection8,
+    Instruction::LoadCollection(u8::MAX as usize),
+    {
+        let mut expected = vec![LDC8];
+        expected.extend_from_slice(&u8::MAX.to_le_bytes());
+        expected
+    }
+);
+
+serialize_instructions!(
+    load_collection16,
+    Instruction::LoadCollection(u16::MAX as usize),
+    {
+        let mut expected = vec![LDC16];
+        expected.extend_from_slice(&u16::MAX.to_le_bytes());
+        expected
+    }
+);
+
+serialize_instruction!(load_from_collection, Instruction::LoadFromCollection, LDFC);
+serialize_instruction!(collection_len, Instruction::CollectionLen, LEN);

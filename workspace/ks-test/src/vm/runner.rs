@@ -1,3 +1,4 @@
+use ks_core::compiler_new::serializer::Serializer;
 use ks_vm_new::ir::instructions::{
     ADD, AND, ASC, ASN, ASV, ASV8, ASV16, CALL, CALL8, CALL16, CLR, CPY, DEC, DIV, EQ, FREE, FREE8,
     FREE16, GE, GT, INC, JMP, JMP8, JMP16, JNZ, JNZ8, JNZ16, JZ, JZ8, JZ16, LBF, LBT, LDC, LDC8,
@@ -2222,7 +2223,9 @@ fn native_call_was_added() -> VMResult<()> {
     let native_id = 1;
     let arguments = 5;
 
-    let instructions = Instruction::CallNative(native_id, arguments).to_bytes();
+    let serializer = Serializer::new(vec![Instruction::CallNative(native_id, arguments)]);
+
+    let instructions = serializer.serialize();
 
     let vm_helper = VMHelper {
         instruction: instructions[0],
