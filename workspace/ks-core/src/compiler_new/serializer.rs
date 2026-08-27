@@ -1,8 +1,8 @@
 use ks_vm_new::ir::instructions::{
     ADD, AND, ASC, ASN, ASV, ASV8, ASV16, CALL, CALL8, CALL16, CLR, CPY, DEC, DIV, EQ, FREE, FREE8,
     FREE16, GE, GT, INC, JMP, JMP8, JMP16, JNZ, JNZ8, JNZ16, JZ, JZ8, JZ16, LBF, LBT, LDC, LDC8,
-    LDC16, LDCP, LDCP8, LDCP16, LDF, LDFC, LDFN, LDFN8, LDFN16, LDI, LDI8, LDI16, LDI32, LDN, LDS,
-    LDV, LDV8, LDV16, LE, LEN, LT, MUL, NCALL, NE, NOT, OR, RET, STR, SUB,
+    LDC16, LDCP, LDCP8, LDCP16, LDF, LDFC, LDFN, LDI, LDI8, LDI16, LDI32, LDN, LDS, LDV, LDV8,
+    LDV16, LE, LEN, LT, MUL, NCALL, NE, NOT, OR, RET, STR, SUB,
 };
 
 use super::constant::Constant;
@@ -54,13 +54,13 @@ impl Serializer {
         }
     }
 
-    fn native(&self, native_id: u32, arguments: u32) -> Vec<u8> {
-        let mut opcode = vec![NCALL];
-        let mut native_id = native_id.to_le_bytes().to_vec();
-        let mut arguments = arguments.to_le_bytes().to_vec();
+    fn dual_instruction(&self, instruction: u8, parameter1: u32, parameter2: u32) -> Vec<u8> {
+        let mut opcode = vec![instruction];
+        let mut parameter1 = parameter1.to_le_bytes().to_vec();
+        let mut parameter2 = parameter2.to_le_bytes().to_vec();
 
-        opcode.append(&mut native_id);
-        opcode.append(&mut arguments);
+        opcode.append(&mut parameter1);
+        opcode.append(&mut parameter2);
 
         opcode
     }
@@ -203,12 +203,14 @@ impl Serializer {
                 self.compressed_u32(LDV8, LDV16, LDV, *variable_id)
             }
             Instruction::Call(arguments) => self.compressed_u32(CALL8, CALL16, CALL, *arguments),
-            Instruction::CallNative(native_id, arguments) => self.native(*native_id, *arguments),
+            Instruction::CallNative(native_id, arguments) => {
+                self.dual_instruction(NCALL, *native_id, *arguments)
+            }
             Instruction::LoadCapture(captured) => {
                 self.compressed_u32(LDCP8, LDCP16, LDCP, *captured)
             }
-            Instruction::LoadFunction(size) => {
-                self.compressed_u32(LDFN8, LDFN16, LDFN, *size as u32)
+            Instruction::LoadFunction(pointer, size) => {
+                self.dual_instruction(LDFN, *pointer, *size as u32)
             }
             Instruction::LoadCollection(size) => {
                 self.compressed_u32(LDC8, LDC16, LDC, *size as u32)

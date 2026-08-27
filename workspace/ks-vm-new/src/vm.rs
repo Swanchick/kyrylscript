@@ -41,7 +41,7 @@ impl VM {
 
     fn call_native(&mut self, native_call: NativeCall) -> VMResult<()> {
         self.native.call(
-            native_call.native_id,
+            native_call.native_id as usize,
             native_call.arguments,
             &mut self.runners[native_call.runner_id],
             &mut self.gvs,

@@ -230,14 +230,12 @@ impl CompilerNew {
         let pointer = self.current_pc() + self.function_depth - 1;
 
         self.scope_append(final_scope)?;
-
-        self.insert_constant(Constant::Integer(pointer as i64))?;
-        let captured_len = captured.len();
+        let captured_len = captured.len() as u32;
         for capture in captured {
             let variable_id = self.environment.variable_id(&capture)?;
             self.insert(Instruction::LoadVar(variable_id))?;
         }
-        self.insert(Instruction::LoadFunction(captured_len))?;
+        self.insert(Instruction::LoadFunction(pointer as u32, captured_len))?;
 
         self.function_depth -= 1;
 

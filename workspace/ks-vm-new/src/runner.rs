@@ -10,8 +10,8 @@ use crate::ir::byte_reader::ByteReader;
 use crate::ir::instructions::{
     ADD, AND, ASC, ASN, ASV, ASV8, ASV16, CALL, CALL8, CALL16, CLR, CPY, DEC, DIV, EQ, FREE, FREE8,
     FREE16, GE, GT, INC, JMP, JMP8, JMP16, JNZ, JNZ8, JNZ16, JZ, JZ8, JZ16, LBF, LBT, LDC, LDC8,
-    LDC16, LDCP, LDCP8, LDCP16, LDF, LDFC, LDFN, LDFN8, LDFN16, LDI, LDI8, LDI16, LDI32, LDN, LDS,
-    LDV, LDV8, LDV16, LE, LEN, LT, MUL, NCALL, NE, NOT, OR, RET, STR, SUB,
+    LDC16, LDCP, LDCP8, LDCP16, LDF, LDFC, LDFN, LDI, LDI8, LDI16, LDI32, LDN, LDS, LDV, LDV8,
+    LDV16, LE, LEN, LT, MUL, NCALL, NE, NOT, OR, RET, STR, SUB,
 };
 use crate::{Assign, Function, NativeCall, VMError, VMHelper, VMResult};
 
@@ -431,7 +431,7 @@ impl Runner {
         reader: ByteReader,
         data_size: DataSize32,
     ) -> VMResult<()> {
-        let size = reader.from_data_size_32(&data_size)?;
+        let size = reader.from_data_size_32(&data_size)? as u32;
 
         let stack = self.acc.size_pop(size);
         let collection_id = gvs.collection_store_stack(stack);
@@ -516,13 +516,8 @@ impl Runner {
         self.step(INSTRUCTION)
     }
 
-    fn load_function(
-        &mut self,
-        gvs: &mut GVS,
-        reader: ByteReader,
-        data_size: DataSize32,
-    ) -> VMResult<()> {
-        let captures = reader.from_data_size_32(&data_size)?;
+    fn load_function(&mut self, gvs: &mut GVS, reader: ByteReader) -> VMResult<()> {
+        let (pointer, captures) = reader.parse_dual()?;
 
         let collection_id = if captures == 0 {
             None
@@ -533,19 +528,17 @@ impl Runner {
             Some(collection_id as u32)
         };
 
-        let variable_pointer = self.acc.pop(gvs)?;
-
         let function = if let Some(collection_id) = collection_id {
-            Function::new(variable_pointer.value as u32, collection_id)
+            Function::new(pointer as u32, collection_id)
         } else {
-            Function::from(variable_pointer.value as u32)
+            Function::from(pointer as u32)
         };
 
         let variable_function = Variable::from(function);
 
         self.acc.push(gvs, variable_function)?;
 
-        self.step(data_size.instruction_size())?;
+        self.step(INSTRUCTION + DWORD * 2)?;
 
         Ok(())
     }
@@ -810,7 +803,7 @@ impl Runner {
         runner_id: usize,
         reader: ByteReader,
     ) -> VMResult<()> {
-        let (native_id, arguments) = reader.parse_ncall()?;
+        let (native_id, arguments) = reader.parse_dual()?;
         let native_call = NativeCall::new(native_id, arguments, runner_id);
         native_stack.push(native_call);
         self.step(INSTRUCTION + DWORD * 2)?;
@@ -871,9 +864,7 @@ impl Runner {
             CALL16 => self.call(gvs, reader, DataSize32::Word),
             CALL => self.call(gvs, reader, DataSize32::DWord),
             RET => self.on_return(gvs),
-            LDFN8 => self.load_function(gvs, reader, DataSize32::Byte),
-            LDFN16 => self.load_function(gvs, reader, DataSize32::Word),
-            LDFN => self.load_function(gvs, reader, DataSize32::DWord),
+            LDFN => self.load_function(gvs, reader),
             LDCP8 => self.load_capture(gvs, reader, DataSize32::Byte),
             LDCP16 => self.load_capture(gvs, reader, DataSize32::Word),
             LDCP => self.load_capture(gvs, reader, DataSize32::DWord),

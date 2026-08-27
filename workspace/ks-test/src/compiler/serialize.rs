@@ -4,8 +4,8 @@ use ks_core::compiler_new::{constant::Constant, serializer::Serializer};
 use ks_vm_new::ir::instructions::{
     ADD, AND, ASC, ASN, ASV, ASV8, ASV16, CALL, CALL8, CALL16, CLR, CPY, DEC, DIV, EQ, FREE, FREE8,
     FREE16, GE, GT, INC, JMP, JMP8, JMP16, JNZ, JNZ8, JNZ16, JZ, JZ8, JZ16, LBF, LBT, LDC, LDC8,
-    LDC16, LDCP, LDCP8, LDCP16, LDF, LDFC, LDFN, LDFN8, LDFN16, LDI, LDI8, LDI16, LDI32, LDN, LDS,
-    LDV, LDV8, LDV16, LE, LEN, LT, MUL, NCALL, NE, NOT, OR, RET, STR, SUB,
+    LDC16, LDCP, LDCP8, LDCP16, LDF, LDFC, LDFN, LDI, LDI8, LDI16, LDI32, LDN, LDS, LDV, LDV8,
+    LDV16, LE, LEN, LT, MUL, NCALL, NE, NOT, OR, RET, STR, SUB,
 };
 
 macro_rules! serialize_instruction {
@@ -355,35 +355,12 @@ serialize_instructions!(load_capture16, Instruction::LoadCapture(u16::MAX as u32
     expected
 });
 
-serialize_instructions!(
-    load_function,
-    Instruction::LoadFunction(u32::MAX as usize),
-    {
-        let mut expected = vec![LDFN];
-        expected.extend_from_slice(&u32::MAX.to_le_bytes());
-        expected
-    }
-);
-
-serialize_instructions!(
-    load_function8,
-    Instruction::LoadFunction(u8::MAX as usize),
-    {
-        let mut expected = vec![LDFN8];
-        expected.extend_from_slice(&u8::MAX.to_le_bytes());
-        expected
-    }
-);
-
-serialize_instructions!(
-    load_function16,
-    Instruction::LoadFunction(u16::MAX as usize),
-    {
-        let mut expected = vec![LDFN16];
-        expected.extend_from_slice(&u16::MAX.to_le_bytes());
-        expected
-    }
-);
+serialize_instructions!(load_function, Instruction::LoadFunction(10, 20), {
+    let mut expected = vec![LDFN];
+    expected.append(&mut 10u32.to_le_bytes().to_vec());
+    expected.append(&mut 20u32.to_le_bytes().to_vec());
+    expected
+});
 
 serialize_instructions!(
     load_collection,

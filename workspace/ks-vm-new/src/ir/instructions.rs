@@ -58,10 +58,8 @@ pub const LDC: u8 = 0x67;
 pub const LDI8: u8 = 0x70; // <u8>
 pub const LDI16: u8 = 0x71; // <u16>
 pub const LDI32: u8 = 0x72; // <u32>
-pub const LDFN8: u8 = 0x73; // <u8>
-pub const LDFN16: u8 = 0x74; // <u16>
-pub const LDC8: u8 = 0x75; // <u8>
-pub const LDC16: u8 = 0x76; // <u16>
+pub const LDC8: u8 = 0x73; // <u8>
+pub const LDC16: u8 = 0x74; // <u16>
 
 // Small sized memory (0x80-0x08F)
 pub const LDV8: u8 = 0x80; // <u8>

@@ -116,8 +116,7 @@ fn function_declaration() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Add,
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(1)),
-        Instruction::LoadFunction(0),
+        Instruction::LoadFunction(1, 0),
         Instruction::Store,
     ];
 
@@ -140,8 +139,7 @@ fn should_create_return_at_the_end() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::Jump(1),
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(1)),
-        Instruction::LoadFunction(0),
+        Instruction::LoadFunction(1, 0),
         Instruction::Store,
     ];
 
@@ -162,17 +160,16 @@ fn should_create_return_at_the_end() -> KsResult<()> {
 #[test]
 fn function_with_parameters() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(7),                         // Skiping function to store it
-        Instruction::Store,                           // Storing parameter a
-        Instruction::Store,                           // Storing parameter b
-        Instruction::LoadVar(0),                      // Loading var a to variable stack
-        Instruction::LoadVar(1),                      // Loading var b to variable stack
-        Instruction::Add,                             // Sum them
-        Instruction::Free(2),                         // Free local variables
-        Instruction::Return,                          // And return
-        Instruction::LoadConst(Constant::Integer(1)), // Defining function pointer
-        Instruction::LoadFunction(0),                 // Save function with function pointer
-        Instruction::Store,                           // Saving function from variable stack
+        Instruction::Jump(7),            // Skiping function to store it
+        Instruction::Store,              // Storing parameter a
+        Instruction::Store,              // Storing parameter b
+        Instruction::LoadVar(0),         // Loading var a to variable stack
+        Instruction::LoadVar(1),         // Loading var b to variable stack
+        Instruction::Add,                // Sum them
+        Instruction::Free(2),            // Free local variables
+        Instruction::Return,             // And return
+        Instruction::LoadFunction(1, 0), // Save function with function pointer
+        Instruction::Store,              // Saving function from variable stack
     ];
 
     let mut functions = HashMap::<String, usize>::new();
@@ -197,8 +194,7 @@ fn function_call() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Add,
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(1)),
-        Instruction::LoadFunction(0),
+        Instruction::LoadFunction(1, 0),
         Instruction::Store,
         Instruction::LoadVar(0),
         Instruction::Call(0),
@@ -222,16 +218,15 @@ fn function_call() -> KsResult<()> {
 #[test]
 fn function_call_with_parameters() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(7),                         // Skiping function to store it
-        Instruction::Store,                           // Storing parameter a
-        Instruction::Store,                           // Storing parameter b
-        Instruction::LoadVar(0),                      // Loading var a to variable stack
-        Instruction::LoadVar(1),                      // Loading var b to variable stack
-        Instruction::Add,                             // Sum them
-        Instruction::Free(2),                         // Free ownership of the local variables
-        Instruction::Return,                          // And return
-        Instruction::LoadConst(Constant::Integer(1)), // Defining function pointer as variable and save to variable stack
-        Instruction::LoadFunction(0),
+        Instruction::Jump(7),    // Skiping function to store it
+        Instruction::Store,      // Storing parameter a
+        Instruction::Store,      // Storing parameter b
+        Instruction::LoadVar(0), // Loading var a to variable stack
+        Instruction::LoadVar(1), // Loading var b to variable stack
+        Instruction::Add,        // Sum them
+        Instruction::Free(2),    // Free ownership of the local variables
+        Instruction::Return,     // And return
+        Instruction::LoadFunction(1, 0),
         Instruction::Store,      // Saving function from variable stack
         Instruction::LoadVar(0), // Loading variable stored on variable_id. It's a function
         Instruction::LoadConst(Constant::Integer(20)), // Loading constant 20
@@ -754,9 +749,8 @@ fn function_scope_store_name_register() -> KsResult<()> {
         Instruction::LoadVar(0),
         Instruction::Free(2),
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(3)),
         Instruction::LoadVar(0),
-        Instruction::LoadFunction(1),
+        Instruction::LoadFunction(3, 1),
         Instruction::Store,
         Instruction::LoadVar(1),
         Instruction::Call(0),
@@ -793,8 +787,7 @@ fn function_return_in_if_statement() -> KsResult<()> {
         Instruction::Store,
         Instruction::Free(2),
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(1)),
-        Instruction::LoadFunction(0),
+        Instruction::LoadFunction(1, 0),
         Instruction::Store,
     ];
 
@@ -830,15 +823,13 @@ fn multiple_function_scoping() -> KsResult<()> {
         Instruction::Add,
         Instruction::Free(2),
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(6)),
         Instruction::LoadVar(0),
-        Instruction::LoadFunction(1),
+        Instruction::LoadFunction(6, 1),
         Instruction::Store,
         Instruction::LoadVar(1),
         Instruction::Free(2),
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(3)),
-        Instruction::LoadFunction(0),
+        Instruction::LoadFunction(3, 0),
         Instruction::Store,
         Instruction::LoadVar(1),
         Instruction::Call(0),
@@ -883,19 +874,16 @@ fn function_curring() -> KsResult<()> {
         Instruction::Add,
         Instruction::Free(3),
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(7)),
         Instruction::LoadVar(1),
         Instruction::LoadVar(0),
-        Instruction::LoadFunction(2),
+        Instruction::LoadFunction(7, 2),
         Instruction::Free(2),
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(3)),
         Instruction::LoadVar(0),
-        Instruction::LoadFunction(1),
+        Instruction::LoadFunction(3, 1),
         Instruction::Free(1),
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(1)),
-        Instruction::LoadFunction(0),
+        Instruction::LoadFunction(1, 0),
         Instruction::Store,
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(10)),
@@ -965,7 +953,7 @@ fn native_function_in_function_scope() -> KsResult<()> {
         Instruction::ClearAcc,
         Instruction::Return,
         Instruction::LoadConst(Constant::Integer(1)),
-        Instruction::LoadFunction(0),
+        Instruction::LoadFunction(1, 0),
         Instruction::Store,
         Instruction::LoadVar(0),
         Instruction::Call(0),

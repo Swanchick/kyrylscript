@@ -2,8 +2,8 @@ use ks_core::compiler_new::serializer::Serializer;
 use ks_vm_new::ir::instructions::{
     ADD, AND, ASC, ASN, ASV, ASV8, ASV16, CALL, CALL8, CALL16, CLR, CPY, DEC, DIV, EQ, FREE, FREE8,
     FREE16, GE, GT, INC, JMP, JMP8, JMP16, JNZ, JNZ8, JNZ16, JZ, JZ8, JZ16, LBF, LBT, LDC, LDC8,
-    LDC16, LDCP, LDCP8, LDCP16, LDF, LDFC, LDFN, LDFN8, LDFN16, LDI, LDI8, LDI16, LDI32, LDN, LDS,
-    LDV, LDV8, LDV16, LE, LEN, LT, MUL, NE, NOT, OR, RET, STR, SUB,
+    LDC16, LDCP, LDCP8, LDCP16, LDF, LDFC, LDFN, LDI, LDI8, LDI16, LDI32, LDN, LDS, LDV, LDV8,
+    LDV16, LE, LEN, LT, MUL, NE, NOT, OR, RET, STR, SUB,
 };
 use ks_vm_new::types::Pointer;
 use ks_vm_new::{Assign, VMHelper};
@@ -1628,51 +1628,9 @@ fn load_function_empty() -> VMResult<()> {
     let acc = vec![0];
     let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, None, None, None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, vec![LDFN, 0, 0, 0, 0])?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![LDFN, 0, 0, 0, 0, 0, 0, 0, 0])?;
 
     assert_eq!(driver.runner.pc, 5);
-    assert_eq!(driver.gvs.storage[0], Some(function));
-
-    assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc.get(0), Some(&0));
-
-    Ok(())
-}
-
-#[test]
-fn load_function_empty_8() -> VMResult<()> {
-    let function = Variable::from(Function::from(20u32)).with_owners(1);
-
-    let storage = vec![Some(function.clone())];
-    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
-
-    let acc = vec![0];
-    let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, None, None, None);
-
-    let driver = KsDriver::runner_configured(runner, gvs, vec![LDFN8, 0, 0, 0, 0])?;
-
-    assert_eq!(driver.runner.pc, 2);
-    assert_eq!(driver.gvs.storage[0], Some(function));
-
-    assert_eq!(driver.runner.acc.len(), 1);
-    assert_eq!(driver.runner.acc.get(0), Some(&0));
-
-    Ok(())
-}
-
-#[test]
-fn load_function_empty_16() -> VMResult<()> {
-    let function = Variable::from(Function::from(20u32)).with_owners(1);
-
-    let storage = vec![Some(function.clone())];
-    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
-
-    let acc = vec![0];
-    let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, None, None, None);
-
-    let driver = KsDriver::runner_configured(runner, gvs, vec![LDFN16, 0, 0])?;
-
-    assert_eq!(driver.runner.pc, 3);
     assert_eq!(driver.gvs.storage[0], Some(function));
 
     assert_eq!(driver.runner.acc.len(), 1);
@@ -1695,7 +1653,7 @@ fn load_function_capture() -> VMResult<()> {
     let acc = vec![0, 2, 1];
     let runner = KsDriver::runner_default(Some(Stack::from(acc)), None, None, None, None);
 
-    let driver = KsDriver::runner_configured(runner, gvs, vec![LDFN, 2, 0, 0, 0])?;
+    let driver = KsDriver::runner_configured(runner, gvs, vec![LDFN, 0, 0, 0, 0, 2, 0, 0, 0])?;
 
     assert_eq!(driver.runner.pc, 5);
     assert_eq!(driver.gvs.storage[0], Some(function));
