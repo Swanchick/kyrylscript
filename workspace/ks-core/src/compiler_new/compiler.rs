@@ -19,7 +19,7 @@ use super::types::{CollectionId, NativeId, Pointer, VariableId};
 
 pub struct CompilerNew {
     scopes: Vec<Vec<Instruction>>,
-    instructions: Vec<Instruction>,
+    pub instructions: Vec<Instruction>,
     environment: Environment,
     function_depth: usize,
 }
