@@ -106,8 +106,8 @@ impl Stack {
         }
     }
 
-    pub fn size_pop(&mut self, size: usize) -> Vec<Slot> {
-        let mut data = Vec::<Slot>::with_capacity(size);
+    pub fn size_pop(&mut self, size: u32) -> Vec<Slot> {
+        let mut data = Vec::<Slot>::with_capacity(size as usize);
 
         for _ in 0..size {
             if let Some(slot) = self.data.pop() {

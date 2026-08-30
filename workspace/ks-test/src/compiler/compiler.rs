@@ -1,21 +1,20 @@
 use std::collections::HashMap;
 
+use ks_core::compiler_new::constant::Constant;
+use ks_core::compiler_new::instructions::Instruction;
 use ks_core::kyryl_script::KyrylScript;
 use ks_core::parser::data_type::DataType;
 use ks_global::utils::ks_result::KsResult;
-use ks_vm_new::Constant;
-use ks_vm_new::Instruction;
-use ks_vm_new::Program;
 
 use crate::drivers::KsDriver;
 
 #[test]
 fn create_main_function() -> KsResult<()> {
-    let output = Program::serialize(Vec::new());
+    let output = Vec::new();
 
     let driver = KsDriver::new("compiler/create_main_function.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
     assert_eq!(program, output);
 
@@ -29,13 +28,11 @@ fn simple_variable_declaration() -> KsResult<()> {
         Instruction::Store,
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/simple_variable_declaration.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -53,13 +50,11 @@ fn expression() -> KsResult<()> {
         Instruction::Store,
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/expression.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -77,13 +72,11 @@ fn expression_statement() -> KsResult<()> {
         Instruction::ClearAcc,
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/expression_statement.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -97,13 +90,11 @@ fn simple_identifier() -> KsResult<()> {
         Instruction::Store,
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/simple_identifier.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -116,21 +107,18 @@ fn function_declaration() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Add,
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(1)),
-        Instruction::LoadFunction(0),
+        Instruction::LoadFunction(1, 0),
         Instruction::Store,
     ];
 
     let mut functions = HashMap::<String, usize>::new();
     functions.insert(String::from("add"), 1);
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/function_declaration.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -140,21 +128,18 @@ fn should_create_return_at_the_end() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::Jump(1),
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(1)),
-        Instruction::LoadFunction(0),
+        Instruction::LoadFunction(1, 0),
         Instruction::Store,
     ];
 
     let mut functions = HashMap::<String, usize>::new();
     functions.insert(String::from("add"), 1);
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/should_create_return_at_the_end.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -162,29 +147,26 @@ fn should_create_return_at_the_end() -> KsResult<()> {
 #[test]
 fn function_with_parameters() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(7),                         // Skiping function to store it
-        Instruction::Store,                           // Storing parameter a
-        Instruction::Store,                           // Storing parameter b
-        Instruction::LoadVar(0),                      // Loading var a to variable stack
-        Instruction::LoadVar(1),                      // Loading var b to variable stack
-        Instruction::Add,                             // Sum them
-        Instruction::Free(2),                         // Free local variables
-        Instruction::Return,                          // And return
-        Instruction::LoadConst(Constant::Integer(1)), // Defining function pointer
-        Instruction::LoadFunction(0),                 // Save function with function pointer
-        Instruction::Store,                           // Saving function from variable stack
+        Instruction::Jump(7),            // Skiping function to store it
+        Instruction::Store,              // Storing parameter a
+        Instruction::Store,              // Storing parameter b
+        Instruction::LoadVar(0),         // Loading var a to variable stack
+        Instruction::LoadVar(1),         // Loading var b to variable stack
+        Instruction::Add,                // Sum them
+        Instruction::Free(2),            // Free local variables
+        Instruction::Return,             // And return
+        Instruction::LoadFunction(1, 0), // Save function with function pointer
+        Instruction::Store,              // Saving function from variable stack
     ];
 
     let mut functions = HashMap::<String, usize>::new();
     functions.insert(String::from("sum"), 1);
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/function_with_parameters.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -197,8 +179,7 @@ fn function_call() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Add,
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(1)),
-        Instruction::LoadFunction(0),
+        Instruction::LoadFunction(1, 0),
         Instruction::Store,
         Instruction::LoadVar(0),
         Instruction::Call(0),
@@ -208,13 +189,11 @@ fn function_call() -> KsResult<()> {
     let mut functions = HashMap::<String, usize>::new();
     functions.insert(String::from("add"), 1);
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/function_call.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -222,16 +201,15 @@ fn function_call() -> KsResult<()> {
 #[test]
 fn function_call_with_parameters() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(7),                         // Skiping function to store it
-        Instruction::Store,                           // Storing parameter a
-        Instruction::Store,                           // Storing parameter b
-        Instruction::LoadVar(0),                      // Loading var a to variable stack
-        Instruction::LoadVar(1),                      // Loading var b to variable stack
-        Instruction::Add,                             // Sum them
-        Instruction::Free(2),                         // Free ownership of the local variables
-        Instruction::Return,                          // And return
-        Instruction::LoadConst(Constant::Integer(1)), // Defining function pointer as variable and save to variable stack
-        Instruction::LoadFunction(0),
+        Instruction::Jump(7),    // Skiping function to store it
+        Instruction::Store,      // Storing parameter a
+        Instruction::Store,      // Storing parameter b
+        Instruction::LoadVar(0), // Loading var a to variable stack
+        Instruction::LoadVar(1), // Loading var b to variable stack
+        Instruction::Add,        // Sum them
+        Instruction::Free(2),    // Free ownership of the local variables
+        Instruction::Return,     // And return
+        Instruction::LoadFunction(1, 0),
         Instruction::Store,      // Saving function from variable stack
         Instruction::LoadVar(0), // Loading variable stored on variable_id. It's a function
         Instruction::LoadConst(Constant::Integer(20)), // Loading constant 20
@@ -240,13 +218,11 @@ fn function_call_with_parameters() -> KsResult<()> {
         Instruction::ClearAcc,   // Ending an expression
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/function_call_with_parameters.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -261,13 +237,11 @@ fn assignment_statment() -> KsResult<()> {
         Instruction::Assign,
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/assignment_statment.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -286,13 +260,11 @@ fn add_value_statment() -> KsResult<()> {
         Instruction::Free(1),
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/add_value_statment.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -311,13 +283,11 @@ fn remove_value_statment() -> KsResult<()> {
         Instruction::Free(1),
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/remove_value_statment.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -336,13 +306,11 @@ fn if_statement() -> KsResult<()> {
         Instruction::Assign,
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/if_statement.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -365,13 +333,11 @@ fn if_statement_with_else() -> KsResult<()> {
         Instruction::Assign,
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/if_statement_with_else.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -393,13 +359,11 @@ fn while_statement() -> KsResult<()> {
         Instruction::JumpIfTrue(-9),
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/while_statement.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -430,13 +394,11 @@ fn for_statement() -> KsResult<()> {
         Instruction::Free(3),
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/for_statement.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -453,13 +415,11 @@ fn list_expression() -> KsResult<()> {
         Instruction::Store,
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/list_expression.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -477,13 +437,11 @@ fn unary_operator() -> KsResult<()> {
         Instruction::Store,
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/unary_operator.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -504,13 +462,11 @@ fn front_unary_operator() -> KsResult<()> {
         Instruction::Store,
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/front_unary_operator.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -526,13 +482,11 @@ fn tuple_literal() -> KsResult<()> {
         Instruction::Store,
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/tuple_literal.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -547,13 +501,11 @@ fn module_literal() -> KsResult<()> {
         Instruction::Store,
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/module_literal.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -569,13 +521,11 @@ fn complex_module() -> KsResult<()> {
         Instruction::Store,
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/complex_module.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -596,13 +546,11 @@ fn access_module_children() -> KsResult<()> {
         Instruction::ClearAcc,
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/access_module_children.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -641,13 +589,11 @@ fn complex_access() -> KsResult<()> {
         Instruction::ClearAcc, // person.items_on_the_table->2;
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/complex_access.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -670,13 +616,11 @@ fn complex_assignment_statement() -> KsResult<()> {
         Instruction::Assign,
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/complex_assignment_statement.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -730,13 +674,11 @@ fn scope_enter_exit() -> KsResult<()> {
         Instruction::Store,
     ];
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/scope_enter_exit.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -754,9 +696,8 @@ fn function_scope_store_name_register() -> KsResult<()> {
         Instruction::LoadVar(0),
         Instruction::Free(2),
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(3)),
         Instruction::LoadVar(0),
-        Instruction::LoadFunction(1),
+        Instruction::LoadFunction(3, 1),
         Instruction::Store,
         Instruction::LoadVar(1),
         Instruction::Call(0),
@@ -766,13 +707,11 @@ fn function_scope_store_name_register() -> KsResult<()> {
     let mut functions = HashMap::<String, usize>::new();
     functions.insert(String::from("return_the_variable"), 3);
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/function_scope_store_name_register.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -793,21 +732,18 @@ fn function_return_in_if_statement() -> KsResult<()> {
         Instruction::Store,
         Instruction::Free(2),
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(1)),
-        Instruction::LoadFunction(0),
+        Instruction::LoadFunction(1, 0),
         Instruction::Store,
     ];
 
     let mut functions = HashMap::<String, usize>::new();
     functions.insert(String::from("test"), 1);
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/function_return_in_if_statement.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -817,7 +753,7 @@ fn multiple_function_scoping() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(783)),
         Instruction::Store,
-        Instruction::Jump(19),
+        Instruction::Jump(18),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Store,
         Instruction::Jump(9),
@@ -830,15 +766,13 @@ fn multiple_function_scoping() -> KsResult<()> {
         Instruction::Add,
         Instruction::Free(2),
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(6)),
         Instruction::LoadVar(0),
-        Instruction::LoadFunction(1),
+        Instruction::LoadFunction(6, 1),
         Instruction::Store,
         Instruction::LoadVar(1),
         Instruction::Free(2),
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(3)),
-        Instruction::LoadFunction(0),
+        Instruction::LoadFunction(3, 0),
         Instruction::Store,
         Instruction::LoadVar(1),
         Instruction::Call(0),
@@ -850,13 +784,11 @@ fn multiple_function_scoping() -> KsResult<()> {
     functions.insert(String::from("foo"), 3);
     functions.insert(String::from("bar"), 6);
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/multiple_function_scoping.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -864,9 +796,9 @@ fn multiple_function_scoping() -> KsResult<()> {
 #[test]
 fn function_curring() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(29),
+        Instruction::Jump(27),
         Instruction::Store,
-        Instruction::Jump(22),
+        Instruction::Jump(21),
         Instruction::Store,
         Instruction::LoadCapture(0),
         Instruction::Store,
@@ -883,19 +815,16 @@ fn function_curring() -> KsResult<()> {
         Instruction::Add,
         Instruction::Free(3),
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(7)),
         Instruction::LoadVar(1),
         Instruction::LoadVar(0),
-        Instruction::LoadFunction(2),
+        Instruction::LoadFunction(7, 2),
         Instruction::Free(2),
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(3)),
         Instruction::LoadVar(0),
-        Instruction::LoadFunction(1),
+        Instruction::LoadFunction(3, 1),
         Instruction::Free(1),
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(1)),
-        Instruction::LoadFunction(0),
+        Instruction::LoadFunction(1, 0),
         Instruction::Store,
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(10)),
@@ -910,13 +839,11 @@ fn function_curring() -> KsResult<()> {
     let mut functions = HashMap::<String, usize>::new();
     functions.insert(String::from("curry"), 1);
 
-    let test_program = Program::serialize(instructions);
-
     let driver = KsDriver::new("compiler/function_curring.ks");
     let compiler = driver.compiler_new()?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -928,8 +855,6 @@ fn native_call() -> KsResult<()> {
         Instruction::CallNative(0, 1),
         Instruction::ClearAcc,
     ];
-
-    let test_program = Program::serialize(instructions);
 
     let mut kyryl_script = KyrylScript::new();
 
@@ -947,9 +872,9 @@ fn native_call() -> KsResult<()> {
 
     let driver = KsDriver::new("compiler/native_call.ks");
     let compiler = driver.compiler_new_environment(kyryl_script)?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }
@@ -964,14 +889,12 @@ fn native_function_in_function_scope() -> KsResult<()> {
         Instruction::CallNative(0, 3),
         Instruction::ClearAcc,
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(1)),
-        Instruction::LoadFunction(0),
+        Instruction::LoadFunction(1, 0),
         Instruction::Store,
         Instruction::LoadVar(0),
         Instruction::Call(0),
         Instruction::ClearAcc,
     ];
-    let test_program = Program::serialize(instructions);
 
     let mut kyryl_script = KyrylScript::new();
 
@@ -988,9 +911,9 @@ fn native_function_in_function_scope() -> KsResult<()> {
 
     let driver = KsDriver::new("compiler/native_function_in_function_scope.ks");
     let compiler = driver.compiler_new_environment(kyryl_script)?;
-    let program = compiler.program();
+    let program = compiler.instructions;
 
-    assert_eq!(test_program, program);
+    assert_eq!(instructions, program);
 
     Ok(())
 }

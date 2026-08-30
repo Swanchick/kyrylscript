@@ -3,10 +3,10 @@ use std::collections::HashMap;
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 use ks_vm::function::Function;
-use ks_vm_new::Program;
 
 use crate::compiler::compiler::Compiler;
 use crate::compiler_new::compiler::CompilerNew;
+use crate::compiler_new::program::Program;
 use crate::lexer::lexer::Lexer;
 use crate::parser::parser::Parser;
 use crate::parser::statement::Statement;

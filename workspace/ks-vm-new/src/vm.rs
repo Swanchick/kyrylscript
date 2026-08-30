@@ -4,17 +4,17 @@ use alloc::vec::Vec;
 #[cfg(not(feature = "std"))]
 use alloc::boxed::Box;
 
-use crate::{GVS, KsCall, NativeCall, NativeRegistry, Program, Runner, VMHelper, VMResult};
+use crate::{GVS, KsCall, NativeCall, NativeRegistry, Runner, VMHelper, VMResult};
 
 pub struct VM {
-    program: Program,
+    program: Box<[u8]>,
     pub runners: Vec<Runner>,
     pub gvs: GVS,
     pub native: NativeRegistry,
 }
 
-impl From<Program> for VM {
-    fn from(program: Program) -> Self {
+impl From<Box<[u8]>> for VM {
+    fn from(program: Box<[u8]>) -> Self {
         Self {
             program,
             runners: Vec::new(),
@@ -25,7 +25,7 @@ impl From<Program> for VM {
 }
 
 impl VM {
-    pub fn new(program: Program, runners: Vec<Runner>, gvs: GVS, native: NativeRegistry) -> Self {
+    pub fn new(program: Box<[u8]>, runners: Vec<Runner>, gvs: GVS, native: NativeRegistry) -> Self {
         Self {
             program,
             runners,
@@ -41,7 +41,7 @@ impl VM {
 
     fn call_native(&mut self, native_call: NativeCall) -> VMResult<()> {
         self.native.call(
-            native_call.native_id,
+            native_call.native_id as usize,
             native_call.arguments,
             &mut self.runners[native_call.runner_id],
             &mut self.gvs,
@@ -51,7 +51,7 @@ impl VM {
     }
 
     pub fn step(&mut self) -> VMResult<()> {
-        let instructions = self.program.instructions.as_ref();
+        let instructions = &self.program;
         let mut native_stack = Vec::new();
         let mut empty_runner_ids = Vec::new();
 
@@ -86,7 +86,7 @@ impl VM {
         Ok(())
     }
 
-    pub fn reset(&mut self, program: Program) {
+    pub fn reset(&mut self, program: Box<[u8]>) {
         self.runners.clear();
         self.gvs = GVS::new();
         self.program = program;

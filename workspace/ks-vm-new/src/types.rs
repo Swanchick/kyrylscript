@@ -11,7 +11,7 @@ pub type CollectionId = u32;
 pub type StorageId = u32;
 pub type Owners = u32;
 
-pub type NativeId = usize;
-pub type Arguments = usize;
+pub type NativeId = u32;
+pub type Arguments = u32;
 
 pub type VMResult<T> = Result<T, VMError>;

@@ -22,9 +22,6 @@ pub use environment::variable::{
     BOOLEAN_TYPE, FLOAT_TYPE, FUNCTION_TYPE, INT_TYPE, NULL_TYPE, STACK_TYPE, STRING_TYPE,
 };
 pub use environment::{Collection, Function, GVS, Stack, Variable};
-pub use ir::constant::Constant;
-pub use ir::instructions::Instruction;
-pub use ir::program::Program;
 pub use native::{KsCall, NativeCall, NativeHelper, NativeRegistry};
 pub use runner::Runner;
 pub use vm::VM;

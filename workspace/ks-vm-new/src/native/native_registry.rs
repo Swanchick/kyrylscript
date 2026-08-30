@@ -34,7 +34,7 @@ impl NativeRegistry {
 
         let helper = NativeHelper { runner, gvs };
 
-        function.call(arguments, helper)?;
+        function.call(arguments as usize, helper)?;
 
         Ok(())
     }

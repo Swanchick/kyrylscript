@@ -2,7 +2,6 @@ use std::collections::{BTreeMap, HashMap};
 
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
-use ks_vm_new::{Constant, Instruction, Program};
 
 use crate::parser::expression::Expression;
 use crate::parser::identifier_tail::IdentifierTail;
@@ -11,13 +10,16 @@ use crate::parser::parameter::Parameter;
 use crate::parser::statement::Statement;
 
 use super::collection::Collection;
+use super::constant::Constant;
 use super::environment::Environment;
+use super::instructions::Instruction;
+use super::program::Program;
 use super::slot::Slot;
 use super::types::{CollectionId, NativeId, Pointer, VariableId};
 
 pub struct CompilerNew {
     scopes: Vec<Vec<Instruction>>,
-    instructions: Vec<Instruction>,
+    pub instructions: Vec<Instruction>,
     environment: Environment,
     function_depth: usize,
 }
@@ -228,14 +230,12 @@ impl CompilerNew {
         let pointer = self.current_pc() + self.function_depth - 1;
 
         self.scope_append(final_scope)?;
-
-        self.insert_constant(Constant::Integer(pointer as i64))?;
-        let captured_len = captured.len();
+        let captured_len = captured.len() as u32;
         for capture in captured {
             let variable_id = self.environment.variable_id(&capture)?;
             self.insert(Instruction::LoadVar(variable_id))?;
         }
-        self.insert(Instruction::LoadFunction(captured_len))?;
+        self.insert(Instruction::LoadFunction(pointer as u32, captured_len))?;
 
         self.function_depth -= 1;
 
@@ -525,14 +525,14 @@ impl CompilerNew {
         if let Some(name) = last_name {
             if let Some(native_id) = self.environment.native_function(name) {
                 let native_id = *native_id;
-                self.insert(Instruction::CallNative(native_id, arguments))?;
+                self.insert(Instruction::CallNative(native_id as u32, arguments as u32))?;
                 return Ok(());
             } else {
                 return Err(KsError::parse("Cannot find nativeId"));
             }
         }
 
-        self.insert(Instruction::Call(arguments))?;
+        self.insert(Instruction::Call(arguments as u32))?;
 
         Ok(())
     }

@@ -5,9 +5,9 @@ use alloc::string::String;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
+use crate::VMResult;
 use crate::data_size::DataSize32;
 use crate::types::Pointer;
-use crate::{VMResult, native};
 
 pub struct ByteReader<'a> {
     pub pc: Pointer,
@@ -89,20 +89,20 @@ impl<'a> ByteReader<'a> {
         Ok(string)
     }
 
-    pub fn parse_ncall(&self) -> VMResult<(usize, usize)> {
+    pub fn parse_dual(&self) -> VMResult<(u32, u32)> {
         let bytes = self
             .program
             .get(self.pc + 1..self.pc + 5)
             .ok_or("Out of program for native_id")?;
 
-        let native_id = u32::from_le_bytes(bytes.try_into().unwrap()) as usize;
+        let native_id = u32::from_le_bytes(bytes.try_into().unwrap());
 
         let bytes = self
             .program
             .get(self.pc + 5..self.pc + 9)
             .ok_or("Out of program for arguments")?;
 
-        let arguments = u32::from_le_bytes(bytes.try_into().unwrap()) as usize;
+        let arguments = u32::from_le_bytes(bytes.try_into().unwrap());
 
         Ok((native_id, arguments))
     }
