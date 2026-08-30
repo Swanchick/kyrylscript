@@ -142,8 +142,8 @@ impl Serializer {
         let mut pc = 0;
 
         for instruction in &self.instructions {
-            pc += instruction.size();
             self.instruction_positions.push(pc);
+            pc += instruction.size();
         }
     }
 
@@ -169,9 +169,9 @@ impl Serializer {
         )
     }
 
+    #[inline]
     fn convert_pointer(&self, pointer: u32) -> u32 {
-        let actual_pointer = self.instruction_positions[pointer as usize];
-        actual_pointer as u32
+        self.instruction_positions[pointer as usize] as u32
     }
 
     pub fn serialize_instruction(&self, index: usize, instruction: &Instruction) -> Vec<u8> {
