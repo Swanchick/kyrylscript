@@ -131,9 +131,9 @@ serialize_instructions!(jump16, Instruction::Jump(i16::MAX as i32), {
 serialize_instruction!(store, Instruction::Store, STR);
 serialize_instruction!(assign, Instruction::Assign, ASN);
 
-serialize_instructions!(assign_variable, Instruction::AssignVariable(5), {
+serialize_instructions!(assign_variable, Instruction::AssignVariable(u32::MAX), {
     let mut expected = vec![ASV];
-    expected.extend_from_slice(&[0x1, 0x5]);
+    expected.extend_from_slice(&u32::MAX.to_le_bytes());
     expected
 });
 
@@ -160,41 +160,41 @@ serialize_instructions!(
 serialize_instruction!(assign_collection, Instruction::AssignCollection, ASC);
 
 serialize_instructions!(
-    load_const_integer,
-    Instruction::LoadConst(Constant::Integer(56515760029747400)),
-    {
-        let mut expected = vec![LDI];
-        expected.extend_from_slice(&[0x7, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8, 0xC8]);
-        expected
-    }
-);
-
-serialize_instructions!(
     load_const_integer8,
-    Instruction::LoadConst(Constant::Integer(u8::MAX as i64)),
+    Instruction::LoadConst(Constant::Integer(i8::MAX as i64)),
     {
         let mut expected = vec![LDI8];
-        expected.extend_from_slice(&u8::MAX.to_le_bytes());
+        expected.extend_from_slice(&i8::MAX.to_le_bytes());
         expected
     }
 );
 
 serialize_instructions!(
     load_const_integer16,
-    Instruction::LoadConst(Constant::Integer(u16::MAX as i64)),
+    Instruction::LoadConst(Constant::Integer(i16::MAX as i64)),
     {
         let mut expected = vec![LDI16];
-        expected.extend_from_slice(&u16::MAX.to_le_bytes());
+        expected.extend_from_slice(&i16::MAX.to_le_bytes());
         expected
     }
 );
 
 serialize_instructions!(
     load_const_integer32,
-    Instruction::LoadConst(Constant::Integer(u32::MAX as i64)),
+    Instruction::LoadConst(Constant::Integer(i32::MAX as i64)),
     {
         let mut expected = vec![LDI32];
-        expected.extend_from_slice(&u32::MAX.to_le_bytes());
+        expected.extend_from_slice(&i32::MAX.to_le_bytes());
+        expected
+    }
+);
+
+serialize_instructions!(
+    load_const_integer,
+    Instruction::LoadConst(Constant::Integer(i64::MAX as i64)),
+    {
+        let mut expected = vec![LDI];
+        expected.extend_from_slice(&i64::MAX.to_le_bytes());
         expected
     }
 );
@@ -277,9 +277,9 @@ serialize_instructions!(call_native, Instruction::CallNative(1, 2), {
     expected
 });
 
-serialize_instructions!(load_capture, Instruction::LoadCapture(9), {
+serialize_instructions!(load_capture, Instruction::LoadCapture(u32::MAX), {
     let mut expected = vec![LDCP];
-    expected.extend_from_slice(&[0x1, 0x9]);
+    expected.append(&mut u32::MAX.to_le_bytes().to_vec());
     expected
 });
 

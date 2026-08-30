@@ -753,7 +753,7 @@ fn multiple_function_scoping() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(783)),
         Instruction::Store,
-        Instruction::Jump(19),
+        Instruction::Jump(18),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Store,
         Instruction::Jump(9),
@@ -796,9 +796,9 @@ fn multiple_function_scoping() -> KsResult<()> {
 #[test]
 fn function_curring() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(29),
+        Instruction::Jump(27),
         Instruction::Store,
-        Instruction::Jump(22),
+        Instruction::Jump(21),
         Instruction::Store,
         Instruction::LoadCapture(0),
         Instruction::Store,
@@ -889,7 +889,6 @@ fn native_function_in_function_scope() -> KsResult<()> {
         Instruction::CallNative(0, 3),
         Instruction::ClearAcc,
         Instruction::Return,
-        Instruction::LoadConst(Constant::Integer(1)),
         Instruction::LoadFunction(1, 0),
         Instruction::Store,
         Instruction::LoadVar(0),
