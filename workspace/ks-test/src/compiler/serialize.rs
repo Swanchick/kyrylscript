@@ -12,7 +12,8 @@ macro_rules! serialize_instruction {
     ($test: ident, $instruction: expr, $opcode: expr) => {
         #[test]
         fn $test() {
-            let serializer = Serializer::new(vec![$instruction]);
+            let mut serializer = Serializer::new(vec![$instruction]);
+            serializer.prepare_map();
             assert_eq!(serializer.serialize(), vec![$opcode]);
         }
     };
@@ -22,7 +23,20 @@ macro_rules! serialize_instructions {
     ($test: ident, $instruction: expr, $opcodes: expr) => {
         #[test]
         fn $test() {
-            let serializer = Serializer::new(vec![$instruction]);
+            let mut serializer = Serializer::new(vec![$instruction]);
+            serializer.prepare_map();
+            let buffer = $opcodes;
+            assert_eq!(serializer.serialize(), buffer);
+        }
+    };
+}
+
+macro_rules! serialize_jumps {
+    ($test: ident, $instruction: expr, $opcodes: expr) => {
+        #[test]
+        fn $test() {
+            let mut serializer = Serializer::new($instruction);
+            serializer.prepare_map();
             let buffer = $opcodes;
             assert_eq!(serializer.serialize(), buffer);
         }
@@ -70,63 +84,59 @@ serialize_instructions!(free16, Instruction::Free(u16::MAX as usize), {
     expected
 });
 
-serialize_instructions!(jump_if_false, Instruction::JumpIfFalse(i32::MAX), {
-    let mut expected = vec![JZ];
-    expected.extend_from_slice(&u32::MAX.to_le_bytes());
-    expected
-});
-
-serialize_instructions!(jump_if_false8, Instruction::JumpIfFalse(i8::MAX as i32), {
-    let mut expected = vec![JZ8];
-    expected.extend_from_slice(&u8::MAX.to_le_bytes());
-    expected
-});
-
-serialize_instructions!(
-    jump_if_false16,
-    Instruction::JumpIfFalse(i16::MAX as i32),
+serialize_jumps!(
+    jump_if_false,
+    vec![
+        Instruction::JumpIfFalse(3),
+        Instruction::Add,
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::LoadConst(Constant::Integer(10))
+    ],
     {
-        let mut expected = vec![JZ16];
-        expected.extend_from_slice(&u16::MAX.to_le_bytes());
+        let mut expected = vec![JZ8];
+        expected.push(5);
+        expected.push(ADD);
+        expected.extend_from_slice(&[LDI8, 10]);
+        expected.extend_from_slice(&[LDI8, 10]);
         expected
     }
 );
 
-serialize_instructions!(jump_if_true, Instruction::JumpIfTrue(i32::MAX), {
-    let mut expected = vec![JNZ];
-    expected.extend_from_slice(&u32::MAX.to_le_bytes());
-    expected
-});
+serialize_jumps!(
+    jump_if_true,
+    vec![
+        Instruction::JumpIfTrue(3),
+        Instruction::Add,
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::LoadConst(Constant::Integer(10))
+    ],
+    {
+        let mut expected = vec![JNZ8];
+        expected.push(5);
+        expected.push(ADD);
+        expected.extend_from_slice(&[LDI8, 10]);
+        expected.extend_from_slice(&[LDI8, 10]);
+        expected
+    }
+);
 
-serialize_instructions!(jump_if_true8, Instruction::JumpIfTrue(i8::MAX as i32), {
-    let mut expected = vec![JNZ8];
-    expected.extend_from_slice(&u8::MAX.to_le_bytes());
-    expected
-});
-
-serialize_instructions!(jump_if_true16, Instruction::JumpIfTrue(i16::MAX as i32), {
-    let mut expected = vec![JNZ16];
-    expected.extend_from_slice(&u16::MAX.to_le_bytes());
-    expected
-});
-
-serialize_instructions!(jump, Instruction::Jump(i32::MAX), {
-    let mut expected = vec![JMP];
-    expected.extend_from_slice(&u32::MAX.to_le_bytes());
-    expected
-});
-
-serialize_instructions!(jump8, Instruction::Jump(i8::MAX as i32), {
-    let mut expected = vec![JMP8];
-    expected.extend_from_slice(&u8::MAX.to_le_bytes());
-    expected
-});
-
-serialize_instructions!(jump16, Instruction::Jump(i16::MAX as i32), {
-    let mut expected = vec![JMP16];
-    expected.extend_from_slice(&u16::MAX.to_le_bytes());
-    expected
-});
+serialize_jumps!(
+    jump,
+    vec![
+        Instruction::Jump(3),
+        Instruction::Add,
+        Instruction::LoadConst(Constant::Integer(10)),
+        Instruction::LoadConst(Constant::Integer(10))
+    ],
+    {
+        let mut expected = vec![JMP8];
+        expected.push(5);
+        expected.push(ADD);
+        expected.extend_from_slice(&[LDI8, 10]);
+        expected.extend_from_slice(&[LDI8, 10]);
+        expected
+    }
+);
 
 serialize_instruction!(store, Instruction::Store, STR);
 serialize_instruction!(assign, Instruction::Assign, ASN);

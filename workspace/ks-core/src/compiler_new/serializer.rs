@@ -155,7 +155,8 @@ impl Serializer {
         index: usize,
         offset: i32,
     ) -> Vec<u8> {
-        let difference = index as i32 - offset;
+        let difference = index as i32 + offset;
+
         let jump_index = self.instruction_positions[index] as i32;
         let instruction_jump = self.instruction_positions[difference as usize] as i32;
         let actual_distance = instruction_jump - jump_index;
@@ -166,6 +167,11 @@ impl Serializer {
             instruction_32,
             actual_distance,
         )
+    }
+
+    fn convert_pointer(&self, pointer: u32) -> u32 {
+        let actual_pointer = self.instruction_positions[pointer as usize];
+        actual_pointer as u32
     }
 
     pub fn serialize_instruction(&self, index: usize, instruction: &Instruction) -> Vec<u8> {
@@ -210,7 +216,7 @@ impl Serializer {
                 self.compressed_u32(LDCP8, LDCP16, LDCP, *captured)
             }
             Instruction::LoadFunction(pointer, size) => {
-                self.dual_instruction(LDFN, *pointer, *size as u32)
+                self.dual_instruction(LDFN, self.convert_pointer(*pointer), *size as u32)
             }
             Instruction::LoadCollection(size) => {
                 self.compressed_u32(LDC8, LDC16, LDC, *size as u32)
