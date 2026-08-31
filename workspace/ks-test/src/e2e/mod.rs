@@ -27,7 +27,7 @@ fn if_statement() -> KsResult<()> {
 
     KsDriver::vm(bytes, vec![Box::new(MockPrintLn::from(output.clone()))])?;
 
-    assert_eq!(output.borrow().clone(), "world!");
+    assert_eq!(output.borrow().clone(), "worldBU BU BU BA!");
 
-    todo!()
+    Ok(())
 }

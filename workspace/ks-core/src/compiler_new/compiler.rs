@@ -350,7 +350,7 @@ impl CompilerNew {
 
         self.scope_append(body_scope)?;
         self.scope_append(expression_scope)?;
-        self.insert(Instruction::JumpIfTrue(-body_len - expression_len - 1))?;
+        self.insert(Instruction::JumpIfTrue(-body_len - expression_len))?;
 
         Ok(())
     }
