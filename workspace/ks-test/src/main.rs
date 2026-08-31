@@ -16,4 +16,7 @@ mod compiler;
 #[cfg(test)]
 mod vm;
 
+#[cfg(test)]
+mod e2e;
+
 fn main() {}

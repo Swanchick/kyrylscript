@@ -6,11 +6,12 @@ use ks_core::{
     kyryl_script::KyrylScript,
 };
 
+use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 use ks_std::ks_register_std;
 use ks_vm_new::{
-    Assign, CallStack, Collection, GVS, NativeRegistry, Runner, Stack, VM, VMError, VMHelper,
-    VMResult, Variable,
+    Assign, CallStack, Collection, GVS, KsCall, NativeRegistry, Runner, Stack, VM, VMError,
+    VMHelper, VMResult, Variable,
 };
 
 use super::runner_driver::RunnerDriver;
@@ -55,11 +56,36 @@ impl KsDriver {
         let mut kyryl_script = KyrylScript::new();
         ks_register_std(&mut kyryl_script);
         let mut compiler = kyryl_script.take_compiler();
+
         let statements = self.parser()?;
 
         compiler.compile(statements)?;
 
         Ok(compiler)
+    }
+
+    pub fn compiler(mut kyryl_script: KyrylScript, path: &str) -> KsResult<Box<[u8]>> {
+        let statements = kyryl_script.statements(&format!("tests/{}", path))?;
+        let mut compiler = kyryl_script.take_compiler();
+        compiler.compile(statements)?;
+        let program = compiler.program();
+        let bytes = program.as_bytes();
+        Ok(bytes)
+    }
+
+    pub fn vm(bytes: Box<[u8]>, mut natives: Vec<Box<dyn KsCall>>) -> KsResult<()> {
+        let mut vm = VM::from(bytes);
+        while let Some(native) = natives.pop() {
+            vm.add_native(native);
+        }
+
+        vm.init();
+
+        while !vm.is_empty() {
+            vm.step().or_else(|e| Err(KsError::runtime(&e.message)))?;
+        }
+
+        Ok(())
     }
 
     pub fn compiler_new_environment(&self, mut kyryl_script: KyrylScript) -> KsResult<CompilerNew> {
