@@ -48,6 +48,6 @@ fn while_statement() -> KsResult<()> {
 #[test]
 fn function_call() -> KsResult<()> {
     let output = run("e2e/function_call.ks")?;
-    assert_eq!(output, "AB");
+    assert_eq!(output, "30");
     Ok(())
 }

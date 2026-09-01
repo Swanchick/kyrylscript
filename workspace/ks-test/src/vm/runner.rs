@@ -1515,7 +1515,7 @@ fn call() -> VMResult<()> {
     assert_eq!(driver.runner.pc, 20);
     assert_eq!(driver.runner.call_stack.len(), 1);
     assert_eq!(driver.runner.call_stack[0].return_pointer, 0);
-    assert_eq!(driver.runner.call_stack[0].collection_id, 0);
+    assert_eq!(driver.runner.call_stack[0].stack_pointer, 0);
 
     assert_eq!(driver.runner.acc.len(), 0);
 
@@ -1540,7 +1540,7 @@ fn call_with_parameters() -> VMResult<()> {
     assert_eq!(driver.runner.pc, 20);
     assert_eq!(driver.runner.call_stack.len(), 1);
     assert_eq!(driver.runner.call_stack[0].return_pointer, 0);
-    assert_eq!(driver.runner.call_stack[0].collection_id, 0);
+    assert_eq!(driver.runner.call_stack[0].stack_pointer, 0);
 
     assert_eq!(driver.runner.acc.len(), 2);
 
@@ -1565,7 +1565,7 @@ fn call_with_parameters_8() -> VMResult<()> {
     assert_eq!(driver.runner.pc, 20);
     assert_eq!(driver.runner.call_stack.len(), 1);
     assert_eq!(driver.runner.call_stack[0].return_pointer, 0);
-    assert_eq!(driver.runner.call_stack[0].collection_id, 0);
+    assert_eq!(driver.runner.call_stack[0].stack_pointer, 0);
 
     assert_eq!(driver.runner.acc.len(), 2);
 
@@ -1590,7 +1590,7 @@ fn call_with_parameters_16() -> VMResult<()> {
     assert_eq!(driver.runner.pc, 20);
     assert_eq!(driver.runner.call_stack.len(), 1);
     assert_eq!(driver.runner.call_stack[0].return_pointer, 0);
-    assert_eq!(driver.runner.call_stack[0].collection_id, 0);
+    assert_eq!(driver.runner.call_stack[0].stack_pointer, 0);
 
     assert_eq!(driver.runner.acc.len(), 2);
 
@@ -1724,7 +1724,7 @@ fn call_stack_should_own_collection() -> VMResult<()> {
     assert_eq!(driver.runner.pc, 20);
     assert_eq!(driver.runner.call_stack.len(), 1);
     assert_eq!(driver.runner.call_stack[0].return_pointer, 0);
-    assert_eq!(driver.runner.call_stack[0].collection_id, 0);
+    assert_eq!(driver.runner.call_stack[0].stack_pointer, 0);
 
     assert_eq!(driver.runner.acc.len(), 0);
 

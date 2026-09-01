@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use ks_vm_new::{KsCall, NativeHelper, STRING_TYPE, VMResult, types::CollectionId};
+use ks_vm_new::{FLOAT_TYPE, INT_TYPE, KsCall, NativeHelper, STRING_TYPE, VMResult};
 
 pub struct MockPrintLn {
     pub output: Rc<RefCell<String>>,
@@ -17,23 +17,19 @@ impl KsCall for MockPrintLn {
     fn call(&mut self, arguments: usize, helper: NativeHelper) -> VMResult<()> {
         let gvs = helper.gvs;
 
-        let mut storage_ids = helper.runner.acc.size_pop(arguments as u32);
-        storage_ids.reverse();
-        for storage_id in storage_ids {
-            println!("STORAGE_ID: {}", storage_id);
+        let mut output = self.output.borrow_mut();
 
-            let variable = gvs.variable(storage_id)?;
-            if variable.value_type != STRING_TYPE {
-                gvs.storage_remove_owner(storage_id)?;
-                continue;
+        for _ in 0..arguments {
+            let argument = helper.runner.acc.last(gvs)?.clone();
+
+            match argument.value_type {
+                INT_TYPE => output.push_str(&(argument.value as i64).to_string()),
+                FLOAT_TYPE => output.push_str(&(f64::from_bits(argument.value)).to_string()),
+                STRING_TYPE => output.push_str(gvs.collection_string(argument.value as u32)?),
+                _ => {}
             }
 
-            let string = gvs.collection_string(variable.value as CollectionId)?;
-
-            let mut output = self.output.borrow_mut();
-            output.push_str(string);
-
-            gvs.storage_remove_owner(storage_id)?;
+            helper.runner.acc.pop_data()?;
         }
 
         Ok(())

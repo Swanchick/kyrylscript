@@ -116,7 +116,13 @@ impl Runner {
         reader: ByteReader,
         data_size: DataSize32,
     ) -> VMResult<()> {
-        let slot = reader.from_data_size_32(&data_size)? as u32;
+        let padding = if let Some(call_stack) = self.call_stack.last() {
+            call_stack.stack_pointer
+        } else {
+            0
+        } as u32;
+
+        let slot = padding + reader.from_data_size_32(&data_size)? as u32;
 
         let storage_id = self.stack.storage_id(slot)?;
         self.acc.push_storage_id(gvs, storage_id)?;
@@ -135,8 +141,6 @@ impl Runner {
             .pc
             .checked_add_signed(offset)
             .ok_or("Out of program bounding")?;
-
-        println!("PC: {}", self.pc);
 
         Ok(())
     }
@@ -517,7 +521,8 @@ impl Runner {
 
         gvs.storage_remove_owner(call_stack.storage_id)?;
         self.pc = call_stack.return_pointer;
-        self.step(INSTRUCTION)
+
+        Ok(())
     }
 
     fn load_function(&mut self, gvs: &mut GVS, reader: ByteReader) -> VMResult<()> {
@@ -815,8 +820,6 @@ impl Runner {
     pub fn run<'a>(&mut self, helper: VMHelper<'a>) -> VMResult<()> {
         let gvs = helper.gvs;
         let reader = ByteReader::new(self.pc, helper.instructions);
-
-        println!("{:X}", helper.instruction);
 
         match helper.instruction {
             LDN => self.load_null(gvs),

@@ -1,6 +1,7 @@
-function police(port string, pin1 int, pin2 int) {
-  print(port);
-  print("B");
+function add(a int, b int): int {
+  return a + b;
 }
 
-police("A", 6, 7);
+let result = add(10, 20);
+
+print(result);
