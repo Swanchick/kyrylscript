@@ -821,6 +821,8 @@ impl Runner {
         let gvs = helper.gvs;
         let reader = ByteReader::new(self.pc, helper.instructions);
 
+        println!("{}: {:X}", self.pc, helper.instruction);
+
         match helper.instruction {
             LDN => self.load_null(gvs),
             LBT => self.load_true(gvs),
