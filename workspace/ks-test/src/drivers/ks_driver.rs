@@ -73,7 +73,14 @@ impl KsDriver {
 
         let program = compiler.program();
         let bytes = program.as_bytes();
-        println!("Compiled program: {:X?}", bytes);
+
+        println!("=============== bytes ===============");
+
+        for (i, opcode) in bytes.to_vec().iter().enumerate() {
+            println!("{}: {:X}", i, opcode);
+        }
+
+        println!("=====================================");
         Ok(bytes)
     }
 

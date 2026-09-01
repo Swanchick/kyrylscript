@@ -136,6 +136,8 @@ impl Runner {
             .checked_add_signed(offset)
             .ok_or("Out of program bounding")?;
 
+        println!("PC: {}", self.pc);
+
         Ok(())
     }
 
@@ -488,6 +490,8 @@ impl Runner {
     fn call(&mut self, gvs: &mut GVS, reader: ByteReader, data_size: DataSize32) -> VMResult<()> {
         let arguments = reader.from_data_size_32(&data_size)?;
 
+        self.step(data_size.instruction_size())?;
+
         let slot = self.acc.len() - arguments - 1;
         let storage_id = self.acc.remove(slot);
 
@@ -812,6 +816,8 @@ impl Runner {
         let gvs = helper.gvs;
         let reader = ByteReader::new(self.pc, helper.instructions);
 
+        println!("{:X}", helper.instruction);
+
         match helper.instruction {
             LDN => self.load_null(gvs),
             LBT => self.load_true(gvs),
@@ -874,7 +880,7 @@ impl Runner {
             ASV => self.assign_variable(reader, DataSize32::DWord),
             ASC => self.assign_collection(gvs),
             NCALL => self.call_native(helper.native_stack, helper.runner_id, reader),
-            _ => Err(VMError::from("Unknown instruction opcode")),
+            opcode => Err(VMError::from(format!("Unknown instruction {:X}", opcode))),
         }?;
 
         Ok(())

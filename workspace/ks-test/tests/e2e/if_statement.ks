@@ -1,11 +1,11 @@
 let a = 20;
 
-println("0");
+print("0");
 
 if a == 52 {
-  println("1");
+  print("1");
 } else {
-  println("2");
+  print("2");
 }
 
-println("3");
+print("3");

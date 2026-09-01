@@ -10,46 +10,44 @@ use crate::e2e::native::MockPrintLn;
 
 mod native;
 
-#[test]
-fn if_statement() -> KsResult<()> {
+fn run(path: &str) -> KsResult<String> {
     let mut kyrylscript = KyrylScript::new();
     kyrylscript.parser_mut().register_variable(
-        "println",
+        "print",
         DataType::RustFunction {
             return_type: Box::new(DataType::void()),
         },
         true,
     );
-    kyrylscript.compiler_mut().register_native("println", 0);
+    kyrylscript.compiler_mut().register_native("print", 0);
 
-    let bytes = KsDriver::compiler(kyrylscript, "e2e/if_statement.ks")?;
+    let bytes = KsDriver::compiler(kyrylscript, path)?;
     let output = Rc::new(RefCell::new(String::new()));
 
     KsDriver::vm(bytes, vec![Box::new(MockPrintLn::from(output.clone()))])?;
 
-    assert_eq!(output.borrow().clone(), "023");
+    Ok(output.borrow().clone())
+}
+
+#[test]
+fn if_statement() -> KsResult<()> {
+    let output = run("e2e/if_statement.ks")?;
+    assert_eq!(output, "023");
 
     Ok(())
 }
 
 #[test]
 fn while_statement() -> KsResult<()> {
-    let mut kyrylscript = KyrylScript::new();
-    kyrylscript.parser_mut().register_variable(
-        "println",
-        DataType::RustFunction {
-            return_type: Box::new(DataType::void()),
-        },
-        true,
-    );
-    kyrylscript.compiler_mut().register_native("println", 0);
+    let output = run("e2e/while_statement.ks")?;
+    assert_eq!(output, "7\\ 7\\ 7\\ 7\\ 7\\ ");
 
-    let bytes = KsDriver::compiler(kyrylscript, "e2e/while_statement.ks")?;
-    let output = Rc::new(RefCell::new(String::new()));
+    Ok(())
+}
 
-    KsDriver::vm(bytes, vec![Box::new(MockPrintLn::from(output.clone()))])?;
-
-    assert_eq!(output.borrow().clone(), "7\\ 7\\ 7\\ 7\\ 7\\ ");
-
+#[test]
+fn function_call() -> KsResult<()> {
+    let output = run("e2e/function_call.ks")?;
+    assert_eq!(output, "AB");
     Ok(())
 }
