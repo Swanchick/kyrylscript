@@ -1,10 +1,5 @@
 use core::str::from_utf8;
 
-#[cfg(not(feature = "std"))]
-use alloc::string::String;
-#[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
-
 use crate::VMResult;
 use crate::data_size::DataSize32;
 use crate::types::Pointer;
