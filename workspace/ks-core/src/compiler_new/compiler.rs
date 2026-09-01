@@ -226,7 +226,7 @@ impl CompilerNew {
 
         let final_scope = self.scope_pop()?;
 
-        self.insert(Instruction::Jump(final_scope.len() as i32))?;
+        self.insert(Instruction::Jump(final_scope.len() as i32 + 1))?;
         let pointer = self.current_pc() + self.function_depth - 1;
 
         self.scope_append(final_scope)?;
@@ -320,14 +320,14 @@ impl CompilerNew {
             self.compile_statements_free(else_body)?;
             let else_body_scope = self.scope_pop()?;
 
-            body_scope.push(Instruction::Jump(else_body_scope.len() as i32));
+            body_scope.push(Instruction::Jump(else_body_scope.len() as i32 + 1));
 
             else_body_scope
         } else {
             Vec::new()
         };
 
-        self.insert(Instruction::JumpIfFalse(body_scope.len() as i32))?;
+        self.insert(Instruction::JumpIfFalse(body_scope.len() as i32 + 1))?;
         self.scope_append(body_scope)?;
         self.scope_append(else_body_scope)?;
 
@@ -346,11 +346,11 @@ impl CompilerNew {
         let expression_len = expression_scope.len() as i32;
         let body_len = body_scope.len() as i32;
 
-        self.insert(Instruction::Jump(body_len))?;
+        self.insert(Instruction::Jump(body_len + 1))?;
 
         self.scope_append(body_scope)?;
         self.scope_append(expression_scope)?;
-        self.insert(Instruction::JumpIfTrue(-body_len - expression_len - 1))?;
+        self.insert(Instruction::JumpIfTrue(-body_len - expression_len))?;
 
         Ok(())
     }
@@ -404,7 +404,7 @@ impl CompilerNew {
         let after_len = after_scope.len() as i32;
         self.scope_append(after_scope)?;
 
-        self.insert(Instruction::JumpIfFalse(-body_len - after_len - 1))?;
+        self.insert(Instruction::JumpIfFalse(-body_len - after_len))?;
 
         self.free()?;
 
