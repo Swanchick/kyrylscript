@@ -102,7 +102,7 @@ fn simple_identifier() -> KsResult<()> {
 #[test]
 fn function_declaration() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(4),
+        Instruction::Jump(5),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Add,
@@ -126,7 +126,7 @@ fn function_declaration() -> KsResult<()> {
 #[test]
 fn should_create_return_at_the_end() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(1),
+        Instruction::Jump(2),
         Instruction::Return,
         Instruction::LoadFunction(1, 0),
         Instruction::Store,
@@ -147,7 +147,7 @@ fn should_create_return_at_the_end() -> KsResult<()> {
 #[test]
 fn function_with_parameters() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(7),            // Skiping function to store it
+        Instruction::Jump(8),            // Skiping function to store it
         Instruction::Store,              // Storing parameter a
         Instruction::Store,              // Storing parameter b
         Instruction::LoadVar(0),         // Loading var a to variable stack
@@ -174,7 +174,7 @@ fn function_with_parameters() -> KsResult<()> {
 #[test]
 fn function_call() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(4),
+        Instruction::Jump(5),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Add,
@@ -201,7 +201,7 @@ fn function_call() -> KsResult<()> {
 #[test]
 fn function_call_with_parameters() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(7),    // Skiping function to store it
+        Instruction::Jump(8),    // Skiping function to store it
         Instruction::Store,      // Storing parameter a
         Instruction::Store,      // Storing parameter b
         Instruction::LoadVar(0), // Loading var a to variable stack
@@ -300,7 +300,7 @@ fn if_statement() -> KsResult<()> {
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Eq,
-        Instruction::JumpIfFalse(3),
+        Instruction::JumpIfFalse(4),
         Instruction::AssignVariable(0),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Assign,
@@ -323,11 +323,11 @@ fn if_statement_with_else() -> KsResult<()> {
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Eq,
-        Instruction::JumpIfFalse(4),
+        Instruction::JumpIfFalse(5),
         Instruction::AssignVariable(0),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Assign,
-        Instruction::Jump(3),
+        Instruction::Jump(4),
         Instruction::AssignVariable(0),
         Instruction::LoadConst(Constant::Integer(30)),
         Instruction::Assign,
@@ -347,7 +347,7 @@ fn while_statement() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(0)),
         Instruction::Store,
-        Instruction::Jump(5),
+        Instruction::Jump(6),
         Instruction::AssignVariable(0),
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(1)),
@@ -356,7 +356,7 @@ fn while_statement() -> KsResult<()> {
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::GreaterEq,
-        Instruction::JumpIfTrue(-9),
+        Instruction::JumpIfTrue(-8),
     ];
 
     let driver = KsDriver::new("compiler/while_statement.ks");
@@ -390,7 +390,7 @@ fn for_statement() -> KsResult<()> {
         Instruction::LoadVar(0),
         Instruction::CollectionLen,
         Instruction::GreaterEq, // iterator >= list_iter.len()
-        Instruction::JumpIfFalse(-11),
+        Instruction::JumpIfFalse(-10),
         Instruction::Free(3),
     ];
 
@@ -631,18 +631,18 @@ fn scope_enter_exit() -> KsResult<()> {
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Store,
         Instruction::LoadConst(Constant::Boolean(true)),
-        Instruction::JumpIfFalse(3),
+        Instruction::JumpIfFalse(4),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Store,
         Instruction::Free(1),
         Instruction::LoadConst(Constant::Integer(23)),
         Instruction::Store,
-        Instruction::Jump(3),
+        Instruction::Jump(4),
         Instruction::LoadConst(Constant::String(String::from("Hello World"))),
         Instruction::Store,
         Instruction::Free(1),
         Instruction::LoadConst(Constant::Boolean(true)),
-        Instruction::JumpIfTrue(-5),
+        Instruction::JumpIfTrue(-4),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Store,
         Instruction::LoadConst(Constant::Integer(10)),
@@ -668,7 +668,7 @@ fn scope_enter_exit() -> KsResult<()> {
         Instruction::LoadVar(3),
         Instruction::CollectionLen,
         Instruction::GreaterEq,
-        Instruction::JumpIfFalse(-14),
+        Instruction::JumpIfFalse(-13),
         Instruction::Free(3),
         Instruction::LoadConst(Constant::Integer(345)),
         Instruction::Store,
@@ -688,7 +688,7 @@ fn function_scope_store_name_register() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Store,
-        Instruction::Jump(7),
+        Instruction::Jump(8),
         Instruction::LoadCapture(0),
         Instruction::Store,
         Instruction::LoadConst(Constant::Integer(10)),
@@ -719,12 +719,12 @@ fn function_scope_store_name_register() -> KsResult<()> {
 #[test]
 fn function_return_in_if_statement() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(12),
+        Instruction::Jump(13),
         Instruction::Store,
         Instruction::LoadVar(0),
         Instruction::LoadConst(Constant::Integer(20)),
         Instruction::Eq,
-        Instruction::JumpIfFalse(3),
+        Instruction::JumpIfFalse(4),
         Instruction::LoadConst(Constant::Null),
         Instruction::Free(1),
         Instruction::Return,
@@ -753,10 +753,10 @@ fn multiple_function_scoping() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
         Instruction::LoadConst(Constant::Integer(783)),
         Instruction::Store,
-        Instruction::Jump(18),
+        Instruction::Jump(19),
         Instruction::LoadConst(Constant::Integer(10)),
         Instruction::Store,
-        Instruction::Jump(9),
+        Instruction::Jump(10),
         Instruction::LoadCapture(0),
         Instruction::Store,
         Instruction::LoadConst(Constant::Integer(20)),
@@ -796,13 +796,13 @@ fn multiple_function_scoping() -> KsResult<()> {
 #[test]
 fn function_curring() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(27),
+        Instruction::Jump(28),
         Instruction::Store,
-        Instruction::Jump(21),
+        Instruction::Jump(22),
         Instruction::Store,
         Instruction::LoadCapture(0),
         Instruction::Store,
-        Instruction::Jump(12),
+        Instruction::Jump(13),
         Instruction::Store,
         Instruction::LoadCapture(0),
         Instruction::Store,
@@ -882,7 +882,7 @@ fn native_call() -> KsResult<()> {
 #[test]
 fn native_function_in_function_scope() -> KsResult<()> {
     let instructions: Vec<Instruction> = vec![
-        Instruction::Jump(6),
+        Instruction::Jump(7),
         Instruction::LoadConst(Constant::Boolean(true)),
         Instruction::LoadConst(Constant::Integer(1)),
         Instruction::LoadConst(Constant::String(String::from("A"))),

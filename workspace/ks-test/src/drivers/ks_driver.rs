@@ -68,8 +68,12 @@ impl KsDriver {
         let statements = kyryl_script.statements(&format!("tests/{}", path))?;
         let mut compiler = kyryl_script.take_compiler();
         compiler.compile(statements)?;
+
+        println!("Instructions: {:?}", &compiler.instructions);
+
         let program = compiler.program();
         let bytes = program.as_bytes();
+        println!("Compiled program: {:X?}", bytes);
         Ok(bytes)
     }
 

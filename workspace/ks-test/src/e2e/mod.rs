@@ -27,7 +27,29 @@ fn if_statement() -> KsResult<()> {
 
     KsDriver::vm(bytes, vec![Box::new(MockPrintLn::from(output.clone()))])?;
 
-    assert_eq!(output.borrow().clone(), "worldBU BU BU BA!");
+    assert_eq!(output.borrow().clone(), "023");
+
+    Ok(())
+}
+
+#[test]
+fn while_statement() -> KsResult<()> {
+    let mut kyrylscript = KyrylScript::new();
+    kyrylscript.parser_mut().register_variable(
+        "println",
+        DataType::RustFunction {
+            return_type: Box::new(DataType::void()),
+        },
+        true,
+    );
+    kyrylscript.compiler_mut().register_native("println", 0);
+
+    let bytes = KsDriver::compiler(kyrylscript, "e2e/while_statement.ks")?;
+    let output = Rc::new(RefCell::new(String::new()));
+
+    KsDriver::vm(bytes, vec![Box::new(MockPrintLn::from(output.clone()))])?;
+
+    assert_eq!(output.borrow().clone(), "7\\ 7\\ 7\\ 7\\ 7\\ ");
 
     Ok(())
 }

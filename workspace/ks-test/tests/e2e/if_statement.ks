@@ -1,13 +1,11 @@
 let a = 20;
 
-if a == 10 {
-  println("Hello, ");
-}
-
-println("world!");
+println("0");
 
 if a == 52 {
-  println("ASSDASD");
+  println("1");
 } else {
-  println("BU BU BU BA");
+  println("2");
 }
+
+println("3");
