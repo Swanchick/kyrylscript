@@ -71,17 +71,59 @@ impl Environment {
         self.register_collection(collection)
     }
 
-    pub fn register(&mut self, module: &BTreeMap<String, DataType>) -> CollectionId {
-        todo!()
+    pub fn register_module(&mut self, module: &BTreeMap<String, DataType>) -> CollectionId {
+        let mut indeces = HashMap::<String, VariableId>::new();
+        let mut children = Vec::<Option<CollectionId>>::new();
+
+        for (name, data_type) in module {
+            indeces.insert(name.clone(), children.len() as VariableId);
+            let collection_id = self.collection_from_data_type(data_type);
+            children.push(collection_id);
+        }
+
+        let collection = Collection::Module { children, indeces };
+
+        self.register_collection(collection)
+    }
+
+    pub fn register_tuple(&mut self, tuple: &[DataType]) -> CollectionId {
+        let mut children = Vec::<Option<CollectionId>>::new();
+
+        for data_type in tuple {
+            let collection_id = self.collection_from_data_type(data_type);
+            children.push(collection_id);
+        }
+
+        let collection = Collection::Tuple { children };
+        self.register_collection(collection)
     }
 
     pub fn collection_from_data_type(&mut self, data_type: &DataType) -> Option<CollectionId> {
         match data_type {
             DataType::List(children) => Some(self.register_list(children)),
-            DataType::Module(module) => todo!(),
-            DataType::Tuple(children) => todo!(),
+            DataType::Module(module) => Some(self.register_module(module)),
+            DataType::Tuple(tuple) => Some(self.register_tuple(tuple)),
             _ => None,
         }
+    }
+
+    pub fn register_data_type(&mut self, name: &str, data_type: &DataType) -> KsResult<()> {
+        let collection_id = self.collection_from_data_type(data_type);
+        let variable_id = self.current()?;
+
+        let slot = if let Some(collection_id) = collection_id {
+            Slot::Collection {
+                variable_id,
+                collection_id,
+            }
+        } else {
+            Slot::Variable(variable_id)
+        };
+
+        let current_scope = self.current_scope_mut()?;
+        current_scope.insert(name.to_string(), slot);
+
+        Ok(())
     }
 
     fn last_function(&self) -> KsResult<&[HashMap<String, Slot>]> {
