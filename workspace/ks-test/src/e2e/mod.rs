@@ -116,3 +116,10 @@ fn module_init() -> KsResult<()> {
     assert_eq!(output, "Name: Kyryl, Age: 20");
     Ok(())
 }
+
+#[test]
+fn module_return() -> KsResult<()> {
+    let output = run("e2e/module_return.ks")?;
+    assert_eq!(output, "Name: Kyryl, Age: 20");
+    Ok(())
+}
