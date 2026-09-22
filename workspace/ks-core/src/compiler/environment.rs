@@ -10,7 +10,6 @@ use super::slot::Slot;
 use super::types::{CollectionId, Pointer, VariableId};
 
 pub struct Environment {
-    functions: HashMap<String, Pointer>,
     variables: Vec<Vec<HashMap<String, Slot>>>,
     native_function: HashMap<String, NativeId>,
     pub collections: Vec<Collection>,
@@ -20,7 +19,6 @@ pub struct Environment {
 impl Environment {
     pub fn new() -> Self {
         Environment {
-            functions: HashMap::new(),
             variables: vec![Vec::new()],
             native_function: HashMap::new(),
             collections: Vec::new(),
@@ -64,20 +62,20 @@ impl Environment {
         self.temp_collection = Some(collection_id);
     }
 
-    pub fn register_list(&mut self, children: &DataType) -> CollectionId {
-        let child = self.collection_from_data_type(children);
+    fn register_list(&mut self, children: &DataType) -> CollectionId {
+        let child = self.data_type_to_collection(children);
         let collection = Collection::List { child };
 
         self.register_collection(collection)
     }
 
-    pub fn register_module(&mut self, module: &BTreeMap<String, DataType>) -> CollectionId {
+    fn register_module(&mut self, module: &BTreeMap<String, DataType>) -> CollectionId {
         let mut indeces = HashMap::<String, VariableId>::new();
         let mut children = Vec::<Option<CollectionId>>::new();
 
         for (name, data_type) in module {
             indeces.insert(name.clone(), children.len() as VariableId);
-            let collection_id = self.collection_from_data_type(data_type);
+            let collection_id = self.data_type_to_collection(data_type);
             children.push(collection_id);
         }
 
@@ -86,11 +84,11 @@ impl Environment {
         self.register_collection(collection)
     }
 
-    pub fn register_tuple(&mut self, tuple: &[DataType]) -> CollectionId {
+    fn register_tuple(&mut self, tuple: &[DataType]) -> CollectionId {
         let mut children = Vec::<Option<CollectionId>>::new();
 
         for data_type in tuple {
-            let collection_id = self.collection_from_data_type(data_type);
+            let collection_id = self.data_type_to_collection(data_type);
             children.push(collection_id);
         }
 
@@ -98,17 +96,27 @@ impl Environment {
         self.register_collection(collection)
     }
 
-    pub fn collection_from_data_type(&mut self, data_type: &DataType) -> Option<CollectionId> {
+    fn register_function(&mut self, return_type: &DataType) -> CollectionId {
+        let return_collection = self.data_type_to_collection(return_type);
+        let collection = Collection::Function { return_collection };
+        self.register_collection(collection)
+    }
+
+    pub fn data_type_to_collection(&mut self, data_type: &DataType) -> Option<CollectionId> {
         match data_type {
             DataType::List(children) => Some(self.register_list(children)),
             DataType::Module(module) => Some(self.register_module(module)),
             DataType::Tuple(tuple) => Some(self.register_tuple(tuple)),
+            DataType::Function {
+                parameters: _,
+                return_type,
+            } => Some(self.register_function(return_type)),
             _ => None,
         }
     }
 
     pub fn register_data_type(&mut self, name: &str, data_type: &DataType) -> KsResult<()> {
-        let collection_id = self.collection_from_data_type(data_type);
+        let collection_id = self.data_type_to_collection(data_type);
         let variable_id = self.current()?;
 
         let slot = if let Some(collection_id) = collection_id {
@@ -204,10 +212,6 @@ impl Environment {
         current_scope.insert(name, slot);
 
         Ok(variable_id)
-    }
-
-    pub fn define_function(&mut self, name: &str, pointer: Pointer) {
-        self.functions.insert(name.to_string(), pointer);
     }
 
     pub fn slot(&self, name: &str) -> KsResult<&Slot> {

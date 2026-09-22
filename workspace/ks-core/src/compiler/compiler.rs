@@ -3,6 +3,7 @@ use std::collections::{BTreeMap, HashMap};
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
+use crate::parser::data_type::DataType;
 use crate::parser::expression::Expression;
 use crate::parser::identifier_tail::IdentifierTail;
 use crate::parser::operator::Operator;
@@ -182,7 +183,8 @@ impl Compiler {
         parameters: Vec<Parameter>,
         body: Vec<Statement>,
         captured: Vec<String>,
-    ) -> KsResult<Pointer> {
+        return_type: DataType,
+    ) -> KsResult<CollectionId> {
         self.function_depth += 1;
 
         self.environment.enter_function()?;
@@ -240,7 +242,12 @@ impl Compiler {
 
         self.function_depth -= 1;
 
-        Ok(pointer)
+        let collection_id = self
+            .environment
+            .data_type_to_collection(&return_type)
+            .ok_or(KsError::parse("DataType is not a function!"))?;
+
+        Ok(collection_id)
     }
 
     fn function_declaration(
@@ -249,10 +256,11 @@ impl Compiler {
         parameters: Vec<Parameter>,
         body: Vec<Statement>,
         captured: Vec<String>,
+        return_type: DataType,
     ) -> KsResult<()> {
-        let pointer = self.function(parameters, body, captured)?;
+        let collection_id = self.function(parameters, body, captured, return_type)?;
 
-        self.environment.define_function(&name, pointer);
+        self.environment.set_temp_collection(collection_id);
         self.environment.define_variable(name)?;
         self.insert_store()?;
 
@@ -424,11 +432,11 @@ impl Compiler {
             Statement::Function {
                 name,
                 public: _,
-                return_type: _,
+                return_type,
                 parameters,
                 body,
                 captured,
-            } => self.function_declaration(name, parameters, body, captured),
+            } => self.function_declaration(name, parameters, body, captured, return_type),
             Statement::ReturnStatement { value } => self.return_statement(value),
             Statement::Assignment { segments, value } => self.assignment(segments, value),
             Statement::AddValue { segments, value } => {
@@ -511,6 +519,7 @@ impl Compiler {
         &mut self,
         mut expressions: Vec<Expression>,
         assign: bool,
+        last_collection_id: &mut Option<CollectionId>,
         last_name: &mut Option<String>,
     ) -> KsResult<()> {
         if assign {
@@ -532,6 +541,9 @@ impl Compiler {
                 return Err(KsError::parse("Cannot find nativeId"));
             }
         }
+
+        let last_collection_id =
+            last_collection_id.ok_or(KsError::parse("Variable is not a function!"))?
 
         self.insert(Instruction::Call(arguments as u32))?;
 
@@ -726,9 +738,10 @@ impl Compiler {
         parameters: Vec<Parameter>,
         body: Vec<Statement>,
         captured: Vec<String>,
+        return_type: DataType,
     ) -> KsResult<()> {
-        self.function(parameters, body, captured)?;
-
+        let collection_id = self.function(parameters, body, captured, return_type)?;
+        self.environment.set_temp_collection(collection_id);
         Ok(())
     }
 
@@ -760,10 +773,10 @@ impl Compiler {
             } => self.unary_operator(*expression, operator),
             Expression::FunctionLiteral {
                 parameters,
-                return_type: _,
+                return_type,
                 block: body,
                 captured,
-            } => self.function_literal(parameters, body, captured),
+            } => self.function_literal(parameters, body, captured, return_type),
         }?;
 
         Ok(())

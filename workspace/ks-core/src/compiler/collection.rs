@@ -14,4 +14,7 @@ pub enum Collection {
     Tuple {
         children: Vec<Option<CollectionId>>,
     },
+    Function {
+        return_collection: Option<CollectionId>,
+    },
 }
