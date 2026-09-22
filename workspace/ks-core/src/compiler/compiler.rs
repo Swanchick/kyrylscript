@@ -190,9 +190,12 @@ impl Compiler {
         self.scope_enter();
 
         for parameter in parameters {
+            println!("Parameter: {:?}", parameter);
             self.environment.define_variable(parameter.name)?;
             self.insert(Instruction::Store)?;
         }
+
+        println!("{:?}", self.environment.collections);
 
         for index in 0..captured.len() {
             let captured_name = &captured[index];
@@ -685,12 +688,17 @@ impl Compiler {
         let mut indeces = HashMap::<String, VariableId>::new();
 
         for (name, expression) in module {
+            println!("Name: {:?}", name);
+            println!("Expression: {:?}", expression);
             self.compile_expression(expression)?;
 
             indeces.insert(name, children.len() as u32);
             let temp_collection = self.environment.temp_collection();
             children.push(temp_collection);
         }
+
+        println!("Children: {:?}", children);
+        println!("indeces: {:?}", indeces);
 
         let collection = Collection::Module { children, indeces };
         let collection_id = self.environment.register_collection(collection);

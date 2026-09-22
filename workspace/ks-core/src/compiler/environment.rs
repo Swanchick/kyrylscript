@@ -1,8 +1,9 @@
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use crate::compiler::types::NativeId;
+use crate::parser::data_type::DataType;
 
 use super::collection::Collection;
 use super::slot::Slot;
@@ -12,7 +13,7 @@ pub struct Environment {
     functions: HashMap<String, Pointer>,
     variables: Vec<Vec<HashMap<String, Slot>>>,
     native_function: HashMap<String, NativeId>,
-    collections: Vec<Collection>,
+    pub collections: Vec<Collection>,
     temp_collection: Option<CollectionId>,
 }
 
@@ -61,6 +62,26 @@ impl Environment {
 
     pub fn set_temp_collection(&mut self, collection_id: CollectionId) {
         self.temp_collection = Some(collection_id);
+    }
+
+    pub fn register_list(&mut self, children: &DataType) -> CollectionId {
+        let child = self.collection_from_data_type(children);
+        let collection = Collection::List { child };
+
+        self.register_collection(collection)
+    }
+
+    pub fn register(&mut self, module: &BTreeMap<String, DataType>) -> CollectionId {
+        todo!()
+    }
+
+    pub fn collection_from_data_type(&mut self, data_type: &DataType) -> Option<CollectionId> {
+        match data_type {
+            DataType::List(children) => Some(self.register_list(children)),
+            DataType::Module(module) => todo!(),
+            DataType::Tuple(children) => todo!(),
+            _ => None,
+        }
     }
 
     fn last_function(&self) -> KsResult<&[HashMap<String, Slot>]> {
