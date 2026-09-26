@@ -542,12 +542,18 @@ impl Compiler {
             }
         }
 
-        let last_collection_id =
-            last_collection_id.ok_or(KsError::parse("Variable is not a function!"))?
+        let collection_id =
+            last_collection_id.ok_or(KsError::parse("Variable is not a function!"))?;
 
-        self.insert(Instruction::Call(arguments as u32))?;
+        let collection = self.environment.collection(collection_id)?;
 
-        Ok(())
+        if let Collection::Function { return_collection } = collection {
+            *last_collection_id = *return_collection;
+            self.insert(Instruction::Call(arguments as u32))?;
+            Ok(())
+        } else {
+            Err(KsError::parse("Variable is not a function"))
+        }
     }
 
     fn identifier_index(
@@ -611,9 +617,12 @@ impl Compiler {
                     last_name = None;
                     self.identifier_name(name, &mut last_collection_id, assign)
                 }
-                IdentifierTail::Call(expressions) => {
-                    self.identifier_call(expressions, assign, &mut last_name)
-                }
+                IdentifierTail::Call(expressions) => self.identifier_call(
+                    expressions,
+                    assign,
+                    &mut last_collection_id,
+                    &mut last_name,
+                ),
                 IdentifierTail::Index(expression) => {
                     self.identifier_index(expression, &mut last_collection_id, assign)
                 }
