@@ -242,6 +242,8 @@ impl Compiler {
 
         self.function_depth -= 1;
 
+        println!("DataType: {:?}", return_type);
+
         let collection_id = self
             .environment
             .data_type_to_collection(&return_type)
@@ -262,6 +264,7 @@ impl Compiler {
 
         self.environment.set_temp_collection(collection_id);
         self.environment.define_variable(name)?;
+
         self.insert_store()?;
 
         Ok(())
@@ -542,8 +545,21 @@ impl Compiler {
             }
         }
 
-        let collection_id =
-            last_collection_id.ok_or(KsError::parse("Variable is not a function!"))?;
+        let collection_id = if let Some(collection_id) = last_collection_id {
+            *collection_id
+        } else {
+            // let slot = self.environment.slot(name)?;
+            // if let Slot::Collection { variable_id, collection_id } = {
+            //     Ok(collection_id)
+            // } else {
+            //     Err(KsError::parse("Variable is not a function"))
+            // }?
+            //
+            todo!()
+        };
+
+        // let collection_id =
+        //     last_collection_id.ok_or(KsError::parse("Variable is not a function!"))?;
 
         let collection = self.environment.collection(collection_id)?;
 

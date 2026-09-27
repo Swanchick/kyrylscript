@@ -7,7 +7,7 @@ use crate::parser::data_type::DataType;
 
 use super::collection::Collection;
 use super::slot::Slot;
-use super::types::{CollectionId, Pointer, VariableId};
+use super::types::{CollectionId, VariableId};
 
 pub struct Environment {
     variables: Vec<Vec<HashMap<String, Slot>>>,
