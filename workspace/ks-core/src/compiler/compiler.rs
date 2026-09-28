@@ -183,7 +183,7 @@ impl Compiler {
         parameters: Vec<Parameter>,
         body: Vec<Statement>,
         captured: Vec<String>,
-        return_type: DataType,
+        function_data_type: DataType,
     ) -> KsResult<CollectionId> {
         self.function_depth += 1;
 
@@ -242,11 +242,9 @@ impl Compiler {
 
         self.function_depth -= 1;
 
-        println!("DataType: {:?}", return_type);
-
         let collection_id = self
             .environment
-            .data_type_to_collection(&return_type)
+            .data_type_to_collection(&function_data_type)
             .ok_or(KsError::parse("DataType is not a function!"))?;
 
         Ok(collection_id)
@@ -260,11 +258,14 @@ impl Compiler {
         captured: Vec<String>,
         return_type: DataType,
     ) -> KsResult<()> {
-        let collection_id = self.function(parameters, body, captured, return_type)?;
+        let function_data_type = DataType::Function {
+            parameters: parameters.iter().map(|p| p.data_type.clone()).collect(),
+            return_type: Box::new(return_type),
+        };
 
+        let collection_id = self.function(parameters, body, captured, function_data_type)?;
         self.environment.set_temp_collection(collection_id);
         self.environment.define_variable(name)?;
-
         self.insert_store()?;
 
         Ok(())
@@ -765,7 +766,12 @@ impl Compiler {
         captured: Vec<String>,
         return_type: DataType,
     ) -> KsResult<()> {
-        let collection_id = self.function(parameters, body, captured, return_type)?;
+        let function_data_type = DataType::Function {
+            parameters: parameters.iter().map(|p| p.data_type.clone()).collect(),
+            return_type: Box::new(return_type),
+        };
+
+        let collection_id = self.function(parameters, body, captured, function_data_type)?;
         self.environment.set_temp_collection(collection_id);
         Ok(())
     }
