@@ -485,8 +485,11 @@ impl Compiler {
         last_collection_id: &mut Option<CollectionId>,
         assign: bool,
     ) -> KsResult<()> {
+        println!("LAST: {:?}", last_collection_id);
+
         if let Some(collection_id) = last_collection_id {
             let collection = self.environment.collection(*collection_id)?;
+            println!("Collection: {:?}", collection);
             if let Collection::Module { children, indeces } = collection {
                 if let Some(variable_id) = indeces.get(&name) {
                     if let Some(collection_id) = children.get(*variable_id as usize) {
@@ -546,26 +549,22 @@ impl Compiler {
             }
         }
 
-        let collection_id = if let Some(collection_id) = last_collection_id {
-            *collection_id
-        } else {
-            // let slot = self.environment.slot(name)?;
-            // if let Slot::Collection { variable_id, collection_id } = {
-            //     Ok(collection_id)
-            // } else {
-            //     Err(KsError::parse("Variable is not a function"))
-            // }?
-            //
-            todo!()
-        };
+        println!("Hello World!");
 
-        // let collection_id =
-        //     last_collection_id.ok_or(KsError::parse("Variable is not a function!"))?;
+        let collection_id =
+            last_collection_id.ok_or(KsError::parse("Variable is not a function!"))?;
 
         let collection = self.environment.collection(collection_id)?;
 
         if let Collection::Function { return_collection } = collection {
-            *last_collection_id = *return_collection;
+            if let Some(return_collection_id) = return_collection {
+                *last_collection_id = Some(*return_collection_id);
+            } else {
+                *last_collection_id = None;
+            }
+
+            println!("last collection {:?}", last_collection_id);
+
             self.insert(Instruction::Call(arguments as u32))?;
             Ok(())
         } else {
