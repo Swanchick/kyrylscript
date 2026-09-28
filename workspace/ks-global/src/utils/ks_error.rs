@@ -45,7 +45,4 @@ impl KsError {
     pub fn parse(message: &str) -> KsError {
         KsError::new(message, KsErrorType::Parse)
     }
-    pub fn native(message: &str) -> KsError {
-        KsError::new(message, KsErrorType::Native)
-    }
 }

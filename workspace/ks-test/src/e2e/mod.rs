@@ -102,3 +102,24 @@ fn declaration_after_assignment() -> KsResult<()> {
     assert_eq!(output, "20");
     Ok(())
 }
+
+#[test]
+fn list_parameter() -> KsResult<()> {
+    let output = run("e2e/list_parameter.ks")?;
+    assert_eq!(output, "102030");
+    Ok(())
+}
+
+#[test]
+fn module_init() -> KsResult<()> {
+    let output = run("e2e/module_init.ks")?;
+    assert_eq!(output, "Name: Kyryl, Age: 20");
+    Ok(())
+}
+
+#[test]
+fn module_return() -> KsResult<()> {
+    let output = run("e2e/module_return.ks")?;
+    assert_eq!(output, "Name: Kyryl, Age: 20");
+    Ok(())
+}

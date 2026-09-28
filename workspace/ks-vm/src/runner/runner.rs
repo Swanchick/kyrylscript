@@ -447,7 +447,8 @@ impl Runner {
     ) -> VMResult<()> {
         let size = reader.from_data_size_32(&data_size)? as u32;
 
-        let stack = self.acc.size_pop(size);
+        let mut stack = self.acc.size_pop(size);
+        stack.reverse();
         let collection_id = gvs.collection_store_stack(stack);
 
         self.acc.push(gvs, Variable::collection(collection_id))?;

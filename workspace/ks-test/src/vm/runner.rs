@@ -1101,7 +1101,7 @@ fn clone_collection() -> VMResult<()> {
 #[test]
 fn load_collection() -> VMResult<()> {
     let collection = Collection::Stack(vec![0, 1, 2, 3]);
-    let mut storage = vec![
+    let storage = vec![
         Some(Variable::from(1).with_owners(1)),
         Some(Variable::from(2).with_owners(1)),
         Some(Variable::from(3).with_owners(1)),
@@ -1110,18 +1110,12 @@ fn load_collection() -> VMResult<()> {
 
     let storage_len = storage.len();
 
-    for variable in &mut storage {
-        if let Some(variable) = variable {
-            variable.owners = 1;
-        }
-    }
-
     let mut variable_collection = Variable::collection(0);
     variable_collection.owners = 1;
 
     let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
 
-    let acc = Stack::from(vec![3, 2, 1, 0]);
+    let acc = Stack::from(vec![0, 1, 2, 3]);
 
     let runner = KsDriver::runner_default(Some(acc), None, None, None, None);
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDC, storage_len as u8, 0, 0, 0])?;
@@ -1143,7 +1137,7 @@ fn load_collection() -> VMResult<()> {
 #[test]
 fn load_collection_8() -> VMResult<()> {
     let collection = Collection::Stack(vec![0, 1, 2, 3]);
-    let mut storage = vec![
+    let storage = vec![
         Some(Variable::from(1).with_owners(1)),
         Some(Variable::from(2).with_owners(1)),
         Some(Variable::from(3).with_owners(1)),
@@ -1152,18 +1146,12 @@ fn load_collection_8() -> VMResult<()> {
 
     let storage_len = storage.len();
 
-    for variable in &mut storage {
-        if let Some(variable) = variable {
-            variable.owners = 1;
-        }
-    }
-
     let mut variable_collection = Variable::collection(0);
     variable_collection.owners = 1;
 
     let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
 
-    let acc = Stack::from(vec![3, 2, 1, 0]);
+    let acc = Stack::from(vec![0, 1, 2, 3]);
 
     let runner = KsDriver::runner_default(Some(acc), None, None, None, None);
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDC8, storage_len as u8])?;
@@ -1185,7 +1173,7 @@ fn load_collection_8() -> VMResult<()> {
 #[test]
 fn load_collection_16() -> VMResult<()> {
     let collection = Collection::Stack(vec![0, 1, 2, 3]);
-    let mut storage = vec![
+    let storage = vec![
         Some(Variable::from(1).with_owners(1)),
         Some(Variable::from(2).with_owners(1)),
         Some(Variable::from(3).with_owners(1)),
@@ -1194,18 +1182,12 @@ fn load_collection_16() -> VMResult<()> {
 
     let storage_len = storage.len();
 
-    for variable in &mut storage {
-        if let Some(variable) = variable {
-            variable.owners = 1;
-        }
-    }
-
     let mut variable_collection = Variable::collection(0);
     variable_collection.owners = 1;
 
     let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
 
-    let acc = Stack::from(vec![3, 2, 1, 0]);
+    let acc = Stack::from(vec![0, 1, 2, 3]);
 
     let runner = KsDriver::runner_default(Some(acc), None, None, None, None);
     let driver = KsDriver::runner_configured(runner, gvs, vec![LDC16, storage_len as u8, 0])?;

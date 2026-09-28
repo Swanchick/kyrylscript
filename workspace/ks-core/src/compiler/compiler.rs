@@ -3,6 +3,7 @@ use std::collections::{BTreeMap, HashMap};
 use ks_global::utils::ks_error::KsError;
 use ks_global::utils::ks_result::KsResult;
 
+use crate::parser::data_type::DataType;
 use crate::parser::expression::Expression;
 use crate::parser::identifier_tail::IdentifierTail;
 use crate::parser::operator::Operator;
@@ -182,7 +183,8 @@ impl Compiler {
         parameters: Vec<Parameter>,
         body: Vec<Statement>,
         captured: Vec<String>,
-    ) -> KsResult<Pointer> {
+        function_data_type: DataType,
+    ) -> KsResult<CollectionId> {
         self.function_depth += 1;
 
         self.environment.enter_function()?;
@@ -190,7 +192,8 @@ impl Compiler {
         self.scope_enter();
 
         for parameter in parameters {
-            self.environment.define_variable(parameter.name)?;
+            self.environment
+                .register_data_type(&parameter.name, &parameter.data_type)?;
             self.insert(Instruction::Store)?;
         }
 
@@ -239,7 +242,12 @@ impl Compiler {
 
         self.function_depth -= 1;
 
-        Ok(pointer)
+        let collection_id = self
+            .environment
+            .data_type_to_collection(&function_data_type)
+            .ok_or(KsError::parse("DataType is not a function!"))?;
+
+        Ok(collection_id)
     }
 
     fn function_declaration(
@@ -248,10 +256,15 @@ impl Compiler {
         parameters: Vec<Parameter>,
         body: Vec<Statement>,
         captured: Vec<String>,
+        return_type: DataType,
     ) -> KsResult<()> {
-        let pointer = self.function(parameters, body, captured)?;
+        let function_data_type = DataType::Function {
+            parameters: parameters.iter().map(|p| p.data_type.clone()).collect(),
+            return_type: Box::new(return_type),
+        };
 
-        self.environment.define_function(&name, pointer);
+        let collection_id = self.function(parameters, body, captured, function_data_type)?;
+        self.environment.set_temp_collection(collection_id);
         self.environment.define_variable(name)?;
         self.insert_store()?;
 
@@ -423,11 +436,11 @@ impl Compiler {
             Statement::Function {
                 name,
                 public: _,
-                return_type: _,
+                return_type,
                 parameters,
                 body,
                 captured,
-            } => self.function_declaration(name, parameters, body, captured),
+            } => self.function_declaration(name, parameters, body, captured, return_type),
             Statement::ReturnStatement { value } => self.return_statement(value),
             Statement::Assignment { segments, value } => self.assignment(segments, value),
             Statement::AddValue { segments, value } => {
@@ -476,8 +489,8 @@ impl Compiler {
             let collection = self.environment.collection(*collection_id)?;
             if let Collection::Module { children, indeces } = collection {
                 if let Some(variable_id) = indeces.get(&name) {
-                    if let Some(collection_id) = children.get(*variable_id as usize) {
-                        *last_collection_id = collection_id.clone();
+                    if let Some(children_collection_id) = children.get(*variable_id as usize) {
+                        *last_collection_id = children_collection_id.clone();
                     }
 
                     self.insert_constant(Constant::Integer(*variable_id as i64))?;
@@ -510,6 +523,7 @@ impl Compiler {
         &mut self,
         mut expressions: Vec<Expression>,
         assign: bool,
+        last_collection_id: &mut Option<CollectionId>,
         last_name: &mut Option<String>,
     ) -> KsResult<()> {
         if assign {
@@ -532,9 +546,23 @@ impl Compiler {
             }
         }
 
-        self.insert(Instruction::Call(arguments as u32))?;
+        let collection_id =
+            last_collection_id.ok_or(KsError::parse("Variable is not a function!"))?;
 
-        Ok(())
+        let collection = self.environment.collection(collection_id)?;
+
+        if let Collection::Function { return_collection } = collection {
+            if let Some(return_collection_id) = return_collection {
+                *last_collection_id = Some(*return_collection_id);
+            } else {
+                *last_collection_id = None;
+            }
+
+            self.insert(Instruction::Call(arguments as u32))?;
+            Ok(())
+        } else {
+            Err(KsError::parse("Variable is not a function"))
+        }
     }
 
     fn identifier_index(
@@ -598,9 +626,12 @@ impl Compiler {
                     last_name = None;
                     self.identifier_name(name, &mut last_collection_id, assign)
                 }
-                IdentifierTail::Call(expressions) => {
-                    self.identifier_call(expressions, assign, &mut last_name)
-                }
+                IdentifierTail::Call(expressions) => self.identifier_call(
+                    expressions,
+                    assign,
+                    &mut last_collection_id,
+                    &mut last_name,
+                ),
                 IdentifierTail::Index(expression) => {
                     self.identifier_index(expression, &mut last_collection_id, assign)
                 }
@@ -608,6 +639,10 @@ impl Compiler {
                     self.identifier_tuple_index(index, &mut last_collection_id, assign)
                 }
             }?;
+        }
+
+        if let Some(collection_id) = last_collection_id {
+            self.environment.set_temp_collection(collection_id);
         }
 
         Ok(())
@@ -687,7 +722,7 @@ impl Compiler {
         for (name, expression) in module {
             self.compile_expression(expression)?;
 
-            indeces.insert(name, children.len() as u32);
+            indeces.insert(name, children.len() as VariableId);
             let temp_collection = self.environment.temp_collection();
             children.push(temp_collection);
         }
@@ -725,9 +760,15 @@ impl Compiler {
         parameters: Vec<Parameter>,
         body: Vec<Statement>,
         captured: Vec<String>,
+        return_type: DataType,
     ) -> KsResult<()> {
-        self.function(parameters, body, captured)?;
+        let function_data_type = DataType::Function {
+            parameters: parameters.iter().map(|p| p.data_type.clone()).collect(),
+            return_type: Box::new(return_type),
+        };
 
+        let collection_id = self.function(parameters, body, captured, function_data_type)?;
+        self.environment.set_temp_collection(collection_id);
         Ok(())
     }
 
@@ -759,10 +800,10 @@ impl Compiler {
             } => self.unary_operator(*expression, operator),
             Expression::FunctionLiteral {
                 parameters,
-                return_type: _,
+                return_type,
                 block: body,
                 captured,
-            } => self.function_literal(parameters, body, captured),
+            } => self.function_literal(parameters, body, captured, return_type),
         }?;
 
         Ok(())
