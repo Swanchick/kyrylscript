@@ -485,15 +485,12 @@ impl Compiler {
         last_collection_id: &mut Option<CollectionId>,
         assign: bool,
     ) -> KsResult<()> {
-        println!("LAST: {:?}", last_collection_id);
-
         if let Some(collection_id) = last_collection_id {
             let collection = self.environment.collection(*collection_id)?;
-            println!("Collection: {:?}", collection);
             if let Collection::Module { children, indeces } = collection {
                 if let Some(variable_id) = indeces.get(&name) {
-                    if let Some(collection_id) = children.get(*variable_id as usize) {
-                        *last_collection_id = collection_id.clone();
+                    if let Some(children_collection_id) = children.get(*variable_id as usize) {
+                        *last_collection_id = children_collection_id.clone();
                     }
 
                     self.insert_constant(Constant::Integer(*variable_id as i64))?;
@@ -549,8 +546,6 @@ impl Compiler {
             }
         }
 
-        println!("Hello World!");
-
         let collection_id =
             last_collection_id.ok_or(KsError::parse("Variable is not a function!"))?;
 
@@ -562,8 +557,6 @@ impl Compiler {
             } else {
                 *last_collection_id = None;
             }
-
-            println!("last collection {:?}", last_collection_id);
 
             self.insert(Instruction::Call(arguments as u32))?;
             Ok(())
@@ -623,7 +616,11 @@ impl Compiler {
         let mut last_collection_id: Option<CollectionId> = None;
         let mut last_name: Option<String> = None;
 
+        println!("Identifier: {:?}", identifier);
+
         for segment in identifier {
+            println!("last_collection_id: {:?}", last_collection_id);
+
             match segment {
                 IdentifierTail::Name(name) => {
                     if let Some(_) = self.environment.native_function(&name) {
@@ -646,6 +643,10 @@ impl Compiler {
                     self.identifier_tuple_index(index, &mut last_collection_id, assign)
                 }
             }?;
+        }
+
+        if let Some(collection_id) = last_collection_id {
+            self.environment.set_temp_collection(collection_id);
         }
 
         Ok(())
