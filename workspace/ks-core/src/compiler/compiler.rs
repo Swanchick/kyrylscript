@@ -616,11 +616,7 @@ impl Compiler {
         let mut last_collection_id: Option<CollectionId> = None;
         let mut last_name: Option<String> = None;
 
-        println!("Identifier: {:?}", identifier);
-
         for segment in identifier {
-            println!("last_collection_id: {:?}", last_collection_id);
-
             match segment {
                 IdentifierTail::Name(name) => {
                     if let Some(_) = self.environment.native_function(&name) {
