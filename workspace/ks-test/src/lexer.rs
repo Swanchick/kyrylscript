@@ -92,6 +92,8 @@ fn bit_operators() -> KsResult<()> {
         Token::ShiftLeft,
         Token::BitOr,
         Token::BitAnd,
+        Token::BitXOR,
+        Token::Len,
     ];
 
     let tokens = lexer.get_tokens();

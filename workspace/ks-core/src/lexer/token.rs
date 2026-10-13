@@ -1,6 +1,6 @@
 use std::fmt;
 
-const SYMBOLS: &str = "()[]{}<>;:=+-*/!.,^&|/?";
+const SYMBOLS: &str = "()[]{}<>;:=+-*/!.,^&|/?#";
 
 pub const COMMENT: &str = "//";
 
