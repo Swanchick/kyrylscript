@@ -1,7 +1,5 @@
 use std::fmt;
 
-use crate::lexer::token::Token::{ShiftLeft, ShiftRight};
-
 const SYMBOLS: &str = "()[]{}<>;:=+-*/!.,^&|/?";
 
 pub const COMMENT: &str = "//";
@@ -51,7 +49,6 @@ pub fn get_token(text: &str) -> Option<Token> {
         ">" => Some(Token::GreaterThan),
         "!" => Some(Token::Not),
         "," => Some(Token::Comma),
-        "^" => Some(Token::Power),
         "==" => Some(Token::EqualEqual),
         "!=" => Some(Token::NotEqual),
         "<=" => Some(Token::LessEqual),
@@ -64,8 +61,10 @@ pub fn get_token(text: &str) -> Option<Token> {
         "->" => Some(Token::Arrow),
         "|" => Some(Token::BitOr),
         "&" => Some(Token::BitAnd),
-        ">>" => Some(ShiftRight),
-        "<<" => Some(ShiftLeft),
+        ">>" => Some(Token::ShiftRight),
+        "<<" => Some(Token::ShiftLeft),
+        "^" => Some(Token::BitXOR),
+        "#" => Some(Token::Len),
         _ => None,
     }
 }
@@ -126,7 +125,6 @@ pub enum Token {
     LessThan,           // <
     GreaterThan,        // >
     Not,                // !
-    Power,              // ^
     EqualEqual,         // ==
     NotEqual,           // ~=
     LessEqual,          // <=
@@ -141,6 +139,8 @@ pub enum Token {
     BitAnd,             // &
     ShiftRight,         // >>
     ShiftLeft,          // <<
+    BitXOR,             // ^
+    Len,                // #
 }
 
 impl fmt::Display for Token {
@@ -196,7 +196,6 @@ impl fmt::Display for Token {
             Token::LessThan => write!(f, "<"),
             Token::GreaterThan => write!(f, ">"),
             Token::Not => write!(f, "!"),
-            Token::Power => write!(f, "^"),
             Token::EqualEqual => write!(f, "=="),
             Token::NotEqual => write!(f, "!="),
             Token::LessEqual => write!(f, "<="),
@@ -211,6 +210,8 @@ impl fmt::Display for Token {
             Token::BitAnd => write!(f, "&"),
             Token::ShiftRight => write!(f, ">>"),
             Token::ShiftLeft => write!(f, "<<"),
+            Token::BitXOR => write!(f, "^"),
+            Token::Len => write!(f, "#"),
         }
     }
 }
