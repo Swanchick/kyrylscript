@@ -1,5 +1,7 @@
 use std::fmt;
 
+use crate::lexer::token::Token::{ShiftLeft, ShiftRight};
+
 const SYMBOLS: &str = "()[]{}<>;:=+-*/!.,^&|/?";
 
 pub const COMMENT: &str = "//";
@@ -60,6 +62,10 @@ pub fn get_token(text: &str) -> Option<Token> {
         "." => Some(Token::Dot),
         "::" => Some(Token::ColonColon),
         "->" => Some(Token::Arrow),
+        "|" => Some(Token::BitOr),
+        "&" => Some(Token::BitAnd),
+        ">>" => Some(ShiftRight),
+        "<<" => Some(ShiftLeft),
         _ => None,
     }
 }
@@ -131,6 +137,10 @@ pub enum Token {
     Dot,                // .
     ColonColon,         // ::
     Arrow,              // ->
+    BitOr,              // |
+    BitAnd,             // &
+    ShiftRight,         // >>
+    ShiftLeft,          // <<
 }
 
 impl fmt::Display for Token {
@@ -197,6 +207,10 @@ impl fmt::Display for Token {
             Token::Dot => write!(f, "."),
             Token::ColonColon => write!(f, "::"),
             Token::Arrow => write!(f, "->"),
+            Token::BitOr => write!(f, "|"),
+            Token::BitAnd => write!(f, "&"),
+            Token::ShiftRight => write!(f, ">>"),
+            Token::ShiftLeft => write!(f, "<<"),
         }
     }
 }
