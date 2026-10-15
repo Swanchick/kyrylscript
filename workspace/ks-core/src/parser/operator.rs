@@ -16,4 +16,9 @@ pub enum Operator {
     PlusPlus,
     MinusMinus,
     Clone,
+    BitOr,
+    BitAnd,
+    BitXor,
+    ShiftLeft,
+    ShiftRight,
 }
