@@ -20,6 +20,11 @@ pub const LE: u8 = 0x15;
 pub const AND: u8 = 0x20;
 pub const OR: u8 = 0x21;
 pub const NOT: u8 = 0x22;
+pub const BWOR: u8 = 0x23;
+pub const BWAND: u8 = 0x24;
+pub const SHL: u8 = 0x25;
+pub const SHR: u8 = 0x26;
+pub const XOR: u8 = 0x27;
 
 // Branching (0x30-0x3F)
 pub const RET: u8 = 0x30;

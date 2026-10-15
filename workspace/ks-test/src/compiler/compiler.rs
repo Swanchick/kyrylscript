@@ -917,3 +917,37 @@ fn native_function_in_function_scope() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn bit_operators() -> KsResult<()> {
+    let instructions: Vec<Instruction> = vec![
+        Instruction::LoadConst(Constant::Integer(2)),
+        Instruction::LoadConst(Constant::Integer(2)),
+        Instruction::ShiftLeft,
+        Instruction::ClearAcc,
+        Instruction::LoadConst(Constant::Integer(8)),
+        Instruction::LoadConst(Constant::Integer(2)),
+        Instruction::ShiftRight,
+        Instruction::ClearAcc,
+        Instruction::LoadConst(Constant::Integer(6)),
+        Instruction::LoadConst(Constant::Integer(7)),
+        Instruction::BitOr,
+        Instruction::ClearAcc,
+        Instruction::LoadConst(Constant::Integer(6)),
+        Instruction::LoadConst(Constant::Integer(7)),
+        Instruction::BitAnd,
+        Instruction::ClearAcc,
+        Instruction::LoadConst(Constant::Integer(6)),
+        Instruction::LoadConst(Constant::Integer(7)),
+        Instruction::BitXor,
+        Instruction::ClearAcc,
+    ];
+
+    let driver = KsDriver::new("compiler/bit_operators.ks");
+    let compiler = driver.compiler_new()?;
+    let program = compiler.instructions;
+
+    assert_eq!(instructions, program);
+
+    Ok(())
+}

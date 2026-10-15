@@ -2,10 +2,10 @@ use ks_core::compiler::instructions::Instruction;
 use ks_core::compiler::{constant::Constant, serializer::Serializer};
 
 use ks_vm::runner::ir::instructions::{
-    ADD, AND, ASC, ASN, ASV, ASV8, ASV16, CALL, CLR, CPY, DEC, DIV, EQ, FREE, FREE8, FREE16, GE,
-    GT, INC, JMP, JNZ, JZ, LBF, LBT, LDC, LDC8, LDC16, LDCP, LDCP8, LDCP16, LDF, LDFC, LDFN, LDI,
-    LDI8, LDI16, LDI32, LDN, LDS, LDV, LDV8, LDV16, LE, LEN, LT, MUL, NCALL, NE, NOT, OR, RET, STR,
-    SUB,
+    ADD, AND, ASC, ASN, ASV, ASV8, ASV16, BWAND, BWOR, CALL, CLR, CPY, DEC, DIV, EQ, FREE, FREE8,
+    FREE16, GE, GT, INC, JMP, JNZ, JZ, LBF, LBT, LDC, LDC8, LDC16, LDCP, LDCP8, LDCP16, LDF, LDFC,
+    LDFN, LDI, LDI8, LDI16, LDI32, LDN, LDS, LDV, LDV8, LDV16, LE, LEN, LT, MUL, NCALL, NE, NOT,
+    OR, RET, SHL, SHR, STR, SUB, XOR,
 };
 
 macro_rules! serialize_instruction {
@@ -65,6 +65,11 @@ serialize_instruction!(decrement, Instruction::Decrement, DEC);
 serialize_instruction!(clone, Instruction::Clone, CPY);
 serialize_instruction!(clear_acc, Instruction::ClearAcc, CLR);
 serialize_instruction!(serialize_return, Instruction::Return, RET);
+serialize_instruction!(bit_or, Instruction::BitOr, BWOR);
+serialize_instruction!(bit_and, Instruction::BitAnd, BWAND);
+serialize_instruction!(bit_xor, Instruction::BitXor, XOR);
+serialize_instruction!(bit_shl, Instruction::ShiftLeft, SHL);
+serialize_instruction!(bit_shr, Instruction::ShiftRight, SHR);
 
 serialize_instructions!(free, Instruction::Free(u32::MAX as usize), {
     let mut expected = vec![FREE];

@@ -1,8 +1,9 @@
 use ks_core::compiler::serializer::Serializer;
 use ks_vm::runner::ir::instructions::{
-    ADD, AND, ASC, ASN, ASV, ASV8, ASV16, CALL, CLR, CPY, DEC, DIV, EQ, FREE, FREE8, FREE16, GE,
-    GT, INC, JMP, JNZ, JZ, LBF, LBT, LDC, LDC8, LDC16, LDCP, LDCP8, LDCP16, LDF, LDFC, LDFN, LDI,
-    LDI8, LDI16, LDI32, LDN, LDS, LDV, LDV8, LDV16, LE, LEN, LT, MUL, NE, NOT, OR, RET, STR, SUB,
+    ADD, AND, ASC, ASN, ASV, ASV8, ASV16, BWAND, BWOR, CALL, CLR, CPY, DEC, DIV, EQ, FREE, FREE8,
+    FREE16, GE, GT, INC, JMP, JNZ, JZ, LBF, LBT, LDC, LDC8, LDC16, LDCP, LDCP8, LDCP16, LDF, LDFC,
+    LDFN, LDI, LDI8, LDI16, LDI32, LDN, LDS, LDV, LDV8, LDV16, LE, LEN, LT, MUL, NE, NOT, OR, RET,
+    SHL, SHR, STR, SUB, XOR,
 };
 use ks_vm::types::Pointer;
 use ks_vm::{Assign, VMHelper};
@@ -2208,6 +2209,121 @@ fn native_call_was_added() -> VMResult<()> {
     assert_eq!(runner.pc, 9);
 
     assert_eq!(native_call, Some(NativeCall::new(1, 5, 0)));
+
+    Ok(())
+}
+
+#[test]
+fn bw_or() -> VMResult<()> {
+    let storage = vec![
+        Some(Variable::from(6).with_owners(2)),
+        Some(Variable::from(8).with_owners(2)),
+    ];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
+
+    let stack = Stack::from(vec![0, 1]);
+    let acc = Stack::from(vec![0, 1]);
+    let runner = KsDriver::runner_default(Some(acc), Some(stack), None, None, Some(Assign::None));
+    let driver = KsDriver::runner_configured(runner, gvs, vec![BWOR])?;
+
+    assert_eq!(driver.runner.acc.get(0), Some(&2));
+    assert_eq!(
+        driver.gvs.storage[2],
+        Some(Variable::from(14).with_owners(1))
+    );
+
+    Ok(())
+}
+
+#[test]
+fn bw_and() -> VMResult<()> {
+    let storage = vec![
+        Some(Variable::from(6).with_owners(2)),
+        Some(Variable::from(8).with_owners(2)),
+    ];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
+
+    let stack = Stack::from(vec![0, 1]);
+    let acc = Stack::from(vec![0, 1]);
+    let runner = KsDriver::runner_default(Some(acc), Some(stack), None, None, Some(Assign::None));
+    let driver = KsDriver::runner_configured(runner, gvs, vec![BWAND])?;
+
+    assert_eq!(driver.runner.acc.get(0), Some(&2));
+    assert_eq!(
+        driver.gvs.storage[2],
+        Some(Variable::from(0).with_owners(1))
+    );
+
+    Ok(())
+}
+
+#[test]
+fn bw_xor() -> VMResult<()> {
+    let storage = vec![
+        Some(Variable::from(6).with_owners(2)),
+        Some(Variable::from(8).with_owners(2)),
+    ];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
+
+    let stack = Stack::from(vec![0, 1]);
+    let acc = Stack::from(vec![0, 1]);
+    let runner = KsDriver::runner_default(Some(acc), Some(stack), None, None, Some(Assign::None));
+    let driver = KsDriver::runner_configured(runner, gvs, vec![XOR])?;
+
+    assert_eq!(driver.runner.acc.get(0), Some(&2));
+    assert_eq!(
+        driver.gvs.storage[2],
+        Some(Variable::from(14).with_owners(1))
+    );
+
+    Ok(())
+}
+
+#[test]
+fn shift_left() -> VMResult<()> {
+    let storage = vec![
+        Some(Variable::from(2).with_owners(2)),
+        Some(Variable::from(2).with_owners(2)),
+    ];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
+
+    let stack = Stack::from(vec![0, 1]);
+    let acc = Stack::from(vec![0, 1]);
+    let runner = KsDriver::runner_default(Some(acc), Some(stack), None, None, Some(Assign::None));
+    let driver = KsDriver::runner_configured(runner, gvs, vec![SHL])?;
+
+    assert_eq!(driver.runner.acc.get(0), Some(&2));
+    assert_eq!(
+        driver.gvs.storage[2],
+        Some(Variable::from(8).with_owners(1))
+    );
+
+    Ok(())
+}
+
+#[test]
+fn shift_right() -> VMResult<()> {
+    let storage = vec![
+        Some(Variable::from(16).with_owners(2)),
+        Some(Variable::from(2).with_owners(2)),
+    ];
+
+    let gvs = KsDriver::gvs_storage(Some(storage), None, None, None);
+
+    let stack = Stack::from(vec![0, 1]);
+    let acc = Stack::from(vec![0, 1]);
+    let runner = KsDriver::runner_default(Some(acc), Some(stack), None, None, Some(Assign::None));
+    let driver = KsDriver::runner_configured(runner, gvs, vec![SHR])?;
+
+    assert_eq!(driver.runner.acc.get(0), Some(&2));
+    assert_eq!(
+        driver.gvs.storage[2],
+        Some(Variable::from(4).with_owners(1))
+    );
 
     Ok(())
 }

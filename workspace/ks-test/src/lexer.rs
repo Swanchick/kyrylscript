@@ -81,3 +81,23 @@ fn identefier_underscore() -> KsResult<()> {
 
     Ok(())
 }
+
+#[test]
+fn bit_operators() -> KsResult<()> {
+    let driver = KsDriver::new("lexer/bit_operators.ks");
+    let lexer = driver.lexer()?;
+
+    let expected_tokens = vec![
+        Token::ShiftRight,
+        Token::ShiftLeft,
+        Token::BitOr,
+        Token::BitAnd,
+        Token::BitXOR,
+        Token::Len,
+    ];
+
+    let tokens = lexer.get_tokens();
+    assert_eq!(tokens, &expected_tokens);
+
+    Ok(())
+}

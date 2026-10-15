@@ -144,7 +144,7 @@ impl SemanticAnalyzer {
 
         match (left, right) {
             (DataType::Bool, DataType::Bool) => Ok(DataType::Bool),
-            _ => Err(KsError::ks_type("Logic type error!")),
+            _ => Err(KsError::ks_type("Boolean type error!")),
         }
     }
 
@@ -165,7 +165,17 @@ impl SemanticAnalyzer {
             | (DataType::Float, DataType::Int)
             | (DataType::Int, DataType::Float)
             | (DataType::Float, DataType::Float) => Ok(DataType::Bool),
-            _ => Err(KsError::ks_type("Arithmetic type error!")),
+            _ => Err(KsError::ks_type("Logic type error!")),
+        }
+    }
+
+    fn bitwise_logic(&self, left: DataType, right: DataType) -> KsResult<DataType> {
+        self.check_null(&left)?;
+        self.check_null(&right)?;
+
+        match (left, right) {
+            (DataType::Int, DataType::Int) | (DataType::Float, DataType::Int) => Ok(DataType::Int),
+            _ => Err(KsError::ks_type("Logic type error!")),
         }
     }
 
@@ -184,6 +194,11 @@ impl SemanticAnalyzer {
             Operator::GreaterEqual | Operator::Greater | Operator::LessEqual | Operator::Less => {
                 self.logic(left, right)
             }
+            Operator::BitAnd
+            | Operator::BitOr
+            | Operator::BitXor
+            | Operator::ShiftLeft
+            | Operator::ShiftRight => self.bitwise_logic(left, right),
 
             _ => unreachable!(),
         }
@@ -194,6 +209,9 @@ impl SemanticAnalyzer {
             (Operator::Minus, DataType::Int) => Ok(DataType::Int),
             (Operator::Minus, DataType::Float) => Ok(DataType::Float),
             (Operator::Not, DataType::Bool) => Ok(DataType::Bool),
+            (Operator::Len, DataType::List(_)) => Ok(DataType::Int),
+            (Operator::Len, DataType::Tuple(_)) => Ok(DataType::Int),
+            (Operator::Len, DataType::Module(_)) => Ok(DataType::Int),
             _ => Err(KsError::ks_type("Invalid operator in unary operation!")),
         }
     }

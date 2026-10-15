@@ -1,6 +1,6 @@
 use std::fmt;
 
-const SYMBOLS: &str = "()[]{}<>;:=+-*/!.,^&|/?";
+const SYMBOLS: &str = "()[]{}<>;:=+-*/!.,^&|/?#";
 
 pub const COMMENT: &str = "//";
 
@@ -49,7 +49,6 @@ pub fn get_token(text: &str) -> Option<Token> {
         ">" => Some(Token::GreaterThan),
         "!" => Some(Token::Not),
         "," => Some(Token::Comma),
-        "^" => Some(Token::Power),
         "==" => Some(Token::EqualEqual),
         "!=" => Some(Token::NotEqual),
         "<=" => Some(Token::LessEqual),
@@ -60,6 +59,12 @@ pub fn get_token(text: &str) -> Option<Token> {
         "." => Some(Token::Dot),
         "::" => Some(Token::ColonColon),
         "->" => Some(Token::Arrow),
+        "|" => Some(Token::BitOr),
+        "&" => Some(Token::BitAnd),
+        ">>" => Some(Token::ShiftRight),
+        "<<" => Some(Token::ShiftLeft),
+        "^" => Some(Token::BitXOR),
+        "#" => Some(Token::Len),
         _ => None,
     }
 }
@@ -120,7 +125,6 @@ pub enum Token {
     LessThan,           // <
     GreaterThan,        // >
     Not,                // !
-    Power,              // ^
     EqualEqual,         // ==
     NotEqual,           // ~=
     LessEqual,          // <=
@@ -131,6 +135,12 @@ pub enum Token {
     Dot,                // .
     ColonColon,         // ::
     Arrow,              // ->
+    BitOr,              // |
+    BitAnd,             // &
+    ShiftRight,         // >>
+    ShiftLeft,          // <<
+    BitXOR,             // ^
+    Len,                // #
 }
 
 impl fmt::Display for Token {
@@ -186,7 +196,6 @@ impl fmt::Display for Token {
             Token::LessThan => write!(f, "<"),
             Token::GreaterThan => write!(f, ">"),
             Token::Not => write!(f, "!"),
-            Token::Power => write!(f, "^"),
             Token::EqualEqual => write!(f, "=="),
             Token::NotEqual => write!(f, "!="),
             Token::LessEqual => write!(f, "<="),
@@ -197,6 +206,12 @@ impl fmt::Display for Token {
             Token::Dot => write!(f, "."),
             Token::ColonColon => write!(f, "::"),
             Token::Arrow => write!(f, "->"),
+            Token::BitOr => write!(f, "|"),
+            Token::BitAnd => write!(f, "&"),
+            Token::ShiftRight => write!(f, ">>"),
+            Token::ShiftLeft => write!(f, "<<"),
+            Token::BitXOR => write!(f, "^"),
+            Token::Len => write!(f, "#"),
         }
     }
 }

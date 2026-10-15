@@ -666,6 +666,12 @@ impl Compiler {
             Operator::PlusPlus => Instruction::Increment,
             Operator::MinusMinus => Instruction::Decrement,
             Operator::Clone => Instruction::Clone,
+            Operator::BitAnd => Instruction::BitAnd,
+            Operator::BitOr => Instruction::BitOr,
+            Operator::BitXor => Instruction::BitXor,
+            Operator::ShiftRight => Instruction::ShiftRight,
+            Operator::ShiftLeft => Instruction::ShiftLeft,
+            Operator::Len => Instruction::CollectionLen,
         };
 
         self.insert(instruction)?;
