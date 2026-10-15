@@ -194,6 +194,9 @@ impl SemanticAnalyzer {
             (Operator::Minus, DataType::Int) => Ok(DataType::Int),
             (Operator::Minus, DataType::Float) => Ok(DataType::Float),
             (Operator::Not, DataType::Bool) => Ok(DataType::Bool),
+            (Operator::Len, DataType::List(_)) => Ok(DataType::Int),
+            (Operator::Len, DataType::Tuple(_)) => Ok(DataType::Int),
+            (Operator::Len, DataType::Module(_)) => Ok(DataType::Int),
             _ => Err(KsError::ks_type("Invalid operator in unary operation!")),
         }
     }

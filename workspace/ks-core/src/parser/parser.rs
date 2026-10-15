@@ -674,13 +674,45 @@ impl Parser {
     }
 
     pub fn parse_expression(&mut self) -> KsResult<Expression> {
-        self.parse_logic_or()
+        self.parse_bit_and()
     }
 
-    fn parse_logic_or(&mut self) -> KsResult<Expression> {
+    pub fn parse_bit_and(&mut self) -> KsResult<Expression> {
+        let mut expression = self.parse_bit_xor()?;
+
+        while self.match_token(&Token::BitAnd) {
+            let right = self.parse_bit_xor()?;
+
+            expression = Expression::BinaryOp {
+                left: Box::new(expression),
+                operator: Operator::Or,
+                right: Box::new(right),
+            }
+        }
+
+        Ok(expression)
+    }
+
+    pub fn parse_bit_xor(&mut self) -> KsResult<Expression> {
+        let mut expression = self.parse_bit_or()?;
+
+        while self.match_token(&Token::BitXOR) {
+            let right = self.parse_bit_or()?;
+
+            expression = Expression::BinaryOp {
+                left: Box::new(expression),
+                operator: Operator::Or,
+                right: Box::new(right),
+            }
+        }
+
+        Ok(expression)
+    }
+
+    pub fn parse_bit_or(&mut self) -> KsResult<Expression> {
         let mut expression = self.parse_logic_and()?;
 
-        while self.match_token(&Token::Or) {
+        while self.match_token(&Token::BitOr) {
             let right = self.parse_logic_and()?;
 
             expression = Expression::BinaryOp {
@@ -694,14 +726,30 @@ impl Parser {
     }
 
     fn parse_logic_and(&mut self) -> KsResult<Expression> {
-        let mut expression = self.parse_comparison()?;
+        let mut expression = self.parse_logic_or()?;
 
         while self.match_token(&Token::And) {
-            let right = self.parse_comparison()?;
+            let right = self.parse_logic_or()?;
 
             expression = Expression::BinaryOp {
                 left: Box::new(expression),
                 operator: Operator::And,
+                right: Box::new(right),
+            }
+        }
+
+        Ok(expression)
+    }
+
+    fn parse_logic_or(&mut self) -> KsResult<Expression> {
+        let mut expression = self.parse_comparison()?;
+
+        while self.match_token(&Token::Or) {
+            let right = self.parse_comparison()?;
+
+            expression = Expression::BinaryOp {
+                left: Box::new(expression),
+                operator: Operator::Or,
                 right: Box::new(right),
             }
         }
@@ -786,10 +834,14 @@ impl Parser {
     }
 
     fn parse_unary(&mut self) -> KsResult<Expression> {
-        if self.match_token(&Token::Minus) || self.match_token(&Token::Not) {
+        if self.match_token(&Token::Minus)
+            || self.match_token(&Token::Not)
+            || self.match_token(&Token::Len)
+        {
             let operator = match self.previous() {
                 Token::Minus => Operator::Minus,
                 Token::Not => Operator::Not,
+                Token::Len => Operator::Len,
                 _ => unreachable!(),
             };
 

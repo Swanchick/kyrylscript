@@ -671,6 +671,7 @@ impl Compiler {
             Operator::BitXor => Instruction::BitXor,
             Operator::ShiftRight => Instruction::ShiftRight,
             Operator::ShiftLeft => Instruction::ShiftLeft,
+            Operator::Len => Instruction::CollectionLen,
         };
 
         self.insert(instruction)?;
