@@ -841,6 +841,60 @@ impl Runner {
         Ok(())
     }
 
+    fn bitwise_op<RI>(
+        &mut self,
+        gvs: &mut GVS,
+        operation_int: impl Fn(i64, i64) -> RI,
+    ) -> VMResult<()>
+    where
+        Variable: From<RI>,
+    {
+        let right = self.acc.pop(gvs)?;
+        let left = self.acc.pop(gvs)?;
+
+        let variable = match (left.value_type, right.value_type) {
+            (INT_TYPE, INT_TYPE) | (FLOAT_TYPE, INT_TYPE) => Ok(Variable::from(operation_int(
+                left.value as i64,
+                right.value as i64,
+            ))),
+            _ => Err("Invalid type"),
+        }?;
+
+        self.acc.push(gvs, variable)?;
+
+        self.step(INSTRUCTION)
+    }
+
+    fn bw_or(&mut self, gvs: &mut GVS) -> VMResult<()> {
+        self.bitwise_op(gvs, |l, r| l | r)?;
+
+        Ok(())
+    }
+
+    fn bw_and(&mut self, gvs: &mut GVS) -> VMResult<()> {
+        self.bitwise_op(gvs, |l, r| l & r)?;
+
+        Ok(())
+    }
+
+    fn xor(&mut self, gvs: &mut GVS) -> VMResult<()> {
+        self.bitwise_op(gvs, |l, r| l ^ r)?;
+
+        Ok(())
+    }
+
+    fn shl(&mut self, gvs: &mut GVS) -> VMResult<()> {
+        self.bitwise_op(gvs, |l, r| l << r)?;
+
+        Ok(())
+    }
+
+    fn shr(&mut self, gvs: &mut GVS) -> VMResult<()> {
+        self.bitwise_op(gvs, |l, r| l >> r)?;
+
+        Ok(())
+    }
+
     pub fn run<'a>(&mut self, helper: VMHelper<'a>) -> VMResult<&RunnerStatus> {
         self.status = RunnerStatus::None;
 
@@ -880,11 +934,11 @@ impl Runner {
             NE => self.not_eq(gvs),
             AND => self.and(gvs),
             OR => self.or(gvs),
-            BWOR => todo!(),
-            BWAND => todo!(),
-            XOR => todo!(),
-            SHL => todo!(),
-            SHR => todo!(),
+            BWOR => self.bw_or(gvs),
+            BWAND => self.bw_and(gvs),
+            XOR => self.xor(gvs),
+            SHL => self.shl(gvs),
+            SHR => self.shr(gvs),
             NOT => self.not(gvs),
             INC => self.increment(gvs),
             DEC => self.decrement(gvs),
