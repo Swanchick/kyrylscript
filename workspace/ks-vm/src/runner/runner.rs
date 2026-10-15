@@ -10,6 +10,7 @@ use crate::environment::variable::{
 };
 use crate::environment::{GVS, Stack, Variable};
 
+use crate::runner::ir::instructions::{BWAND, BWOR, SHL, SHR, XOR};
 use crate::runner::runner_status::RunnerStatus;
 use crate::types::{CollectionId, Pointer, Slot, StorageId};
 use crate::{Assign, Function, NativeCall, VMError, VMHelper, VMResult};
@@ -879,6 +880,11 @@ impl Runner {
             NE => self.not_eq(gvs),
             AND => self.and(gvs),
             OR => self.or(gvs),
+            BWOR => todo!(),
+            BWAND => todo!(),
+            XOR => todo!(),
+            SHL => todo!(),
+            SHR => todo!(),
             NOT => self.not(gvs),
             INC => self.increment(gvs),
             DEC => self.decrement(gvs),
