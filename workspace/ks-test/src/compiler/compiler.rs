@@ -381,8 +381,8 @@ fn for_statement() -> KsResult<()> {
         Instruction::LoadConst(Constant::Null),
         Instruction::Store, // our preallocated variable
         Instruction::AssignVariable(2),
-        Instruction::LoadVar(1),
         Instruction::LoadVar(0),
+        Instruction::LoadVar(1),
         Instruction::LoadFromCollection,
         Instruction::Assign, // changing the variable to the list number
         Instruction::LoadVar(1),
@@ -656,8 +656,8 @@ fn scope_enter_exit() -> KsResult<()> {
         Instruction::LoadConst(Constant::Null),
         Instruction::Store,
         Instruction::AssignVariable(5),
-        Instruction::LoadVar(4),
         Instruction::LoadVar(3),
+        Instruction::LoadVar(4),
         Instruction::LoadFromCollection,
         Instruction::Assign,
         Instruction::LoadConst(Constant::Integer(10)),

@@ -123,3 +123,17 @@ fn module_return() -> KsResult<()> {
     assert_eq!(output, "Name: Kyryl, Age: 20");
     Ok(())
 }
+
+#[test]
+fn for_loop() -> KsResult<()> {
+    let output = run("e2e/for_loop.ks")?;
+    assert_eq!(output, "0123456789");
+    Ok(())
+}
+
+#[test]
+fn indexing() -> KsResult<()> {
+    let output = run("e2e/indexing.ks")?;
+    assert_eq!(output, "10,20;20,10;");
+    Ok(())
+}
