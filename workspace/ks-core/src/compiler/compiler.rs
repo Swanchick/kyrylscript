@@ -393,8 +393,8 @@ impl Compiler {
 
         self.scope_enter();
         self.insert(Instruction::AssignVariable(iter_variable_id))?;
-        self.insert(Instruction::LoadVar(iter))?;
         self.insert(Instruction::LoadVar(iter_list))?;
+        self.insert(Instruction::LoadVar(iter))?;
         self.insert(Instruction::LoadFromCollection)?;
         self.insert(Instruction::Assign)?;
 

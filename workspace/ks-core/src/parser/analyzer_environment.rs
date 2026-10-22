@@ -45,7 +45,6 @@ impl AnalyzerEnvironment {
         } else if let Some(parent) = &self.parent {
             parent.borrow().get_variable_type(name)
         } else {
-            // println!("{}", std::backtrace::Backtrace::force_capture());
             Err(KsError::parse(&format!("Variable {} not found", name)))
         }
     }
