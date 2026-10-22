@@ -1,11 +1,8 @@
 #[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
+use alloc::boxed::Box;
 
 #[cfg(not(feature = "std"))]
-use alloc::sync::Arc;
-
-#[cfg(feature = "std")]
-use std::sync::Arc;
+use alloc::vec::Vec;
 
 use crate::{
     GVS, KsCall, NativeCall, NativeRegistry, Runner, VMHelper, VMResult,
@@ -13,14 +10,14 @@ use crate::{
 };
 
 pub struct VM {
-    program: Arc<[u8]>,
+    program: Box<[u8]>,
     pub runners: Vec<Runner>,
     pub gvs: GVS,
     pub native: NativeRegistry,
 }
 
-impl From<Arc<[u8]>> for VM {
-    fn from(program: Arc<[u8]>) -> Self {
+impl From<Box<[u8]>> for VM {
+    fn from(program: Box<[u8]>) -> Self {
         Self {
             program,
             runners: Vec::new(),
@@ -31,7 +28,7 @@ impl From<Arc<[u8]>> for VM {
 }
 
 impl VM {
-    pub fn new(program: Arc<[u8]>, runners: Vec<Runner>, gvs: GVS, native: NativeRegistry) -> Self {
+    pub fn new(program: Box<[u8]>, runners: Vec<Runner>, gvs: GVS, native: NativeRegistry) -> Self {
         Self {
             program,
             runners,
@@ -86,7 +83,7 @@ impl VM {
         Ok(())
     }
 
-    pub fn reset(&mut self, program: Arc<[u8]>) {
+    pub fn reset(&mut self, program: Box<[u8]>) {
         self.runners.clear();
         self.gvs = GVS::new();
         self.program = program;
