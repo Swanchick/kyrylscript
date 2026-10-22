@@ -45,7 +45,7 @@ fn run(path: &str) -> KsResult<String> {
     let output = Rc::new(RefCell::new(String::new()));
 
     KsDriver::vm(
-        bytes.into(),
+        bytes,
         vec![
             Box::new(MockPrint::from(output.clone())),
             Box::new(DigitalWrite::from(output.clone())),

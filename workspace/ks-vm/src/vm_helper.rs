@@ -1,6 +1,3 @@
-#[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
-
 use crate::{GVS, NativeCall};
 
 pub struct VMHelper<'a> {

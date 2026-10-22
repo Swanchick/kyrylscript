@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use crate::compiler::serializer::Serializer;
 
 use super::instructions::Instruction;
@@ -27,7 +25,7 @@ impl Program {
         Program::from(out)
     }
 
-    pub fn as_bytes(self) -> Arc<[u8]> {
-        self.instructions.into()
+    pub fn as_bytes(self) -> Box<[u8]> {
+        self.instructions
     }
 }
