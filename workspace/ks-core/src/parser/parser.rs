@@ -343,7 +343,9 @@ impl Parser {
     }
 
     fn is_native_function(&mut self, name: &str) -> KsResult<bool> {
+        println!("Hello World 3 {:?}", name);
         let variable = self.semantic_analyzer.get_variable(name)?;
+        println!("Hello World 4");
 
         Ok(matches!(variable, DataType::RustFunction { .. }))
     }
@@ -396,6 +398,9 @@ impl Parser {
             last_context.variables.push(function_name.clone());
         }
 
+        println!("hello wasdasd");
+        println!("{:?}", context);
+
         for capture in &mut context.captured_variables {
             if self.is_native_function(capture)? {
                 continue;
@@ -423,11 +428,14 @@ impl Parser {
 
     fn parse_for_statement(&mut self) -> KsResult<Statement> {
         let name = self.consume_identifier()?;
+        let context = self.last_function_context_mut()?;
+        context.variables.push(name.clone());
 
         self.consume_token(Token::In)?;
         let expression = self.parse_expression()?;
+        println!("Hello World 1");
         let data_type = self.semantic_analyzer.get_data_type(&expression)?;
-
+        println!("Hello World 2");
         self.semantic_analyzer.enter_function_environment();
 
         match data_type {
